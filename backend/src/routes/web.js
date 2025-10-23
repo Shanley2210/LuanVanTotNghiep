@@ -1,0 +1,16 @@
+const express = require('express');
+const router = express.Router();
+const authRoute = require('./auth.route');
+
+const initWebRoutes = (app) => {
+    //test
+    router.get('/', (req, res) => {
+        return res.send('Hello world');
+    });
+
+    router.use('/api/auth', authRoute);
+
+    return app.use('/', router);
+};
+
+module.exports = initWebRoutes;
