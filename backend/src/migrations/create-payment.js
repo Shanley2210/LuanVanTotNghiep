@@ -9,6 +9,14 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
+            recordId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
+            appointmentId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
             amount: {
                 type: Sequelize.DECIMAL,
                 allowNull: false

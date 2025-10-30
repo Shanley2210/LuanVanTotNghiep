@@ -36,6 +36,7 @@ module.exports = (sequelize, DataTypes) => {
     }
     User.init(
         {
+            branchId: DataTypes.INTEGER,
             name: DataTypes.STRING,
             email: DataTypes.STRING,
             phone: DataTypes.STRING,

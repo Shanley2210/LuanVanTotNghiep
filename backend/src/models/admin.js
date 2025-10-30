@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     }
     Admin.init(
         {
+            userId: DataTypes.INTEGER,
             roleType: DataTypes.STRING
         },
         {

@@ -46,6 +46,11 @@ module.exports = (sequelize, DataTypes) => {
     }
     Appointment.init(
         {
+            doctorId: DataTypes.INTEGER,
+            patientId: DataTypes.INTEGER,
+            slotId: DataTypes.INTEGER,
+            queueId: DataTypes.INTEGER,
+            serviceId: DataTypes.INTEGER,
             status: DataTypes.STRING,
             deposit: DataTypes.DECIMAL
         },

@@ -16,6 +16,7 @@ module.exports = (sequelize, DataTypes) => {
     }
     Report.init(
         {
+            adminId: DataTypes.INTEGER,
             reportType: DataTypes.STRING,
             fromDate: DataTypes.DATE,
             toDate: DataTypes.DATE,

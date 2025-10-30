@@ -9,6 +9,26 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
+            doctorId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
+            patientId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
+            slotId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
+            queueId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
+            serviceId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
             status: {
                 type: Sequelize.STRING,
                 allowNull: false

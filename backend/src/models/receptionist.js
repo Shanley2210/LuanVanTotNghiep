@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     }
     Receptionist.init(
         {
+            userId: DataTypes.INTEGER,
             status: DataTypes.STRING,
             shift: DataTypes.STRING
         },

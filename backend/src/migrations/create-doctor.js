@@ -9,6 +9,14 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
+            userId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
+            specialtyId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
             room: {
                 type: Sequelize.STRING,
                 allowNull: false

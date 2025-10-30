@@ -9,20 +9,37 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
+            doctorId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
+            scheduleId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
+            serviceId: {
+                type: Sequelize.INTEGER,
+                allowNull: false
+            },
             startTime: {
-                type: Sequelize.DATE
+                type: Sequelize.DATE,
+                allowNull: false
             },
             endTime: {
-                type: Sequelize.DATE
+                type: Sequelize.DATE,
+                allowNull: false
             },
             room: {
-                type: Sequelize.STRING
+                type: Sequelize.STRING,
+                allowNull: false
             },
             capacity: {
-                type: Sequelize.INTEGER
+                type: Sequelize.INTEGER,
+                allowNull: false
             },
             status: {
-                type: Sequelize.STRING
+                type: Sequelize.STRING,
+                allowNull: false
             },
             createdAt: {
                 allowNull: false,

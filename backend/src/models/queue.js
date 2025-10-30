@@ -21,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
     }
     Queue.init(
         {
+            receptionistId: DataTypes.INTEGER,
             number: DataTypes.INTEGER,
             status: DataTypes.STRING
         },
