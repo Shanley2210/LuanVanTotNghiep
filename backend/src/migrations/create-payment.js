@@ -11,11 +11,11 @@ module.exports = {
             },
             recordId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             appointmentId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             amount: {
                 type: Sequelize.DECIMAL,
@@ -27,11 +27,11 @@ module.exports = {
             },
             status: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             txnRef: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             createdAt: {
                 allowNull: false,

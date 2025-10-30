@@ -221,20 +221,13 @@ const loginService = (emailOrPhone, password) => {
                 });
             }
 
-            if (!user.verify) {
-                return resolve({
-                    errCode: 3,
-                    errMessage: 'Email not verified'
-                });
-            }
-
             const isPasswordValid = await bcrypt.compare(
                 password,
                 user.password
             );
             if (!isPasswordValid) {
                 return resolve({
-                    errCode: 4,
+                    errCode: 2,
                     errMessage: 'Incorrect email/phone or password'
                 });
             }

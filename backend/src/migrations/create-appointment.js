@@ -11,31 +11,31 @@ module.exports = {
             },
             doctorId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             patientId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             slotId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             queueId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             serviceId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             status: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             deposit: {
                 type: Sequelize.DECIMAL,
-                allowNull: false
+                allowNull: true
             },
             createdAt: {
                 allowNull: false,

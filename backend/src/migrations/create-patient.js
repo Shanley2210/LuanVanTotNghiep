@@ -11,7 +11,7 @@ module.exports = {
             },
             userId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             dob: {
                 type: Sequelize.DATE,
@@ -23,11 +23,11 @@ module.exports = {
             },
             insurance: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             allergies: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             createdAt: {
                 allowNull: false,

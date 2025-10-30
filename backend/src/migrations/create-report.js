@@ -11,7 +11,7 @@ module.exports = {
             },
             adminId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             reportType: {
                 type: Sequelize.STRING,

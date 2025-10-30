@@ -11,7 +11,7 @@ module.exports = {
             },
             userId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             roleType: {
                 type: Sequelize.STRING,

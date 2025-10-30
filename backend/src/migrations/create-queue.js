@@ -11,7 +11,7 @@ module.exports = {
             },
             receptionistId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             number: {
                 type: Sequelize.INTEGER,
@@ -19,7 +19,7 @@ module.exports = {
             },
             status: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             createdAt: {
                 allowNull: false,

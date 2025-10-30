@@ -11,11 +11,11 @@ module.exports = {
             },
             userId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             specialtyId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             room: {
                 type: Sequelize.STRING,
@@ -23,7 +23,7 @@ module.exports = {
             },
             status: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             createdAt: {
                 allowNull: false,

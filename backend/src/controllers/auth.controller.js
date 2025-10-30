@@ -4,6 +4,13 @@ const registerController = async (req, res) => {
     try {
         const { name, email, phone, password, confirmPassword } = req.body;
 
+        if (!name || !email || !phone || !password || !confirmPassword) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
         const response = await authService.registerService(
             name,
             email,
@@ -11,12 +18,6 @@ const registerController = async (req, res) => {
             password,
             confirmPassword
         );
-        if (!name || !email || !phone || !password || !confirmPassword) {
-            return res.status(200).json({
-                errCode: 1,
-                errMessage: 'Missing required parameters'
-            });
-        }
 
         return res.status(200).json(response);
     } catch (e) {
@@ -26,6 +27,7 @@ const registerController = async (req, res) => {
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
+
 const verifyEmailController = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -47,6 +49,7 @@ const verifyEmailController = async (req, res) => {
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
+
 const resendOtpController = async (req, res) => {
     try {
         const { email } = req.body;
@@ -125,6 +128,7 @@ const forgotPasswordController = async (req, res) => {
         }
 
         const response = await authService.forgotPasswordService(emailOrPhone);
+
         return res.status(200).json(response);
     } catch (e) {
         console.log('Error in forgotPassword:', e);

@@ -11,7 +11,7 @@ module.exports = {
             },
             branchId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             name: {
                 type: Sequelize.STRING,
@@ -38,7 +38,7 @@ module.exports = {
             },
             verify: {
                 type: Sequelize.BOOLEAN,
-                allowNull: false,
+                allowNull: true,
                 defaultValue: false
             },
             otp: {

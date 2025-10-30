@@ -11,15 +11,15 @@ module.exports = {
             },
             doctorId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             scheduleId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             serviceId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             startTime: {
                 type: Sequelize.DATE,
@@ -35,11 +35,11 @@ module.exports = {
             },
             capacity: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             status: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             createdAt: {
                 allowNull: false,

@@ -11,43 +11,43 @@ module.exports = {
             },
             doctorId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             patientId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             serviceId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             appointmentId: {
                 type: Sequelize.INTEGER,
-                allowNull: false
+                allowNull: true
             },
             examDate: {
                 type: Sequelize.DATE,
-                allowNull: false
+                allowNull: true
             },
             diagnosis: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             symptoms: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             soapNotes: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             prescription: {
                 type: Sequelize.STRING,
-                allowNull: false
+                allowNull: true
             },
             reExamDate: {
                 type: Sequelize.DATE,
-                allowNull: false
+                allowNull: true
             },
             createdAt: {
                 allowNull: false,
