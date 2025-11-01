@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authRoute = require('./auth.route');
 const patientRoute = require('./patient.route');
+const adminRoute = require('./admin.route');
 
 const initWebRoutes = (app) => {
     //test
@@ -11,6 +12,7 @@ const initWebRoutes = (app) => {
 
     router.use('/api/auth', authRoute);
     router.use('/api/patient', patientRoute);
+    router.use('/api/admin', adminRoute);
 
     return app.use('/', router);
 };

@@ -112,7 +112,7 @@ const registerService = (name, email, phone, password, confirmPassword) => {
 
             return resolve({
                 errCode: 0,
-                errMessage:
+                message:
                     'Registration successful. Please check your email for OTP.'
             });
         } catch (e) {
@@ -157,7 +157,7 @@ const verifyEmailService = (email, otp) => {
             await user.save();
             return resolve({
                 errCode: 0,
-                errMessage: 'Email verified successfully',
+                message: 'Email verified successfully',
                 tokens: tokens
             });
         } catch (e) {
@@ -196,7 +196,7 @@ const resendOtpService = (email) => {
 
             return resolve({
                 errCode: 0,
-                errMessage: 'OTP resent successfully. Please check your email.'
+                message: 'OTP resent successfully. Please check your email.'
             });
         } catch (e) {
             return reject(e);
@@ -238,7 +238,7 @@ const loginService = (emailOrPhone, password) => {
 
             return resolve({
                 errCode: 0,
-                errMessage: 'Login successful',
+                message: 'Login successful',
                 tokens: tokens
             });
         } catch (e) {
@@ -266,7 +266,7 @@ const logoutService = (refreshToken) => {
 
             return resolve({
                 errCode: 0,
-                errMessage: 'Logout successful'
+                message: 'Logout successful'
             });
         } catch (e) {
             return reject(e);
@@ -301,7 +301,7 @@ const forgotPasswordService = (emailOrPhone) => {
 
             return resolve({
                 errCode: 0,
-                errMessage:
+                message:
                     'OTP for password reset sent successfully. Please check your email.'
             });
         } catch (e) {
@@ -354,7 +354,7 @@ const resetPasswordService = (
 
             return resolve({
                 errCode: 0,
-                errMessage: 'Password reset successful'
+                message: 'Password reset successful'
             });
         } catch (e) {
             return reject(e);
@@ -410,7 +410,7 @@ const refreshTokenService = (refreshToken) => {
 
                     return resolve({
                         errCode: 0,
-                        errMessage: 'Token refreshed successfully.',
+                        message: 'Token refreshed successfully.',
                         accessToken: newTokens
                     });
                 }

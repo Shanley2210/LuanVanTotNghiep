@@ -23,7 +23,7 @@ const registerController = async (req, res) => {
     } catch (e) {
         console.log('Error in register:', e);
         return res
-            .status(200)
+            .status(500)
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
@@ -45,7 +45,7 @@ const verifyEmailController = async (req, res) => {
     } catch (e) {
         console.log('Error in verifyEmail:', e);
         return res
-            .status(200)
+            .status(500)
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
@@ -67,7 +67,7 @@ const resendOtpController = async (req, res) => {
     } catch (e) {
         console.log('Error in resendOtp:', e);
         return res
-            .status(200)
+            .status(500)
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
@@ -89,7 +89,7 @@ const loginController = async (req, res) => {
     } catch (e) {
         console.log('Error in Login:', e);
         return res
-            .status(200)
+            .status(500)
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
@@ -111,7 +111,7 @@ const logoutController = async (req, res) => {
     } catch (e) {
         console.log('Error in Logout:', e);
         return res
-            .status(200)
+            .status(500)
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
@@ -133,7 +133,7 @@ const forgotPasswordController = async (req, res) => {
     } catch (e) {
         console.log('Error in forgotPassword:', e);
         return res
-            .status(200)
+            .status(500)
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
@@ -159,7 +159,7 @@ const resetPasswordController = async (req, res) => {
     } catch (e) {
         console.log('Error in resetPassword:', e);
         return res
-            .status(200)
+            .status(500)
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };
@@ -180,7 +180,7 @@ const refreshTokenController = async (req, res) => {
     } catch (e) {
         console.log('Error in refreshToken:', e);
         return res
-            .status(200)
+            .status(500)
             .json({ errCode: -1, errMessage: 'Error from server' });
     }
 };

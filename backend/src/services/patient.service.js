@@ -44,7 +44,7 @@ const getProfileService = (userId) => {
 
             return resolve({
                 errCode: 0,
-                errMessage: 'Get profile successful',
+                message: 'Get profile successful',
                 data: user
             });
         } catch (e) {
@@ -115,7 +115,7 @@ const putProfileService = (userId, data) => {
 
             return resolve({
                 errCode: 0,
-                errMessage: 'Update profile successful'
+                message: 'Update profile successful'
             });
         } catch (e) {
             await trans.rollback();
