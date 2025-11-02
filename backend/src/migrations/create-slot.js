@@ -17,10 +17,6 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: true
             },
-            serviceId: {
-                type: Sequelize.INTEGER,
-                allowNull: true
-            },
             startTime: {
                 type: Sequelize.DATE,
                 allowNull: true

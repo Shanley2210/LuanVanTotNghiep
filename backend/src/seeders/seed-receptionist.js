@@ -5,7 +5,19 @@ module.exports = {
     async up(queryInterface, Sequelize) {
         return queryInterface.bulkInsert('Receptionists', [
             {
-                userId: '4',
+                userId: '18',
+                status: 'active',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                userId: '19',
+                status: 'active',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                userId: '20',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()

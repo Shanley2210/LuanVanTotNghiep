@@ -5,15 +5,27 @@ const patientController = require('../controllers/patient.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
 
 router.get(
-    '/profile',
+    '/detail/:id',
     authMiddleware.verifyToken,
-    patientController.getProfileController
+    patientController.getDetailPatientController
+);
+
+router.post(
+    '/create',
+    authMiddleware.verifyToken,
+    patientController.createPatientController
 );
 
 router.put(
-    '/profile',
+    '/:id',
     authMiddleware.verifyToken,
-    patientController.putProfileController
+    patientController.updatePatientController
+);
+
+router.delete(
+    '/:id',
+    authMiddleware.verifyToken,
+    patientController.deletePatientController
 );
 
 module.exports = router;

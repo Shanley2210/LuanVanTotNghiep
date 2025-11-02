@@ -1,38 +1,120 @@
 const { verify } = require('jsonwebtoken');
 const db = require('../models');
 
-const getProfileService = (userId) => {
+const getDetailPatientService = async (userId) => {
+    return new Promise(async (resolve, reject) => {
+        const user = await db.Patient.findOne({
+            where: { userId: userId },
+            include: [
+                {
+                    model: db.User,
+                    as: 'user',
+                    attributes: ['name', 'email', 'phone']
+                }
+            ]
+        });
+
+        if (!user) {
+            return resolve({
+                errCode: 2,
+                errMessage: 'User not found'
+            });
+        }
+
+        return resolve({
+            errCode: 0,
+            message: 'Get user successful',
+            data: user
+        });
+    });
+};
+
+const createPatientService = async (userId, data) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const user = await db.User.findOne({
-                where: { id: userId, verify: true },
-                attributes: {
-                    exclude: [
-                        'branchId',
-                        'password',
-                        'verify',
-                        'otp',
-                        'otpExpires',
-                        'refreshToken',
-                        'createdAt',
-                        'updatedAt'
-                    ]
-                },
-                include: [
-                    {
-                        model: db.Patient,
-                        as: 'patient',
-                        attributes: {
-                            exclude: [
-                                'id',
-                                'userId',
-                                'createdAt',
-                                'createdAt',
-                                'updatedAt'
-                            ]
-                        }
-                    }
-                ]
+            const existingPatient = await db.Patient.findOne({
+                where: { userId: userId }
+            });
+
+            if (existingPatient) {
+                return resolve({
+                    errCode: 3,
+                    errMessage: 'Patient already exists'
+                });
+            }
+
+            const patientData = {
+                userId: userId,
+                dob: data.dob,
+                gender: data.gender,
+                ethnicity: data.ethnicity,
+                address: data.address,
+                insuranceTerm: data.insuranceTerm,
+                insuranceNumber: data.insuranceNumber,
+                familyAddress: data.familyAddress,
+                notePMH: data.notePMH
+            };
+
+            const newPatient = await db.Patient.create(patientData);
+
+            return resolve({
+                errCode: 0,
+                message: 'Create patient successful',
+                data: newPatient
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+const updatePatientService = async (userId, data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const patient = await db.Patient.findOne({
+                where: { userId: userId }
+            });
+
+            if (!patient) {
+                return resolve({
+                    errCode: 3,
+                    errMessage: 'User not found'
+                });
+            }
+
+            const patientData = {};
+            if (data.dob !== undefined) patientData.dob = data.dob;
+            if (data.gender !== undefined) patientData.gender = data.gender;
+            if (data.ethnicity !== undefined)
+                patientData.ethnicity = data.ethnicity;
+            if (data.address !== undefined) patientData.address = data.address;
+            if (data.insuranceTerm !== undefined)
+                patientData.insuranceTerm = data.insuranceTerm;
+            if (data.insuranceNumber !== undefined)
+                patientData.insuranceNumber = data.insuranceNumber;
+            if (data.familyAddress !== undefined)
+                patientData.familyAddress = data.familyAddress;
+            if (data.notePMH !== undefined) patientData.notePMH = data.notePMH;
+
+            await db.Patient.update(patientData, {
+                where: { userId: userId }
+            });
+
+            return resolve({
+                errCode: 0,
+                message: 'Update patient successful'
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+const deletePatientService = async (userId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const user = await db.Patient.findOne({
+                where: { userId: userId }
             });
 
             if (!user) {
@@ -42,89 +124,23 @@ const getProfileService = (userId) => {
                 });
             }
 
-            return resolve({
-                errCode: 0,
-                message: 'Get profile successful',
-                data: user
+            await db.Patient.destroy({
+                where: { userId: userId }
             });
-        } catch (e) {
-            return reject(e);
-        }
-    });
-};
-
-const putProfileService = (userId, data) => {
-    return new Promise(async (resolve, reject) => {
-        const trans = await db.sequelize.transaction();
-
-        try {
-            const userData = {};
-            if (data.name !== undefined) {
-                userData.name = data.name;
-            }
-            if (data.phone !== undefined) {
-                userData.phone = data.phone;
-            }
-
-            if (Object.keys(userData).length > 0) {
-                await db.User.update(userData, {
-                    where: { id: userId },
-                    transaction: trans
-                });
-            }
-
-            const patientData = {};
-            if (data.dob !== undefined) {
-                const dateObj = new Date(data.dob);
-                if (!isNaN(dateObj.getTime())) {
-                    patientData.dob = dateObj.toISOString().split('T')[0];
-                } else {
-                    patientData.dob = null;
-                }
-            }
-            if (data.gender !== undefined) {
-                patientData.gender = data.gender;
-            }
-            if (data.insurance !== undefined) {
-                patientData.insurance = data.insurance;
-            }
-            if (data.allergies !== undefined) {
-                patientData.allergies = data.allergies;
-            }
-
-            const patient = await db.Patient.findOne({
-                where: { userId: userId },
-                transaction: trans
-            });
-
-            if (!patient) {
-                await db.Patient.create(
-                    { userId: userId, ...patientData },
-                    { transaction: trans }
-                );
-            } else {
-                if (Object.keys(patientData).length > 0) {
-                    await db.Patient.update(patientData, {
-                        where: { userId: userId },
-                        transaction: trans
-                    });
-                }
-            }
-
-            await trans.commit();
 
             return resolve({
                 errCode: 0,
-                message: 'Update profile successful'
+                message: 'Delete patient successful'
             });
         } catch (e) {
-            await trans.rollback();
             return reject(e);
         }
     });
 };
 
 module.exports = {
-    getProfileService,
-    putProfileService
+    getDetailPatientService,
+    createPatientService,
+    updatePatientService,
+    deletePatientService
 };

@@ -11,8 +11,8 @@ const initWebRoutes = (app) => {
     });
 
     router.use('/api/auth', authRoute);
-    router.use('/api/patient', patientRoute);
     router.use('/api/admin', adminRoute);
+    router.use('/api/patient', patientRoute);
 
     return app.use('/', router);
 };

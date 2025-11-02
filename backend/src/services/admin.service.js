@@ -425,11 +425,36 @@ const deleteUserService = async (userId, IdDel) => {
     });
 };
 
+const getPatientsService = async () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const patients = await db.Patient.findAll({
+                include: [
+                    {
+                        model: db.User,
+                        as: 'user',
+                        attributes: ['name', 'email', 'phone']
+                    }
+                ]
+            });
+
+            return resolve({
+                errCode: 0,
+                message: 'Get patients successful',
+                data: patients
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
 module.exports = {
     getUsersService,
     getUserByIdService,
     createHopistalAdminService,
     createUserService,
     updateUserService,
-    deleteUserService
+    deleteUserService,
+    getPatientsService
 };

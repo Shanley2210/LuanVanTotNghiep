@@ -421,6 +421,67 @@ const refreshTokenService = (refreshToken) => {
     });
 };
 
+const getProfileService = (userId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const user = await db.User.findOne({
+                where: { id: userId, verify: true },
+                attributes: {
+                    exclude: [
+                        'password',
+                        'verify',
+                        'otp',
+                        'otpExpires',
+                        'refreshToken'
+                    ]
+                }
+            });
+
+            if (!user) {
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'User not found'
+                });
+            }
+
+            return resolve({
+                errCode: 0,
+                message: 'Get profile successful',
+                data: user
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+const putProfileService = (userId, data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const userData = {};
+            if (data.name !== undefined) {
+                userData.name = data.name;
+            }
+            if (data.phone !== undefined) {
+                userData.phone = data.phone;
+            }
+
+            if (Object.keys(userData).length > 0) {
+                await db.User.update(userData, {
+                    where: { id: userId }
+                });
+            }
+
+            return resolve({
+                errCode: 0,
+                message: 'Update profile successful'
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
 module.exports = {
     registerService,
     verifyEmailService,
@@ -429,5 +490,7 @@ module.exports = {
     logoutService,
     forgotPasswordService,
     resetPasswordService,
-    refreshTokenService
+    refreshTokenService,
+    getProfileService,
+    putProfileService
 };

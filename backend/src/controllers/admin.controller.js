@@ -144,11 +144,25 @@ const deleteUserController = async (req, res) => {
     }
 };
 
+const getPatientsController = async (req, res) => {
+    try {
+        const response = await adminService.getPatientsService();
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in getPatients:', e);
+        return res
+            .status(500)
+            .json({ errCode: -1, errMessage: 'Error from server' });
+    }
+};
+
 module.exports = {
     getUsersController,
     getUserByIdController,
     createHopistalAdminController,
     createUserController,
     updateUserController,
-    deleteUserController
+    deleteUserController,
+    getPatientsController
 };

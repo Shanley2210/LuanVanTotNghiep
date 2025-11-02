@@ -46,4 +46,11 @@ router.delete(
     adminController.deleteUserController
 );
 
+router.get(
+    '/patients',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyAdmin,
+    adminController.getPatientsController
+);
+
 module.exports = router;

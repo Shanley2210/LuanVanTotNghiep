@@ -18,11 +18,6 @@ module.exports = (sequelize, DataTypes) => {
                 as: 'schedule'
             });
 
-            Slot.belongsTo(models.Service, {
-                foreignKey: 'serviceId',
-                as: 'service'
-            });
-
             Slot.hasMany(models.Appointment, {
                 foreignKey: 'slotId',
                 as: 'appointments'
@@ -33,7 +28,6 @@ module.exports = (sequelize, DataTypes) => {
         {
             doctorId: DataTypes.INTEGER,
             scheduleId: DataTypes.INTEGER,
-            serviceId: DataTypes.INTEGER,
             startTime: DataTypes.DATE,
             endTime: DataTypes.DATE,
             room: DataTypes.STRING,

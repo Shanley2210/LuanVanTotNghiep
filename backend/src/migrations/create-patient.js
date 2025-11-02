@@ -21,12 +21,28 @@ module.exports = {
                 type: Sequelize.STRING,
                 allowNull: true
             },
-            insurance: {
+            ethnicity: {
                 type: Sequelize.STRING,
                 allowNull: true
             },
-            allergies: {
+            address: {
                 type: Sequelize.STRING,
+                allowNull: true
+            },
+            insuranceTerm: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            insuranceNumber: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            familyAddress: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            notePMH: {
+                type: Sequelize.TEXT,
                 allowNull: true
             },
             createdAt: {
