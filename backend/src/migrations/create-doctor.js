@@ -17,7 +17,31 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: true
             },
+            dob: {
+                type: Sequelize.DATE,
+                allowNull: true
+            },
+            gender: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            ethnicity: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            address: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            degree: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
             room: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            image: {
                 type: Sequelize.STRING,
                 allowNull: true
             },

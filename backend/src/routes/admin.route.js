@@ -3,6 +3,7 @@ const router = express.Router();
 
 const adminController = require('../controllers/admin.controller');
 const authMiddleware = require('../middlewares/auth.middleware');
+const uploadMiddleware = require('../middlewares/upload.middleware');
 
 router.get(
     '/users',
@@ -51,6 +52,29 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyAdmin,
     adminController.getPatientsController
+);
+
+router.post(
+    '/specialty',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyAdmin,
+    uploadMiddleware.createUploadImgaeDir('specialties').single('image'),
+    adminController.createSpecialtyController
+);
+
+router.put(
+    '/specialty/:id',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyAdmin,
+    uploadMiddleware.createUploadImgaeDir('specialties').single('image'),
+    adminController.updateSpecialtyController
+);
+
+router.delete(
+    '/specialty/:id',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyAdmin,
+    adminController.deleteSpecialtyController
 );
 
 module.exports = router;

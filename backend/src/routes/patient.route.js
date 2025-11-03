@@ -11,7 +11,7 @@ router.get(
 );
 
 router.post(
-    '/create',
+    '/',
     authMiddleware.verifyToken,
     patientController.createPatientController
 );

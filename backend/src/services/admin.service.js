@@ -1,6 +1,8 @@
 const { Op } = require('sequelize');
 const db = require('../models');
 const bcrypt = require('bcryptjs');
+const path = require('path');
+const fs = require('fs');
 
 const getUsersService = () => {
     return new Promise(async (resolve, reject) => {
@@ -153,7 +155,7 @@ const createHopistalAdminService = (
     });
 };
 
-const createUserService = async (data) => {
+const createUserService = (data) => {
     return new Promise(async (resolve, reject) => {
         const trans = await db.sequelize.transaction();
         const { name, email, phone, password, confirmPassword, role } = data;
@@ -250,7 +252,7 @@ const createUserService = async (data) => {
     });
 };
 
-const updateUserService = async (userId, data) => {
+const updateUserService = (userId, data) => {
     return new Promise(async (resolve, reject) => {
         const trans = await db.sequelize.transaction();
 
@@ -350,7 +352,7 @@ const updateUserService = async (userId, data) => {
     });
 };
 
-const deleteUserService = async (userId, IdDel) => {
+const deleteUserService = (userId, IdDel) => {
     return new Promise(async (resolve, reject) => {
         const trans = await db.sequelize.transaction();
 
@@ -425,7 +427,7 @@ const deleteUserService = async (userId, IdDel) => {
     });
 };
 
-const getPatientsService = async () => {
+const getPatientsService = () => {
     return new Promise(async (resolve, reject) => {
         try {
             const patients = await db.Patient.findAll({
@@ -449,6 +451,138 @@ const getPatientsService = async () => {
     });
 };
 
+const createSpecialtyService = (name, description, imageFilename, status) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const existingSpecialty = await db.Specialty.findOne({
+                where: { name: name }
+            });
+
+            if (existingSpecialty) {
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'Specialty already exists'
+                });
+            }
+
+            const imagePath = path
+                .join('/uploads', 'specialties', imageFilename)
+                .replace(/\\/g, '/');
+
+            await db.Specialty.create({
+                name: name,
+                description: description,
+                image: imagePath,
+                status: status
+            });
+
+            return resolve({
+                errCode: 0,
+                message: 'Create specialty successful'
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+const updateSpecialtyService = (specialtyId, data, imageFile) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const specialty = await db.Specialty.findOne({
+                where: { id: specialtyId }
+            });
+
+            if (!specialty) {
+                if (imageFile) {
+                    fs.unlinkSync(imageFile.path);
+                }
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'Specialty not found'
+                });
+            }
+
+            const oldImagePath = specialty.image;
+
+            const specialtyData = {};
+            if (data.name !== undefined) specialtyData.name = data.name;
+            if (data.description !== undefined)
+                specialtyData.description = data.description;
+            if (data.status !== undefined) specialtyData.status = data.status;
+
+            if (imageFile)
+                specialtyData.image = path
+                    .join('/uploads', 'specialties', imageFile.filename)
+                    .replace(/\\/g, '/');
+
+            await db.Specialty.update(specialtyData, {
+                where: { id: specialtyId }
+            });
+
+            console.log('image path: ', oldImagePath);
+
+            if (imageFile && oldImagePath) {
+                const fullOldImagePath = path.join(
+                    __dirname,
+                    '..',
+                    oldImagePath
+                );
+                if (fs.existsSync(fullOldImagePath)) {
+                    fs.unlinkSync(fullOldImagePath);
+                }
+            }
+
+            return resolve({
+                errCode: 0,
+                message: 'Update specialty successful'
+            });
+        } catch (e) {
+            if (imageFile) {
+                fs.unlink(imageFile.path, (err) => {
+                    if (err)
+                        console.error(
+                            'Failed to cleanup uploaded file on error:',
+                            err
+                        );
+                });
+            }
+            return reject(e);
+        }
+    });
+};
+
+const deleteSpecialtyService = (specialtyId) => {
+    return new Promise(async (resolve, reject) => {
+        const specialty = await db.Specialty.findOne({
+            where: { id: specialtyId }
+        });
+
+        if (!specialty) {
+            return resolve({
+                errCode: 2,
+                errMessage: 'Specialty not found'
+            });
+        }
+
+        const oldImagePath = specialty.image;
+
+        await db.Specialty.destroy({
+            where: { id: specialtyId }
+        });
+
+        const fullOldImagePath = path.join(__dirname, '..', oldImagePath);
+        if (fs.existsSync(fullOldImagePath)) {
+            fs.unlinkSync(fullOldImagePath);
+        }
+
+        return resolve({
+            errCode: 0,
+            message: 'Delete specialty successful'
+        });
+    });
+};
+
 module.exports = {
     getUsersService,
     getUserByIdService,
@@ -456,5 +590,8 @@ module.exports = {
     createUserService,
     updateUserService,
     deleteUserService,
-    getPatientsService
+    getPatientsService,
+    createSpecialtyService,
+    updateSpecialtyService,
+    deleteSpecialtyService
 };

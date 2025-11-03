@@ -1,4 +1,6 @@
 const adminService = require('../services/admin.service');
+const fs = require('fs');
+const path = require('path');
 
 const getUsersController = async (req, res) => {
     try {
@@ -157,6 +159,120 @@ const getPatientsController = async (req, res) => {
     }
 };
 
+const createSpecialtyController = async (req, res) => {
+    try {
+        const { name, description, status } = req.body;
+
+        if (!name || !description || !status) {
+            if (req.file) {
+                fs.unlink(req.file.path, (err) => {
+                    if (err)
+                        console.error(
+                            'Failed to cleanup uploaded file on error:',
+                            err
+                        );
+                });
+            }
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        if (!req.file) {
+            return res.status(200).json({
+                errCode: 2,
+                errMessage: 'Missing required image'
+            });
+        }
+
+        const imageFilename = req.file.filename;
+
+        const response = await adminService.createSpecialtyService(
+            name,
+            description,
+            imageFilename,
+            status
+        );
+
+        if (response.errCode !== 0) {
+            fs.unlinkSync(
+                path.join(__dirname, '../uploads/specialties', imageFilename)
+            );
+        }
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in createSpecialty:', e);
+        if (e.code === 'LIMIT_FILE_SIZE') {
+            return res.status(200).json({
+                errCode: -2,
+                errMessage: 'File size exceeds the limit'
+            });
+        }
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const updateSpecialtyController = async (req, res) => {
+    try {
+        const specialtyId = req.params.id;
+        const data = req.body;
+        const imageFile = req.file;
+
+        if (!specialtyId || !data) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await adminService.updateSpecialtyService(
+            specialtyId,
+            data,
+            imageFile
+        );
+
+        if (imageFile && response.errCode !== 0) {
+            fs.unlinkSync(imageFile.path);
+        }
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in updateSpecialty:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const deleteSpecialtyController = async (req, res) => {
+    try {
+        const specialtyId = req.params.id;
+
+        if (!specialtyId) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await adminService.deleteSpecialtyService(specialtyId);
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in deleteSpecialty:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
 module.exports = {
     getUsersController,
     getUserByIdController,
@@ -164,5 +280,8 @@ module.exports = {
     createUserController,
     updateUserController,
     deleteUserController,
-    getPatientsController
+    getPatientsController,
+    createSpecialtyController,
+    updateSpecialtyController,
+    deleteSpecialtyController
 };

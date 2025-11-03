@@ -3,6 +3,8 @@ const router = express.Router();
 const authRoute = require('./auth.route');
 const patientRoute = require('./patient.route');
 const adminRoute = require('./admin.route');
+const doctorRoute = require('./doctor.route');
+const specialtyRoute = require('./specialty.route');
 
 const initWebRoutes = (app) => {
     //test
@@ -13,6 +15,8 @@ const initWebRoutes = (app) => {
     router.use('/api/auth', authRoute);
     router.use('/api/admin', adminRoute);
     router.use('/api/patient', patientRoute);
+    router.use('/api/doctor', doctorRoute);
+    router.use('/api/specialty', specialtyRoute);
 
     return app.use('/', router);
 };
