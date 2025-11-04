@@ -655,6 +655,127 @@ const deleteSpecialtyService = (specialtyId) => {
     });
 };
 
+const createServiceService = (
+    name,
+    description,
+    durationMinutes,
+    price,
+    status
+) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (durationMinutes <= 0) {
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'Duration must be greater than 0'
+                });
+                s;
+            }
+
+            if (price <= 0) {
+                return resolve({
+                    errCode: 3,
+                    errMessage: 'Price must be greater than 0'
+                });
+            }
+
+            await db.Service.create({
+                name: name,
+                description: description,
+                durationMinutes: durationMinutes,
+                price: price,
+                status: status
+            });
+
+            return resolve({
+                errCode: 0,
+                message: 'Create service successful'
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+const updateServiceService = (serviceId, data) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const service = await db.Service.findOne({
+                where: { id: serviceId }
+            });
+
+            if (!service) {
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'Service not found'
+                });
+            }
+
+            if (data.durationMinutes && data.durationMinutes <= 0) {
+                return resolve({
+                    errCode: 3,
+                    errMessage: 'Duration must be greater than 0'
+                });
+            }
+
+            if (data.price && data.price <= 0) {
+                return resolve({
+                    errCode: 4,
+                    errMessage: 'Price must be greater than 0'
+                });
+            }
+
+            const serviceData = {};
+            if (data.name !== undefined) serviceData.name = data.name;
+            if (data.description !== undefined)
+                serviceData.description = data.description;
+            if (data.durationMinutes !== undefined)
+                serviceData.durationMinutes = data.durationMinutes;
+            if (data.price !== undefined) serviceData.price = data.price;
+            if (data.status !== undefined) serviceData.status = data.status;
+
+            await db.Service.update(serviceData, {
+                where: { id: serviceId }
+            });
+
+            return resolve({
+                errCode: 0,
+                message: 'Update service successful'
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+const deleteServiceService = (serviceId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const service = await db.Service.findOne({
+                where: { id: serviceId }
+            });
+
+            if (!service) {
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'Service not found'
+                });
+            }
+
+            await db.Service.destroy({
+                where: { id: serviceId }
+            });
+
+            return resolve({
+                errCode: 0,
+                message: 'Delete service successful'
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
 module.exports = {
     getUsersService,
     getUserByIdService,
@@ -665,5 +786,8 @@ module.exports = {
     getPatientsService,
     createSpecialtyService,
     updateSpecialtyService,
-    deleteSpecialtyService
+    deleteSpecialtyService,
+    createServiceService,
+    updateServiceService,
+    deleteServiceService
 };

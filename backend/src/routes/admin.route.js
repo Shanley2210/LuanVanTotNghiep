@@ -79,4 +79,25 @@ router.delete(
     adminController.deleteSpecialtyController
 );
 
+router.post(
+    '/services',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyAdmin,
+    adminController.createServiceController
+);
+
+router.put(
+    '/services/:id',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyAdmin,
+    adminController.updateServiceController
+);
+
+router.delete(
+    '/services/:id',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyAdmin,
+    adminController.deleteServiceController
+);
+
 module.exports = router;

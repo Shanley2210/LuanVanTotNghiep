@@ -316,6 +316,85 @@ const deleteSpecialtyController = async (req, res) => {
     }
 };
 
+const createServiceController = async (req, res) => {
+    try {
+        const { name, description, durationMinutes, price, status } = req.body;
+
+        if (!name || !description || !durationMinutes || !price || !status) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await adminService.createServiceService(
+            name,
+            description,
+            durationMinutes,
+            price,
+            status
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in createService:', e);
+        return res.status(200).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const updateServiceController = async (req, res) => {
+    try {
+        const serviceId = req.params.id;
+        const data = req.body;
+
+        if (!serviceId || !data) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await adminService.updateServiceService(
+            serviceId,
+            data
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in updateService:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const deleteServiceController = async (req, res) => {
+    try {
+        const serviceId = req.params.id;
+
+        if (!serviceId) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await adminService.deleteServiceService(serviceId);
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in deleteService:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
 module.exports = {
     getUsersController,
     getUserByIdController,
@@ -326,5 +405,8 @@ module.exports = {
     getPatientsController,
     createSpecialtyController,
     updateSpecialtyController,
-    deleteSpecialtyController
+    deleteSpecialtyController,
+    createServiceController,
+    updateServiceController,
+    deleteServiceController
 };

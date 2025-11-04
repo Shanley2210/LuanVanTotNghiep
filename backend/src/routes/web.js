@@ -5,6 +5,7 @@ const patientRoute = require('./patient.route');
 const adminRoute = require('./admin.route');
 const doctorRoute = require('./doctor.route');
 const specialtyRoute = require('./specialty.route');
+const serviceRoute = require('./service.route');
 
 const initWebRoutes = (app) => {
     //test
@@ -17,6 +18,7 @@ const initWebRoutes = (app) => {
     router.use('/api/patient', patientRoute);
     router.use('/api/doctor', doctorRoute);
     router.use('/api/specialty', specialtyRoute);
+    router.use('/api/service', serviceRoute);
 
     return app.use('/', router);
 };
