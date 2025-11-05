@@ -120,19 +120,6 @@ module.exports = {
                 notePMH: 'Từng bị hen suyễn thời nhỏ',
                 createdAt: new Date(),
                 updatedAt: new Date()
-            },
-            {
-                userId: '12',
-                dob: '1996-06-20',
-                gender: '1',
-                ethnicity: 'Kinh',
-                address: '88 Bạch Đằng, Đà Nẵng',
-                insuranceTerm: '2022-12-01 to 2025-12-01',
-                insuranceNumber: 'HS556677889',
-                familyAddress: 'Sơn Trà, Đà Nẵng',
-                notePMH: 'Đang điều trị cao huyết áp giai đoạn đầu',
-                createdAt: new Date(),
-                updatedAt: new Date()
             }
         ]);
     },

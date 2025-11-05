@@ -3,6 +3,20 @@ const db = require('../models');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
+const { lock } = require('../routes/admin.route');
+
+const getShiftTime = (shift) => {
+    switch (shift) {
+        case 'C1':
+            return { startHour: 8, endHour: 12 };
+        case 'C2':
+            return { startHour: 13, endHour: 17 };
+        case 'C3':
+            return { startHour: 18, endHour: 22 };
+        default:
+            return null;
+    }
+};
 
 const getUsersService = () => {
     return new Promise(async (resolve, reject) => {
@@ -776,6 +790,108 @@ const deleteServiceService = (serviceId) => {
     });
 };
 
+const createScheduleAndSlotService = (
+    doctorId,
+    name,
+    workDate,
+    shift,
+    status
+) => {
+    return new Promise(async (resolve, reject) => {
+        const trans = await db.sequelize.transaction();
+        const SLOT_DURATION_MINUTES = 30;
+
+        try {
+            const shiftList = Array.isArray(shift) ? shift : [shift];
+
+            const dateObj = new Date(workDate);
+            dateObj.setHours(0, 0, 0, 0);
+            const normalizedWorkDate = dateObj;
+
+            for (const currentShift of shiftList) {
+                const shiftTime = getShiftTime(currentShift);
+
+                if (!shiftTime) {
+                    await trans.rollback();
+                    return resolve({
+                        errCode: 2,
+                        errMessage: `Invalid shift ${currentShift}`
+                    });
+                }
+
+                const existingSchedule = await db.Schedule.findOne({
+                    where: {
+                        doctorId: doctorId,
+                        workDate: normalizedWorkDate,
+                        shift: currentShift
+                    },
+                    transaction: trans
+                });
+
+                if (existingSchedule) {
+                    await trans.rollback();
+                    return resolve({
+                        errCode: 3,
+                        errMessage: `Schedule for shift ${currentShift} on ${
+                            normalizedWorkDate.toISOString().split('T')[0]
+                        } already exists`
+                    });
+                }
+
+                const newSchedule = await db.Schedule.create(
+                    {
+                        doctorId: doctorId,
+                        name: name,
+                        workDate: normalizedWorkDate,
+                        shift: currentShift,
+                        status: status
+                    },
+                    { transaction: trans }
+                );
+
+                const slots = [];
+
+                const startTime = new Date(normalizedWorkDate);
+                startTime.setHours(shiftTime.startHour, 0, 0, 0);
+
+                const endTime = new Date(normalizedWorkDate);
+                endTime.setHours(shiftTime.endHour, 0, 0, 0);
+
+                let currentTime = new Date(startTime);
+
+                while (currentTime < endTime) {
+                    const nextTime = new Date(
+                        currentTime.getTime() + SLOT_DURATION_MINUTES * 60000
+                    );
+
+                    slots.push({
+                        doctorId: doctorId,
+                        scheduleId: newSchedule.id,
+                        startTime: currentTime,
+                        endTime: nextTime,
+                        capacity: 1,
+                        status: 'available'
+                    });
+
+                    currentTime = nextTime;
+                }
+
+                await db.Slot.bulkCreate(slots, { transaction: trans });
+            }
+
+            await trans.commit();
+
+            return resolve({
+                errCode: 0,
+                message: 'Create schedule and slot successful'
+            });
+        } catch (e) {
+            await trans.rollback();
+            return reject(e);
+        }
+    });
+};
+
 module.exports = {
     getUsersService,
     getUserByIdService,
@@ -789,5 +905,6 @@ module.exports = {
     deleteSpecialtyService,
     createServiceService,
     updateServiceService,
-    deleteServiceService
+    deleteServiceService,
+    createScheduleAndSlotService
 };

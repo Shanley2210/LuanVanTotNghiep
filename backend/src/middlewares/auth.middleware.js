@@ -51,7 +51,16 @@ const verifyAdmin = async (req, res, next) => {
     next();
 };
 
-const verifyDoctor = async (req, res, next) => {};
+const verifyDoctor = async (req, res, next) => {
+    if (!req.user || req.user.role !== 'doctor') {
+        return res.status(403).json({
+            errCode: 403,
+            errMessage: 'Require doctor role'
+        });
+    }
+
+    next();
+};
 
 const verifySystemAdmin = async (req, res, next) => {
     try {
@@ -85,5 +94,6 @@ const verifySystemAdmin = async (req, res, next) => {
 module.exports = {
     verifyToken,
     verifyAdmin,
-    verifySystemAdmin
+    verifySystemAdmin,
+    verifyDoctor
 };

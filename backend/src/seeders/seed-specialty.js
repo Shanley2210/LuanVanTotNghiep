@@ -5,82 +5,10 @@ module.exports = {
     async up(queryInterface, Sequelize) {
         return queryInterface.bulkInsert('Specialties', [
             {
-                name: 'Nội tổng quát',
+                name: 'Cơ xương khớp',
                 description:
-                    'Chẩn đoán và điều trị các bệnh lý nội khoa thông thường như cảm cúm, viêm phổi, tăng huyết áp, tiểu đường...',
-                image: '/images/specialties/noi-tong-quat.jpg',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Ngoại tổng quát',
-                description:
-                    'Khám và điều trị các bệnh cần can thiệp phẫu thuật như viêm ruột thừa, thoát vị, chấn thương phần mềm...',
-                image: '/images/specialties/ngoai-tong-quat.jpg',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Nhi khoa',
-                description:
-                    'Chuyên khám và điều trị cho trẻ sơ sinh, trẻ nhỏ và thanh thiếu niên về các bệnh lý thông thường và đặc thù.',
-                image: '/images/specialties/nhi-khoa.jpg',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Sản phụ khoa',
-                description:
-                    'Chăm sóc sức khỏe sinh sản, khám thai, tư vấn kế hoạch hóa gia đình và điều trị bệnh lý phụ khoa.',
-                image: '/images/specialties/san-phu-khoa.jpg',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Tai - Mũi - Họng',
-                description:
-                    'Khám và điều trị các bệnh về tai, mũi, họng như viêm xoang, viêm amidan, ù tai, giảm thính lực...',
-                image: '/images/specialties/tai-mui-hong.jpg',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Mắt',
-                description:
-                    'Chuyên khám, điều trị các bệnh về mắt như cận thị, loạn thị, viêm kết mạc, đục thủy tinh thể...',
-                image: '/images/specialties/mat.jpg',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Răng - Hàm - Mặt',
-                description:
-                    'Khám và điều trị các vấn đề răng miệng, chỉnh nha, nhổ răng, phục hình răng và phẫu thuật thẩm mỹ hàm mặt.',
-                image: '/images/specialties/rang-ham-mat.jpg',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Da liễu',
-                description:
-                    'Điều trị các bệnh về da như mụn, viêm da, dị ứng, nấm da và tư vấn chăm sóc da liễu.',
-                image: '/images/specialties/da-lieu.jpg',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Tim mạch',
-                description:
-                    'Khám, tư vấn và điều trị các bệnh liên quan đến tim mạch như tăng huyết áp, đau thắt ngực, rối loạn nhịp tim.',
-                image: '/images/specialties/tim-mach.jpg',
+                    'Chẩn đoán và điều trị các bệnh lý về cơ, xương, khớp như viêm khớp, thoái hóa khớp, loãng xương, đau lưng, thoát vị đĩa đệm.',
+                image: '/uploads/specialties/1762244242622-894136200.png',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -88,8 +16,35 @@ module.exports = {
             {
                 name: 'Thần kinh',
                 description:
-                    'Chẩn đoán và điều trị các bệnh lý thần kinh như đau đầu, mất ngủ, rối loạn tiền đình, tai biến mạch máu não...',
-                image: '/images/specialties/than-kinh.jpg',
+                    'Khám và điều trị các bệnh lý liên quan đến hệ thần kinh như đau đầu, rối loạn giấc ngủ, rối loạn tiền đình, tai biến mạch máu não.',
+                image: '/uploads/specialties/1762244256553-654168478.png',
+                status: 'active',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                name: 'Tiêu hóa',
+                description:
+                    'Chuyên khám và điều trị các bệnh lý về đường tiêu hóa như viêm dạ dày, trào ngược, viêm đại tràng, hội chứng ruột kích thích.',
+                image: '/uploads/specialties/1762244285678-813357738.png',
+                status: 'active',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                name: 'Tim mạch',
+                description:
+                    'Khám, chẩn đoán và điều trị các bệnh lý về tim mạch như tăng huyết áp, đau thắt ngực, suy tim, rối loạn nhịp tim.',
+                image: '/uploads/specialties/1762244307381-896606875.png',
+                status: 'active',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            },
+            {
+                name: 'Tai - Mũi - Họng',
+                description:
+                    'Khám và điều trị các bệnh lý tai mũi họng như viêm xoang, viêm họng, ù tai, giảm thính lực, polyp mũi.',
+                image: '/uploads/specialties/1762244317541-865827511.png',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()

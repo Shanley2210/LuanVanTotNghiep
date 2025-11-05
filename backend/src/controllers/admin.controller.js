@@ -395,6 +395,36 @@ const deleteServiceController = async (req, res) => {
     }
 };
 
+const createScheduleController = async (req, res) => {
+    try {
+        const doctorId = req.params.doctorId;
+        const { name, workDate, shift, status } = req.body;
+
+        if (!doctorId || !name || !workDate || !shift || !status) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await adminService.createScheduleAndSlotService(
+            doctorId,
+            name,
+            workDate,
+            shift,
+            status
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in createSchedule:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
 module.exports = {
     getUsersController,
     getUserByIdController,
@@ -408,5 +438,6 @@ module.exports = {
     deleteSpecialtyController,
     createServiceController,
     updateServiceController,
-    deleteServiceController
+    deleteServiceController,
+    createScheduleController
 };

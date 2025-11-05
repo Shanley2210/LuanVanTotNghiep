@@ -5,21 +5,21 @@ module.exports = {
     async up(queryInterface, Sequelize) {
         return queryInterface.bulkInsert('Doctors', [
             {
-                userId: 13,
-                specialtyId: 1,
+                userId: 12,
+                specialtyId: 0,
                 dob: '1980-03-12',
                 gender: '1',
                 ethnicity: 'Kinh',
                 address: '123 Nguyễn Trãi, Hà Nội',
                 degree: 'Bác sĩ chuyên khoa II - Nội tổng quát',
                 room: '101',
-                image: 'doctor1.jpg',
+                image: '/uploads/users/1762242786635-752572594.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
             {
-                userId: 14,
+                userId: 13,
                 specialtyId: 2,
                 dob: '1985-07-24',
                 gender: '0',
@@ -27,13 +27,13 @@ module.exports = {
                 address: '45 Lê Lợi, TP. Hồ Chí Minh',
                 degree: 'Thạc sĩ - Tim mạch học',
                 room: '102',
-                image: 'doctor1.jpg',
+                image: '/uploads/users/1762242843903-960164697.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
             {
-                userId: 15,
+                userId: 14,
                 specialtyId: 3,
                 dob: '1982-09-15',
                 gender: '1',
@@ -41,13 +41,13 @@ module.exports = {
                 address: '56 Nguyễn Huệ, Đà Nẵng',
                 degree: 'Bác sĩ chuyên khoa I - Nhi khoa',
                 room: '103',
-                image: 'doctor1.jpg',
+                image: '/uploads/users/1762242861483-118028065.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
             {
-                userId: 16,
+                userId: 15,
                 specialtyId: 4,
                 dob: '1978-01-30',
                 gender: '0',
@@ -55,13 +55,13 @@ module.exports = {
                 address: '89 Phan Chu Trinh, Cần Thơ',
                 degree: 'Tiến sĩ - Ngoại tổng quát',
                 room: '104',
-                image: 'doctor1.jpg',
+                image: '/uploads/users/1762242874653-920786739.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
             {
-                userId: 17,
+                userId: 16,
                 specialtyId: 5,
                 dob: '1987-05-19',
                 gender: '1',
@@ -69,7 +69,7 @@ module.exports = {
                 address: '22 Trần Phú, Hải Phòng',
                 degree: 'Thạc sĩ - Tai mũi họng',
                 room: '105',
-                image: 'doctor1.jpg',
+                image: '/uploads/users/1762242889138-898119219.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()

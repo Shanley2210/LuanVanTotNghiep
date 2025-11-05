@@ -100,4 +100,13 @@ router.delete(
     adminController.deleteServiceController
 );
 
+router.post(
+    '/schedules/:doctorId',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyAdmin,
+    adminController.createScheduleController
+);
+
+
+
 module.exports = router;

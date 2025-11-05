@@ -30,7 +30,6 @@ module.exports = (sequelize, DataTypes) => {
             scheduleId: DataTypes.INTEGER,
             startTime: DataTypes.DATE,
             endTime: DataTypes.DATE,
-            room: DataTypes.STRING,
             capacity: DataTypes.INTEGER,
             status: DataTypes.STRING
         },
