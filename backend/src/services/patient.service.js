@@ -2,6 +2,7 @@ const { verify } = require('jsonwebtoken');
 const db = require('../models');
 const { sendMail } = require('../utils/sendMail');
 const moment = require('moment');
+const { where } = require('sequelize');
 require('moment/locale/vi');
 
 const sendAppontment = async (
@@ -45,6 +46,87 @@ const sendAppontment = async (
             </ul>
 
             <p style="margin-bottom:10px;">Vui lòng thanh toán tiền cọc để xác nhận lịch hẹn chính thức.</p>
+            <p style="margin-bottom:5px;">Trân trọng,</p>
+            <p style="font-style:italic;margin:0;">Hệ thống Đặt lịch</p>
+        </div>
+    `;
+
+    await sendMail(email, subject, text, html);
+};
+
+const sendUpdateAppointment = async (
+    email,
+    id,
+    name,
+    type,
+    target,
+    time,
+    finalPrice,
+    deposit,
+    status
+) => {
+    const subject = 'Cập nhật lịch hẹn';
+    const text = `Kính gửi ${
+        name || 'Quý khách hàng'
+    },\n. Chúng tôi xác nhận bạn đẫ cập nhật lịch hẹn thành công.`;
+
+    const html = `
+        <div style="max-width:600px;margin:0 auto;background-color:#ffffff;border:1px solid #d0d0d0;padding:25px 30px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:#333;line-height:1.6;">
+            <h3 style="color:#2980b9;margin-bottom:15px;">Kính gửi ${
+                name || 'Quý khách hàng'
+            },</h3>
+            <p style="margin-bottom:10px;">Chúng tôi xin xác nhận bạn đã CẬP NHẬT lịch hẹn thành công với các chi tiết **mới nhất** sau:</p>
+
+            <ul style="background:#f5f5f5;padding:15px 20px;list-style-type:none;border:1px solid #ccc;margin:15px 0;">
+                <li style="margin-bottom:8px;"><strong>Mã lịch hẹn:</strong> <span style="color:#2980b9;font-weight:bold;">${id}</span></li>
+                <li style="margin-bottom:8px;"><strong>Loại lịch hẹn:</strong> ${type}</li>
+                <li style="margin-bottom:8px;"><strong>Đối tượng/Dịch vụ:</strong> ${target}</li>
+                
+                ${
+                    time
+                        ? `<li style="margin-bottom:8px;"><strong>Thời gian cập nhật:</strong> <span style="font-weight:bold; color:#0078d7;">${time}</span></li>`
+                        : ''
+                }
+
+                <li style="margin-bottom:8px;"><strong>Tổng chi phí dự kiến:</strong> ${finalPrice.toLocaleString(
+                    'vi-VN'
+                )} VNĐ</li>
+                <li style="margin-bottom:8px;"><strong>Tiền cọc cần thanh toán (20%):</strong> 
+                <span style="color:#0078d7;font-weight:bold;">${deposit.toLocaleString(
+                    'vi-VN'
+                )} VNĐ</span>
+                </li>
+                <li style="margin-bottom:8px;"><strong>Trạng thái:</strong> <span style="color:#e67e22;font-weight:600;">${status}</span></li>
+            </ul>
+            
+            <p style="margin-bottom:10px;">Vui lòng kiểm tra lại chi tiết. Nếu có thắc mắc, vui lòng liên hệ chúng tôi.</p>
+            <p style="margin-bottom:5px;">Trân trọng,</p>
+            <p style="font-style:italic;margin:0;">Hệ thống Đặt lịch</p>
+        </div>
+    `;
+
+    await sendMail(email, subject, text, html);
+};
+
+const sendCancelAppontment = async (email, id, name, status) => {
+    const subject = 'Xác nhận HỦY LỊCH HẸN';
+    const text = `Kính gửi ${
+        name || 'Quý khách hàng'
+    },\n. Lịch hẹn của bạn đã được hủy thành công.`;
+
+    const html = `
+        <div style="max-width:600px;margin:0 auto;background-color:#ffffff;border:1px solid #d0d0d0;padding:25px 30px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:#333;line-height:1.6;">
+            <h3 style="color:#e74c3c;margin-bottom:15px;">Kính gửi ${
+                name || 'Quý khách hàng'
+            },</h3>
+            <p style="margin-bottom:10px;">Chúng tôi xác nhận lịch hẹn của bạn với Mã lịch hẹn <span style="color:#e74c3c;font-weight:bold;">${id}</span> đã được **HỦY BỎ** thành công.</p>
+
+            <ul style="background:#f5f5f5;padding:15px 20px;list-style-type:none;border:1px solid #ccc;margin:15px 0;">
+                <li style="margin-bottom:8px;"><strong>Mã lịch hẹn:</strong> <span style="color:#e74c3c;font-weight:bold;">${id}</span></li>
+                <li style="margin-bottom:8px;"><strong>Trạng thái mới:</strong> <span style="color:#e74c3c;font-weight:600;">${status.toUpperCase()}</span></li>
+                <li style="margin-bottom:8px;"><strong>Thông báo:</strong> Tiền cọc (nếu có) sẽ được xử lý hoàn trả theo chính sách của phòng khám.</li>
+            </ul>
+            
             <p style="margin-bottom:5px;">Trân trọng,</p>
             <p style="font-style:italic;margin:0;">Hệ thống Đặt lịch</p>
         </div>
@@ -212,7 +294,7 @@ const getAppointmentsService = async (patientId) => {
 };
 
 const createAppointmentService = async (
-    patientId,
+    userId,
     doctorId,
     slotId,
     serviceId
@@ -220,10 +302,27 @@ const createAppointmentService = async (
     const trans = await db.sequelize.transaction();
 
     try {
+        const findPatient = await db.User.findOne({
+            where: { id: userId },
+            include: [
+                {
+                    model: db.Patient,
+                    as: 'patient',
+                    attributes: ['id']
+                }
+            ],
+            transaction: trans
+        });
+
+        const patientId = findPatient.patient.id;
+
         const isDoctorAppointment = doctorId && slotId;
         const isServiceAppointment = serviceId && !isDoctorAppointment;
 
-        if (!isDoctorAppointment && !isServiceAppointment) {
+        if (
+            (!isDoctorAppointment && !isServiceAppointment) ||
+            (doctorId && slotId && serviceId)
+        ) {
             await trans.rollback();
             return { errCode: 1, errMessage: 'Invalid appointment type' };
         }
@@ -292,7 +391,7 @@ const createAppointmentService = async (
         deposit = finalPrice * 0.2;
 
         const patientInfo = await db.Patient.findOne({
-            where: { userId: patientId },
+            where: { id: patientId },
             include: [
                 {
                     model: db.User,
@@ -344,8 +443,7 @@ const createAppointmentService = async (
 
         return {
             errCode: 0,
-            message: 'Create appointment successful',
-            data: appointment
+            message: 'Create appointment successful'
         };
     } catch (e) {
         if (trans) await trans.rollback();
@@ -354,11 +452,25 @@ const createAppointmentService = async (
     }
 };
 
-const updateAppointmentService = async (patientId, appointmentId, data) => {
+const updateAppointmentService = async (userId, appointmentId, data) => {
     return new Promise(async (resolve, reject) => {
         const trans = await db.sequelize.transaction();
 
         try {
+            const findPatient = await db.User.findOne({
+                where: { id: userId },
+                include: [
+                    {
+                        model: db.Patient,
+                        as: 'patient',
+                        attributes: ['id']
+                    }
+                ],
+                transaction: trans
+            });
+
+            const patientId = findPatient.patient.id;
+
             const oldAppointment = await db.Appointment.findOne({
                 where: { id: appointmentId },
                 lock: trans.LOCK.UPDATE,
@@ -407,13 +519,18 @@ const updateAppointmentService = async (patientId, appointmentId, data) => {
             let newFinalPrice = 0;
             let newDeposit = 0;
             let newType = '';
+            let target = '';
 
             if (isNewDoctorAppointment) {
                 const doctorInfo = await db.Doctor.findOne({
-                    where: { id: data.doctorId }
+                    where: { id: data.doctorId },
+                    include: [
+                        { model: db.User, as: 'user', attributes: ['name'] }
+                    ]
                 });
 
                 if (!doctorInfo) {
+                    await trans.rollback();
                     return resolve({
                         errCode: 6,
                         errMessage: 'Doctor not found'
@@ -421,6 +538,7 @@ const updateAppointmentService = async (patientId, appointmentId, data) => {
                 }
 
                 newFinalPrice = doctorInfo.price;
+                target = 'Bác sĩ ' + doctorInfo.user.name;
 
                 const isSlotChanged = oldAppointment.slotId !== data.slotId;
 
@@ -433,37 +551,32 @@ const updateAppointmentService = async (patientId, appointmentId, data) => {
 
                     if (oldSlot) {
                         oldSlot.capacity += 1;
-                        if (oldSlot.capacity >= 3) {
-                            oldSlot.status = 'available';
-                        } else {
-                            oldSlot.status = 'booked';
-                        }
+                        oldSlot.status =
+                            oldSlot.capacity >= 3 ? 'available' : 'booked';
                         await oldSlot.save({ transaction: trans });
                     }
                 }
 
-                const slotCheck = await db.Slot.findOne({
-                    where: { id: data.slotId },
-                    lock: trans.LOCK.UPDATE,
-                    transaction: trans
-                });
-
-                if (!slotCheck || slotCheck.capacity <= 0) {
-                    await trans.rollback();
-                    return resolve({
-                        errCode: 7,
-                        errMessage: 'Slot not found or slot full'
+                if (isSlotChanged) {
+                    const slotCheck = await db.Slot.findOne({
+                        where: { id: data.slotId },
+                        lock: trans.LOCK.UPDATE,
+                        transaction: trans
                     });
-                }
 
-                slotCheck.capacity -= 1;
-                if (slotCheck.capacity <= 0) {
-                    slotCheck.status = 'full';
-                } else {
-                    slotCheck.status = 'booked';
-                }
+                    if (!slotCheck || slotCheck.capacity <= 0) {
+                        await trans.rollback();
+                        return resolve({
+                            errCode: 7,
+                            errMessage: 'Slot not found or slot full'
+                        });
+                    }
 
-                await slotCheck.save({ transaction: trans });
+                    slotCheck.capacity -= 1;
+                    slotCheck.status =
+                        slotCheck.capacity <= 0 ? 'full' : 'booked';
+                    await slotCheck.save({ transaction: trans });
+                }
 
                 newType = 'doctor';
                 data.serviceId = null;
@@ -473,6 +586,7 @@ const updateAppointmentService = async (patientId, appointmentId, data) => {
                 });
 
                 if (!serviceInfo) {
+                    await trans.rollback();
                     return resolve({
                         errCode: 8,
                         errMessage: 'Service not found'
@@ -480,6 +594,7 @@ const updateAppointmentService = async (patientId, appointmentId, data) => {
                 }
 
                 newFinalPrice = serviceInfo.price;
+                target = 'Dịch vụ ' + serviceInfo.name;
 
                 if (oldAppointment.slotId) {
                     const oldSlot = await db.Slot.findOne({
@@ -490,11 +605,8 @@ const updateAppointmentService = async (patientId, appointmentId, data) => {
 
                     if (oldSlot) {
                         oldSlot.capacity += 1;
-                        if (oldSlot.capacity >= 3) {
-                            oldSlot.status = 'available';
-                        } else {
-                            oldSlot.status = 'booked';
-                        }
+                        oldSlot.status =
+                            oldSlot.capacity >= 3 ? 'available' : 'booked';
                         await oldSlot.save({ transaction: trans });
                     }
                 }
@@ -517,10 +629,53 @@ const updateAppointmentService = async (patientId, appointmentId, data) => {
                     type: newType,
                     finalPrice: newFinalPrice
                 },
-                {
-                    where: { id: appointmentId },
-                    transaction: trans
-                }
+                { where: { id: appointmentId }, transaction: trans }
+            );
+
+            const updatedAppointment = await db.Appointment.findOne({
+                where: { id: appointmentId },
+                include: [
+                    {
+                        model: db.Patient,
+                        as: 'patient',
+                        include: [
+                            {
+                                model: db.User,
+                                as: 'user',
+                                attributes: ['name', 'email', 'phone']
+                            }
+                        ]
+                    }
+                ],
+                transaction: trans
+            });
+
+            if (
+                !updatedAppointment ||
+                !updatedAppointment.patient ||
+                !updatedAppointment.patient.user
+            ) {
+                await trans.rollback();
+                return resolve({
+                    errCode: 9,
+                    errMessage: 'Patient or user not found'
+                });
+            }
+
+            const appointmentCreatedTime = moment(updatedAppointment.updatedAt)
+                .locale('vi')
+                .format('llll');
+
+            await sendUpdateAppointment(
+                updatedAppointment.patient.user.email,
+                updatedAppointment.id,
+                updatedAppointment.patient.user.name,
+                updatedAppointment.type,
+                target,
+                appointmentCreatedTime,
+                updatedAppointment.finalPrice,
+                updatedAppointment.deposit,
+                updatedAppointment.status
             );
 
             await trans.commit();
@@ -528,6 +683,95 @@ const updateAppointmentService = async (patientId, appointmentId, data) => {
             return resolve({
                 errCode: 0,
                 message: 'Update appointment successful'
+            });
+        } catch (e) {
+            if (!trans.finished) await trans.rollback();
+            return reject(e);
+        }
+    });
+};
+
+const deleteAppointmentService = async (patientId, appointmentId) => {
+    return new Promise(async (resolve, reject) => {
+        const trans = await db.sequelize.transaction();
+
+        try {
+            const appointment = await db.Appointment.findOne({
+                where: { id: appointmentId },
+                lock: trans.LOCK.UPDATE,
+                transaction: trans
+            });
+
+            if (!appointment) {
+                await trans.rollback();
+                return resolve({
+                    errCode: 1,
+                    errMessage: 'Appointment not found'
+                });
+            }
+
+            if (appointment.patientId !== patientId) {
+                await trans.rollback();
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'You are not the owner of this appointment'
+                });
+            }
+
+            if (appointment.status !== 'pending') {
+                await trans.rollback();
+                return resolve({
+                    errCode: 3,
+                    errMessage: 'Cannot cancel this appointment'
+                });
+            }
+
+            if (appointment.slotId) {
+                const oldSlot = await db.Slot.findOne({
+                    where: { id: appointment.slotId },
+                    lock: trans.LOCK.UPDATE,
+                    transaction: trans
+                });
+
+                if (oldSlot) {
+                    oldSlot.capacity += 1;
+                    if (oldSlot.capacity >= 3) {
+                        oldSlot.status = 'available';
+                    } else {
+                        oldSlot.status = 'booked';
+                    }
+                    await oldSlot.save({ transaction: trans });
+                }
+            }
+
+            await db.Appointment.update(
+                { status: 'cancelled' },
+                { where: { id: appointmentId }, transaction: trans }
+            );
+
+            await trans.commit();
+
+            const patientInfo = await db.Patient.findOne({
+                where: { userId: patientId },
+                include: [
+                    {
+                        model: db.User,
+                        as: 'user',
+                        attributes: ['name', 'email', 'phone']
+                    }
+                ]
+            });
+
+            await sendCancelAppontment(
+                patientInfo.user.email,
+                appointment.id,
+                patientInfo.user.name,
+                'cancelled'
+            );
+
+            return resolve({
+                errCode: 0,
+                message: 'Cancel appointment successful'
             });
         } catch (e) {
             await trans.rollback();
@@ -542,5 +786,6 @@ module.exports = {
     updateProfilePatientService,
     createAppointmentService,
     getAppointmentsService,
-    updateAppointmentService
+    updateAppointmentService,
+    deleteAppointmentService
 };
