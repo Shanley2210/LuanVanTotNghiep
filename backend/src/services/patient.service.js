@@ -299,157 +299,206 @@ const createAppointmentService = async (
     slotId,
     serviceId
 ) => {
-    const trans = await db.sequelize.transaction();
+    return new Promise(async (resolve, reject) => {
+        const trans = await db.sequelize.transaction();
 
-    try {
-        const findPatient = await db.User.findOne({
-            where: { id: userId },
-            include: [
-                {
-                    model: db.Patient,
-                    as: 'patient',
-                    attributes: ['id']
-                }
-            ],
-            transaction: trans
-        });
-
-        const patientId = findPatient.patient.id;
-
-        const isDoctorAppointment = doctorId && slotId;
-        const isServiceAppointment = serviceId && !isDoctorAppointment;
-
-        if (
-            (!isDoctorAppointment && !isServiceAppointment) ||
-            (doctorId && slotId && serviceId)
-        ) {
-            await trans.rollback();
-            return { errCode: 1, errMessage: 'Invalid appointment type' };
-        }
-
-        let finalPrice = 0;
-        let deposit = 0;
-        let type = '';
-        let target = '';
-        let currentSlot = null;
-
-        if (isDoctorAppointment) {
-            const doctorInfo = await db.Doctor.findOne({
-                where: { id: doctorId },
-                include: [{ model: db.User, as: 'user', attributes: ['name'] }]
-            });
-
-            if (!doctorInfo) {
-                await trans.rollback();
-                return { errCode: 2, errMessage: 'Doctor not found' };
-            }
-
-            finalPrice = doctorInfo.price;
-
-            currentSlot = await db.Slot.findOne({
-                where: { id: slotId, doctorId: doctorId },
-                lock: trans.LOCK.UPDATE,
+        try {
+            const findPatient = await db.User.findOne({
+                where: { id: userId },
+                include: [
+                    {
+                        model: db.Patient,
+                        as: 'patient',
+                        attributes: ['id']
+                    }
+                ],
                 transaction: trans
             });
 
-            if (!currentSlot || currentSlot.capacity <= 0) {
+            if (!findPatient || !findPatient.patient) {
                 await trans.rollback();
-                return {
-                    errCode: 3,
-                    errMessage: 'Slot not found or slot full'
-                };
+                return resolve({
+                    errCode: 1,
+                    errMessage: 'Patient not found or profile not created.'
+                });
             }
 
-            currentSlot.capacity -= 1;
-            if (currentSlot.capacity <= 0) {
-                currentSlot.status = 'full';
-            } else {
-                currentSlot.status = 'booked';
-            }
-            await currentSlot.save({ transaction: trans });
+            const patientId = findPatient.patient.id;
 
-            serviceId = null;
-            type = 'doctor';
-            target = `Bác sĩ ` + doctorInfo.user.name;
-        } else if (isServiceAppointment) {
-            const serviceInfo = await db.Service.findOne({
-                where: { id: serviceId }
+            const isDoctorAppointment = doctorId && slotId;
+            const isServiceAppointment = serviceId && !isDoctorAppointment;
+            const isServiceWithDoctorAppointment =
+                serviceId && doctorId && !slotId;
+
+            if (
+                (!isDoctorAppointment &&
+                    !isServiceAppointment &&
+                    !isServiceWithDoctorAppointment) ||
+                (isDoctorAppointment && serviceId) ||
+                (doctorId && slotId && serviceId)
+            ) {
+                await trans.rollback();
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'Invalid appointment type'
+                });
+            }
+
+            let deposit = 0;
+            let type = '';
+            let target = '';
+            let currentSlot = null;
+            let finalPrice = 0;
+            let finalDoctorId = doctorId;
+            let finalSlotId = slotId;
+            let finalServiceId = serviceId;
+
+            if (isDoctorAppointment) {
+                const doctorInfo = await db.Doctor.findOne({
+                    where: { id: finalDoctorId },
+                    include: [
+                        { model: db.User, as: 'user', attributes: ['name'] }
+                    ]
+                });
+
+                if (!doctorInfo) {
+                    await trans.rollback();
+                    return resolve({
+                        errCode: 3,
+                        errMessage: 'Doctor not found'
+                    });
+                }
+
+                finalPrice = doctorInfo.price;
+
+                currentSlot = await db.Slot.findOne({
+                    where: { id: finalSlotId, doctorId: doctorId },
+                    lock: trans.LOCK.UPDATE,
+                    transaction: trans
+                });
+
+                if (!currentSlot || currentSlot.capacity <= 0) {
+                    await trans.rollback();
+                    return resolve({
+                        errCode: 4,
+                        errMessage: 'Slot not found or slot full'
+                    });
+                }
+
+                currentSlot.capacity -= 1;
+                currentSlot.status =
+                    currentSlot.capacity <= 0 ? 'full' : 'booked';
+                await currentSlot.save({ transaction: trans });
+
+                finalServiceId = null;
+                type = 'doctor';
+                target = `Bác sĩ ` + doctorInfo.user.name;
+            } else if (isServiceAppointment || isServiceWithDoctorAppointment) {
+                const serviceInfo = await db.Service.findOne({
+                    where: { id: finalServiceId }
+                });
+
+                if (!serviceInfo) {
+                    await trans.rollback();
+                    return resolve({
+                        errCode: 5,
+                        errMessage: 'Service not found'
+                    });
+                }
+
+                if (isServiceWithDoctorAppointment) {
+                    const doctorInfo = await db.Doctor.findOne({
+                        where: { id: finalDoctorId },
+                        include: [
+                            {
+                                model: db.User,
+                                as: 'user',
+                                attributes: ['name']
+                            }
+                        ]
+                    });
+
+                    if (!doctorInfo) {
+                        await trans.rollback();
+                        return resolve({
+                            errCode: 6,
+                            errMessage: 'Doctor not found for service'
+                        });
+                    }
+
+                    let doctorPrice = Number(doctorInfo.price / 2);
+                    let servicePrice = Number(serviceInfo.price);
+
+                    finalPrice = doctorPrice + servicePrice;
+                    target = `Dịch vụ ${serviceInfo.name} (Bác sĩ: ${
+                        doctorInfo.user.name || finalDoctorId
+                    })`;
+                } else {
+                    finalPrice = serviceInfo.price;
+                    target = `Dịch vụ ${serviceInfo.name}`;
+                    finalDoctorId = null;
+                }
+
+                finalSlotId = null;
+                type = 'service';
+            }
+
+            deposit = finalPrice * 0.2;
+
+            const patientInfo = await db.Patient.findOne({
+                where: { id: patientId },
+                include: [
+                    {
+                        model: db.User,
+                        as: 'user',
+                        attributes: ['name', 'email', 'phone']
+                    }
+                ],
+                transaction: trans
             });
 
-            if (!serviceInfo) {
-                await trans.rollback();
-                return { errCode: 4, errMessage: 'Service not found' };
-            }
-
-            finalPrice = serviceInfo.price;
-            doctorId = null;
-            slotId = null;
-            type = 'service';
-            target = `Dịch vụ ` + serviceInfo.name;
-        }
-
-        deposit = finalPrice * 0.2;
-
-        const patientInfo = await db.Patient.findOne({
-            where: { id: patientId },
-            include: [
+            const appointment = await db.Appointment.create(
                 {
-                    model: db.User,
-                    as: 'user',
-                    attributes: ['name', 'email', 'phone']
-                }
-            ]
-        });
+                    doctorId: finalDoctorId,
+                    patientId: patientId,
+                    slotId: finalSlotId,
+                    serviceId: finalServiceId,
+                    status: 'pending',
+                    deposit: deposit,
+                    deposited: 0,
+                    type: type,
+                    finalPrice: finalPrice
+                },
+                { transaction: trans }
+            );
 
-        if (!patientInfo) {
-            await trans.rollback();
-            return {
-                errCode: 5,
-                errMessage: 'Patient not found or profile not created.'
-            };
+            await trans.commit();
+
+            const appointmentCreatedTime = moment(appointment.createdAt)
+                .locale('vi')
+                .format('llll');
+
+            await sendAppontment(
+                patientInfo.user.email,
+                appointment.id,
+                patientInfo.user.name,
+                type,
+                target,
+                appointmentCreatedTime,
+                finalPrice,
+                deposit,
+                'pending'
+            );
+
+            return resolve({
+                errCode: 0,
+                message: 'Create appointment successful'
+            });
+        } catch (e) {
+            if (!trans.finished) await trans.rollback();
+            return reject(e);
         }
-
-        const appointment = await db.Appointment.create(
-            {
-                doctorId: doctorId,
-                patientId: patientId,
-                slotId: slotId,
-                serviceId: serviceId,
-                status: 'pending',
-                deposit: deposit,
-                deposited: 0,
-                type: type,
-                finalPrice: finalPrice
-            },
-            { transaction: trans }
-        );
-
-        await trans.commit();
-
-        const appointmentCreatedTime = moment(appointment.createdAt)
-            .locale('vi')
-            .format('llll');
-        await sendAppontment(
-            patientInfo.user.email,
-            appointment.id,
-            patientInfo.user.name,
-            type,
-            target,
-            appointmentCreatedTime,
-            finalPrice,
-            deposit,
-            'pending'
-        );
-
-        return {
-            errCode: 0,
-            message: 'Create appointment successful'
-        };
-    } catch (e) {
-        if (trans) await trans.rollback();
-        console.error('Error in createAppointmentService:', e);
-        return reject(e);
-    }
+    });
 };
 
 const updateAppointmentService = async (userId, appointmentId, data) => {
@@ -468,6 +517,14 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
                 ],
                 transaction: trans
             });
+
+            if (!findPatient || !findPatient.patient) {
+                await trans.rollback();
+                return resolve({
+                    errCode: 1,
+                    errMessage: 'Patient not found or profile not created.'
+                });
+            }
 
             const patientId = findPatient.patient.id;
 
@@ -493,7 +550,10 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
                 });
             }
 
-            if (oldAppointment.status !== 'pending') {
+            if (
+                oldAppointment.status !== 'pending' &&
+                oldAppointment.status !== 'deposited'
+            ) {
                 await trans.rollback();
                 return resolve({
                     errCode: 4,
@@ -501,13 +561,22 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
                 });
             }
 
-            const isNewDoctorAppointment = data.doctorId && data.slotId;
+            const newDoctorId = data.doctorId;
+            const newSlotId = data.slotId;
+            const newServiceId = data.serviceId;
+
+            const isNewDoctorAppointment =
+                newDoctorId && newSlotId && !newServiceId;
             const isNewServiceAppointment =
-                data.serviceId && !isNewDoctorAppointment;
+                newServiceId && !newDoctorId && !newSlotId;
+            const isNewServiceWithDoctorAppointment =
+                newServiceId && newDoctorId && !newSlotId;
 
             if (
-                (!isNewDoctorAppointment && !isNewServiceAppointment) ||
-                (data.doctorId && data.slotId && data.serviceId)
+                (!isNewDoctorAppointment &&
+                    !isNewServiceAppointment &&
+                    !isNewServiceWithDoctorAppointment) ||
+                (newDoctorId && newSlotId && newServiceId)
             ) {
                 await trans.rollback();
                 return resolve({
@@ -521,9 +590,28 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
             let newType = '';
             let target = '';
 
+            let finalDoctorId = newDoctorId;
+            let finalSlotId = newSlotId;
+            let finalServiceId = newServiceId;
+
+            if (oldAppointment.slotId) {
+                const oldSlot = await db.Slot.findOne({
+                    where: { id: oldAppointment.slotId },
+                    lock: trans.LOCK.UPDATE,
+                    transaction: trans
+                });
+
+                if (oldSlot) {
+                    oldSlot.capacity += 1;
+                    oldSlot.status =
+                        oldSlot.capacity >= 3 ? 'available' : 'booked';
+                    await oldSlot.save({ transaction: trans });
+                }
+            }
+
             if (isNewDoctorAppointment) {
                 const doctorInfo = await db.Doctor.findOne({
-                    where: { id: data.doctorId },
+                    where: { id: finalDoctorId },
                     include: [
                         { model: db.User, as: 'user', attributes: ['name'] }
                     ]
@@ -538,51 +626,35 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
                 }
 
                 newFinalPrice = doctorInfo.price;
-                target = 'Bác sĩ ' + doctorInfo.user.name;
 
-                const isSlotChanged = oldAppointment.slotId !== data.slotId;
+                const currentSlot = await db.Slot.findOne({
+                    where: { id: finalSlotId, doctorId: finalDoctorId },
+                    lock: trans.LOCK.UPDATE,
+                    transaction: trans
+                });
 
-                if (oldAppointment.slotId && isSlotChanged) {
-                    const oldSlot = await db.Slot.findOne({
-                        where: { id: oldAppointment.slotId },
-                        lock: trans.LOCK.UPDATE,
-                        transaction: trans
+                if (!currentSlot || currentSlot.capacity <= 0) {
+                    await trans.rollback();
+                    return resolve({
+                        errCode: 7,
+                        errMessage: 'New Slot not found or slot full'
                     });
-
-                    if (oldSlot) {
-                        oldSlot.capacity += 1;
-                        oldSlot.status =
-                            oldSlot.capacity >= 3 ? 'available' : 'booked';
-                        await oldSlot.save({ transaction: trans });
-                    }
                 }
 
-                if (isSlotChanged) {
-                    const slotCheck = await db.Slot.findOne({
-                        where: { id: data.slotId },
-                        lock: trans.LOCK.UPDATE,
-                        transaction: trans
-                    });
+                currentSlot.capacity -= 1;
+                currentSlot.status =
+                    currentSlot.capacity <= 0 ? 'full' : 'booked';
+                await currentSlot.save({ transaction: trans });
 
-                    if (!slotCheck || slotCheck.capacity <= 0) {
-                        await trans.rollback();
-                        return resolve({
-                            errCode: 7,
-                            errMessage: 'Slot not found or slot full'
-                        });
-                    }
-
-                    slotCheck.capacity -= 1;
-                    slotCheck.status =
-                        slotCheck.capacity <= 0 ? 'full' : 'booked';
-                    await slotCheck.save({ transaction: trans });
-                }
-
+                finalServiceId = null;
                 newType = 'doctor';
-                data.serviceId = null;
-            } else if (isNewServiceAppointment) {
+                target = `Bác sĩ ` + doctorInfo.user.name;
+            } else if (
+                isNewServiceAppointment ||
+                isNewServiceWithDoctorAppointment
+            ) {
                 const serviceInfo = await db.Service.findOne({
-                    where: { id: data.serviceId }
+                    where: { id: finalServiceId }
                 });
 
                 if (!serviceInfo) {
@@ -593,26 +665,42 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
                     });
                 }
 
-                newFinalPrice = serviceInfo.price;
-                target = 'Dịch vụ ' + serviceInfo.name;
-
-                if (oldAppointment.slotId) {
-                    const oldSlot = await db.Slot.findOne({
-                        where: { id: oldAppointment.slotId },
-                        lock: trans.LOCK.UPDATE,
-                        transaction: trans
+                if (isNewServiceWithDoctorAppointment) {
+                    const doctorInfo = await db.Doctor.findOne({
+                        where: { id: finalDoctorId },
+                        include: [
+                            {
+                                model: db.User,
+                                as: 'user',
+                                attributes: ['name']
+                            }
+                        ]
                     });
 
-                    if (oldSlot) {
-                        oldSlot.capacity += 1;
-                        oldSlot.status =
-                            oldSlot.capacity >= 3 ? 'available' : 'booked';
-                        await oldSlot.save({ transaction: trans });
+                    if (!doctorInfo) {
+                        await trans.rollback();
+                        return resolve({
+                            errCode: 9,
+                            errMessage: 'Doctor not found for service'
+                        });
                     }
+
+                    let doctorPrice = Number(doctorInfo.price / 2);
+                    let servicePrice = Number(serviceInfo.price);
+
+                    newFinalPrice = doctorPrice + servicePrice;
+                    target = `Dịch vụ ${serviceInfo.name} (Bác sĩ: ${
+                        doctorInfo.user.name || finalDoctorId
+                    })`;
+
+                    finalSlotId = null;
+                } else {
+                    newFinalPrice = serviceInfo.price;
+                    target = `Dịch vụ ${serviceInfo.name}`;
+                    finalDoctorId = null;
+                    finalSlotId = null;
                 }
 
-                data.doctorId = null;
-                data.slotId = null;
                 newType = 'service';
             }
 
@@ -620,9 +708,9 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
 
             await db.Appointment.update(
                 {
-                    doctorId: data.doctorId,
-                    slotId: data.slotId,
-                    serviceId: data.serviceId,
+                    doctorId: finalDoctorId,
+                    slotId: finalSlotId,
+                    serviceId: finalServiceId,
                     status: 'pending',
                     deposit: newDeposit,
                     deposited: oldAppointment.deposited || 0,
@@ -657,10 +745,12 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
             ) {
                 await trans.rollback();
                 return resolve({
-                    errCode: 9,
-                    errMessage: 'Patient or user not found'
+                    errCode: 10,
+                    errMessage: 'Patient or user not found after update'
                 });
             }
+
+            await trans.commit();
 
             const appointmentCreatedTime = moment(updatedAppointment.updatedAt)
                 .locale('vi')
@@ -677,8 +767,6 @@ const updateAppointmentService = async (userId, appointmentId, data) => {
                 updatedAppointment.deposit,
                 updatedAppointment.status
             );
-
-            await trans.commit();
 
             return resolve({
                 errCode: 0,
