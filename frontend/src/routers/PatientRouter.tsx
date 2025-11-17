@@ -7,12 +7,10 @@ import ResetPassword from '@/patient/pages/ResetPassword';
 export default function PatientRouter() {
     return (
         <Routes>
-            <Route>
-                <Route path='register' element={<Register />} />
-                <Route path='forgot-password' element={<ForgotPassword />} />
-                <Route path='verify-email' element={<VerifyEmail />} />
-                <Route path='reset-password' element={<ResetPassword />} />
-            </Route>
+            <Route path='register' element={<Register />} />
+            <Route path='forgot-password' element={<ForgotPassword />} />
+            <Route path='verify-email' element={<VerifyEmail />} />
+            <Route path='reset-password' element={<ResetPassword />} />
         </Routes>
     );
 }
