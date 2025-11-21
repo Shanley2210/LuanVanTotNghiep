@@ -1124,7 +1124,8 @@ const createServiceService = (
             if (durationMinutes <= 0) {
                 return resolve({
                     errCode: 2,
-                    errMessage: 'Duration must be greater than 0'
+                    errEnMessage: 'Duration must be greater than 0',
+                    errViMessage: 'Thời lượng phải lớn hơn 0'
                 });
                 s;
             }
@@ -1132,7 +1133,8 @@ const createServiceService = (
             if (price <= 0) {
                 return resolve({
                     errCode: 3,
-                    errMessage: 'Price must be greater than 0'
+                    errEnMessage: 'Price must be greater than 0',
+                    errViMessage: 'Giá phải lớn hơn 0'
                 });
             }
 
@@ -1146,7 +1148,8 @@ const createServiceService = (
 
             return resolve({
                 errCode: 0,
-                message: 'Create service successful'
+                enMessage: 'Create service successful',
+                viMessage: 'Tạo dịch vụ thành công'
             });
         } catch (e) {
             return reject(e);
@@ -1164,21 +1167,24 @@ const updateServiceService = (serviceId, data) => {
             if (!service) {
                 return resolve({
                     errCode: 2,
-                    errMessage: 'Service not found'
+                    errEnMessage: 'Service not found',
+                    errViMessage: 'Dịch vụ không tồn tại'
                 });
             }
 
             if (data.durationMinutes && data.durationMinutes <= 0) {
                 return resolve({
                     errCode: 3,
-                    errMessage: 'Duration must be greater than 0'
+                    errEnMessage: 'Duration must be greater than 0',
+                    errViMessage: 'Thời lượng phải lớn hơn 0'
                 });
             }
 
             if (data.price && data.price <= 0) {
                 return resolve({
                     errCode: 4,
-                    errMessage: 'Price must be greater than 0'
+                    errEnMessage: 'Price must be greater than 0',
+                    errViMessage: 'Giá phải lớn hơn 0'
                 });
             }
 
@@ -1197,7 +1203,8 @@ const updateServiceService = (serviceId, data) => {
 
             return resolve({
                 errCode: 0,
-                message: 'Update service successful'
+                enMessage: 'Update service successful',
+                viMessage: 'Cập nhật dịch vụ thành công'
             });
         } catch (e) {
             return reject(e);
@@ -1215,7 +1222,8 @@ const deleteServiceService = (serviceId) => {
             if (!service) {
                 return resolve({
                     errCode: 2,
-                    errMessage: 'Service not found'
+                    errEnMessage: 'Service not found',
+                    errViMessage: 'Dịch vụ không tồn tại'
                 });
             }
 
@@ -1225,7 +1233,8 @@ const deleteServiceService = (serviceId) => {
 
             return resolve({
                 errCode: 0,
-                message: 'Delete service successful'
+                enMessage: 'Delete service successful',
+                viMessage: 'Xóa dịch vụ thành công'
             });
         } catch (e) {
             return reject(e);

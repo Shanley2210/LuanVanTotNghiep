@@ -7,7 +7,8 @@
     "adminSideBar": {
         "db": "Dashboard",
         "ap": "Appointments",
-        "sp": "Specialties"
+        "sp": "Specialties",
+        "sv": "Services"
     },
     "specialty": {
         "tt": "Specialties",
@@ -23,5 +24,20 @@
         "ed": "Edit Specialty",
         "np": "Name Specialty",
         "ul": "Upload"
+    },
+    "service": {
+        "tt": "Services",
+        "ds": "Dashboard / Services",
+        "nb": "Add New",
+        "epg": "Entries per page",
+        "na": "Name",
+        "dc": "Description",
+        "dm": "Duration (minutes)",
+        "pr": "Price (VND)",
+        "st": "Status",
+        "at": "Actions",
+        "an": "Add New Service",
+        "ed": "Edit Service",
+        "ns": "Name Service"
     }
 }

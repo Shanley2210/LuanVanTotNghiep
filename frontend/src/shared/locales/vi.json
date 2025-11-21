@@ -7,7 +7,8 @@
     "adminSideBar": {
         "db": "Bảng điều khiển",
         "ap": "Lịch hẹn",
-        "sp": "Chuyên khoa"
+        "sp": "Chuyên khoa",
+        "sv": "Dịch vụ"
     },
     "specialty": {
         "tt": "Chuyên khoa",
@@ -23,5 +24,20 @@
         "ed": "Chỉnh sửa Chuyên khoa",
         "np": "Tên Chuyên khoa",
         "ul": "Tải lên"
+    },
+    "service": {
+        "tt": "Dịch vụ",
+        "ds": "Bảng điều khiển / Dịch vụ",
+        "nb": "Thêm Mới",
+        "epg": "Số mục mỗi trang",
+        "na": "Tên",
+        "dc": "Mô tả",
+        "dm": "Thời lượng (phút)",
+        "pr": "Giá (VND)",
+        "st": "Trạng thái",
+        "at": "Hành động",
+        "an": "Thêm Dịch vụ Mới",
+        "ed": "Chỉnh sửa Dịch vụ",
+        "ns": "Tên Dịch vụ"
     }
 }

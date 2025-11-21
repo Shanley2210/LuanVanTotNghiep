@@ -562,7 +562,8 @@ const deleteSpecialtyController = async (req, res) => {
         if (!specialtyId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
             });
         }
 
@@ -585,7 +586,8 @@ const createServiceController = async (req, res) => {
         if (!name || !description || !durationMinutes || !price || !status) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
             });
         }
 
@@ -608,6 +610,7 @@ const createServiceController = async (req, res) => {
 };
 
 const updateServiceController = async (req, res) => {
+    
     try {
         const serviceId = req.params.id;
         const data = req.body;
