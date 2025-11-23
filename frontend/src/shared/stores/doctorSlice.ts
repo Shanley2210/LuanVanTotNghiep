@@ -3,6 +3,7 @@ import api from '../apis/api';
 
 export interface IDoctor {
     id: number;
+    userId: number;
     dob: string;
     gender: string;
     ethnicity: string;
@@ -20,6 +21,7 @@ export interface IDoctor {
         phone: string;
     };
     specialty: {
+        id: number;
         name: string | null;
     } | null;
 }

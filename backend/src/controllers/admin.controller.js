@@ -681,21 +681,25 @@ const getSchedulesController = async (req, res) => {
 const createScheduleController = async (req, res) => {
     try {
         const doctorId = req.params.doctorId;
-        const { name, workDate, shift, status } = req.body;
+        const data = req.body;
 
-        if (!doctorId || !name || !workDate || !shift || !status) {
+        if (!doctorId) {
             return res.status(200).json({
                 errCode: 1,
                 errMessage: 'Missing required parameters'
             });
         }
 
+        if (!Array.isArray(data) || data.length === 0) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing or invalid schedule array in body'
+            });
+        }
+
         const response = await adminService.createScheduleAndSlotService(
             doctorId,
-            name,
-            workDate,
-            shift,
-            status
+            data
         );
 
         return res.status(200).json(response);
@@ -710,16 +714,19 @@ const createScheduleController = async (req, res) => {
 
 const deleteScheduleController = async (req, res) => {
     try {
-        const scheduleId = req.params.id;
+        const scheduleIds = req.body.scheduleIds;
 
-        if (!scheduleId) {
+        if (!Array.isArray(scheduleIds) || scheduleIds.length === 0) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errEnMessage:
+                    'Missing or invalid required parameter: scheduleIds (must be an array of IDs)',
+                errViMessage:
+                    'Thiếu tham số bắt buộc: scheduleIds (phải là mảng các ID)'
             });
         }
 
-        const response = await adminService.deleteScheduleService(scheduleId);
+        const response = await adminService.deleteScheduleService(scheduleIds);
 
         return res.status(200).json(response);
     } catch (e) {
@@ -729,7 +736,6 @@ const deleteScheduleController = async (req, res) => {
             errMessage: 'Error from server'
         });
     }
-    s;
 };
 
 const setPriceDoctorController = async (req, res) => {

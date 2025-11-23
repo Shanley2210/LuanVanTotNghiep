@@ -35,6 +35,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         <ThemeContext.Provider value={{ isDark, toggleTheme }}>
             <ConfigProvider
                 theme={{
+                    token: {
+                        fontSize: 14,
+                        lineHeight: 1.5714285714285714,
+                        fontWeightStrong: 600,
+                        borderRadius: 0,
+                        colorText: isDark ? '#F3F4F6' : '#1A1A1A',
+                        colorIcon: isDark ? '#F3F4F6' : '#1A1A1A',
+                        colorTextHeading: isDark ? '#D1D5DB' : '#1A1A1A',
+                        colorTextDisabled: isDark ? '#D1D5DB' : '#1A1A1A',
+                        colorPrimary: isDark ? '#3B82F6' : '#1677FF',
+                        colorBorder: isDark ? '#3B82F6' : '#0D6EFD',
+                        controlItemBgActive: isDark ? '#1F2937' : '#E6F4FF',
+                        controlItemBgHover: isDark
+                            ? '#374151'
+                            : 'rgba(0,0,0,0.04)',
+                        padding: 16,
+                        paddingSM: 12,
+                        paddingXS: 8,
+                        screenXS: 480
+                    },
                     components: {
                         Layout: {
                             headerBg: isDark ? '#111827' : '#FFFFFF',
@@ -45,8 +65,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                             colorBgContainer: isDark ? '#111827' : '#FFFFFF',
                             itemBg: isDark ? '#111827' : '#FFFFFF',
                             itemColor: isDark ? '#F3F4F6' : '#1A1A1A',
-                            itemHoverColor: isDark ? '#F3F4F6' : '#000000',
-                            itemBorderRadius: 0
+                            itemHoverColor: isDark ? '#F3F4F6' : '#000000'
                         },
                         Dropdown: {
                             colorBgElevated: isDark ? '#1F2937' : '#F8F9FA',
@@ -58,24 +77,21 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                         },
                         Button: {
                             colorBgContainer: isDark ? '#374151' : '#1677FF',
-                            colorText: isDark ? '#F3F4F6' : '#F3F4F6',
-                            colorBorder: isDark ? '#3B82F6' : '#0D6EFD',
-                            borderRadius: 0
+                            colorText: isDark ? '#F3F4F6' : '#FFFFFF',
+                            colorBorder: isDark ? '#3B82F6' : '#0D6EFD'
                         },
                         Input: {
-                            colorBgContainer: isDark ? '#374151' : '',
-                            colorText: isDark ? '#F3F4F6' : '',
+                            colorBgContainer: isDark ? '#374151' : '#FFFFFF',
+                            colorText: isDark ? '#F3F4F6' : '#1A1A1A',
                             colorBorder: isDark ? '#3B82F6' : '#E1E1E1',
-                            colorBgElevated: isDark ? '#1F2937' : '#FFFFFF',
-                            borderRadius: 0
+                            colorBgElevated: isDark ? '#1F2937' : '#FFFFFF'
                         },
                         Select: {
-                            colorBgContainer: isDark ? '#374151' : '',
-                            colorText: isDark ? '#F3F4F6' : '',
+                            colorBgContainer: isDark ? '#374151' : '#FFFFFF',
+                            colorText: isDark ? '#F3F4F6' : '#1A1A1A',
                             colorBorder: isDark ? '#3B82F6' : '#E1E1E1',
                             colorBgElevated: isDark ? '#1F2937' : '#FFFFFF',
-                            optionSelectedBg: isDark ? '#374151' : '#F3F4F6',
-                            borderRadius: 0
+                            optionSelectedBg: isDark ? '#374151' : '#F3F4F6'
                         },
                         Table: {
                             colorBgContainer: isDark ? '#374151' : '#FFFFFF',
@@ -91,8 +107,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                             colorTextHeading: isDark ? '#F3F4F6' : '#000000',
                             colorBorder: isDark ? '#3B82F6' : '#0D6EFD'
                         },
-                        Upload: {
-                            borderRadius: 0
+                        DatePicker: {
+                            colorBgContainer: isDark ? '#374151' : '#FFFFFF',
+                            colorBgElevated: isDark ? '#1F2937' : '#FFFFFF',
+                            colorBorder: isDark ? '#3B82F6' : '#E1E1E1',
+                            colorText: isDark ? '#F3F4F6' : '#1A1A1A',
+                            colorTextHeading: isDark ? '#D1D5DB' : '#1A1A1A',
+                            controlItemBgHover: isDark ? '#374151' : '#F5F5F5',
+                            cellRangeBorderColor: isDark ? '#3B82F6' : '#0D6EFD'
+                        },
+                        Calendar: {
+                            fullBg: isDark ? '#1F2937' : '#FFFFFF',
+                            fullPanelBg: isDark ? '#374151' : '#F8F9FA',
+                            itemActiveBg: isDark ? '#1F2937' : '#E6F4FF'
+                        },
+                        Checkbox: {
+                            colorBorder: isDark ? '#3B82F6' : '#0D6EFD',
+                            colorBgContainer: isDark ? '#1F2937' : '#FFFFFF',
+                            colorText: isDark ? '#F3F4F6' : '#1A1A1A'
                         }
                     }
                 }}

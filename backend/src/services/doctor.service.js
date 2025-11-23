@@ -14,9 +14,10 @@ const getAllDoctorsService = () => {
                     {
                         model: db.Specialty,
                         as: 'specialty',
-                        attributes: ['name']
+                        attributes: ['id', 'name']
                     }
-                ]
+                ],
+                order: [['createdAt', 'DESC']]
             });
 
             if (!doctors) {

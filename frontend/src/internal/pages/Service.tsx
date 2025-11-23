@@ -495,10 +495,8 @@ export default function Service() {
     ];
 
     useEffect(() => {
-        if (services.length === 0) {
-            dispatch(fetchServices());
-        }
-    }, [dispatch, services.length]);
+        dispatch(fetchServices());
+    }, [dispatch]);
 
     return (
         <div className='m-5'>

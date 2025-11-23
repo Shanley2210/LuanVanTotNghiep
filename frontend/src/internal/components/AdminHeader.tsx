@@ -62,8 +62,10 @@ export default function AdminHeader() {
     };
 
     return (
-        <Header className='flex justify-between items-center px-6 bg-white'>
-            <div />
+        <Header className='flex justify-between items-center bg-white px-6! fixed top-0 left-0 w-full z-50 '>
+            <div className='text-2xl text-center font-bold text-blue-700'>
+                ADMIN PANEL
+            </div>
             <div className='flex items-center gap-10'>
                 <button
                     className='text-lg cursor-pointer text-blue-500 '

@@ -1,10 +1,11 @@
-import { DatePicker, Form, Input, Select, Space, Upload } from 'antd';
+import { Checkbox, DatePicker, Form, Input, Select, Space, Upload } from 'antd';
 import { useContext, useState } from 'react';
 import ToggleSwitch from './ToggleSwitch';
 import type { Dayjs } from 'dayjs';
 import { ThemeContext } from '@/shared/contexts/ThemeContext';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
+import dayjs from 'dayjs';
 
 type baseFilter = {
     name: string;
@@ -27,14 +28,27 @@ type selectFilter = baseFilter & {
         value: string;
         label: string;
     }[];
+    width?: number;
 };
 
 type dateFilter = baseFilter & {
     type: 'date';
 };
 
+type monthFilter = baseFilter & {
+    type: 'month';
+};
+
 type checkboxFilter = baseFilter & {
     type: 'checkbox';
+};
+
+type checkBoxGroupFilter = baseFilter & {
+    type: 'checkboxGroup';
+    options: {
+        value: string;
+        label: string;
+    }[];
 };
 
 type uploadFilter = baseFilter & { type: 'upload' };
@@ -44,7 +58,9 @@ export type filterConfig =
     | selectFilter
     | textareaFilter
     | dateFilter
+    | monthFilter
     | checkboxFilter
+    | checkBoxGroupFilter
     | uploadFilter;
 
 type FilterProps = {
@@ -154,6 +170,7 @@ export default function AdminFilter({
                                     onChange={(value) =>
                                         handleChange(filter.name, value)
                                     }
+                                    style={{ width: filter.width || '100%' }}
                                 />
                             </Form.Item>
                         );
@@ -173,6 +190,29 @@ export default function AdminFilter({
                             </Form.Item>
                         );
 
+                    case 'month':
+                        return (
+                            <Form.Item key={key} {...restProps}>
+                                <DatePicker
+                                    picker='month'
+                                    placeholder={filter.placeholder || ''}
+                                    allowClear
+                                    value={
+                                        values[filter.name]
+                                            ? dayjs(values[filter.name])
+                                            : null
+                                    }
+                                    onChange={(date: Dayjs) =>
+                                        handleChange(
+                                            filter.name,
+                                            date ? date.format('YYYY-MM') : null
+                                        )
+                                    }
+                                    style={{ width: '100%' }}
+                                />
+                            </Form.Item>
+                        );
+
                     case 'checkbox':
                         return (
                             <Form.Item key={key} {...restProps}>
@@ -185,6 +225,18 @@ export default function AdminFilter({
                             </Form.Item>
                         );
 
+                    case 'checkboxGroup':
+                        return (
+                            <Form.Item key={key} {...restProps}>
+                                <Checkbox.Group
+                                    options={filter.options}
+                                    value={values[filter.name] || []}
+                                    onChange={(checkedValues) =>
+                                        handleChange(filter.name, checkedValues)
+                                    }
+                                />
+                            </Form.Item>
+                        );
                     case 'upload':
                         return (
                             <Form.Item key={key} {...restProps}>

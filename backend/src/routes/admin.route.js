@@ -212,7 +212,7 @@ router.post(
 );
 
 router.delete(
-    '/schedules/:id',
+    '/schedules',
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_schedule_manage'),

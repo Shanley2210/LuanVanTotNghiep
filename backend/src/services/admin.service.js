@@ -536,7 +536,8 @@ const createDoctorService = (data, imageFilename) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 3,
-                    errMessage: 'Password and confirm password do not match'
+                    errEnMessage: 'Password and confirm password do not match',
+                    errViMessage: 'Mật khẩu và xác nhận mật khẩu không khớp'
                 });
             }
 
@@ -550,7 +551,8 @@ const createDoctorService = (data, imageFilename) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 4,
-                    errMessage: 'Email or phone number already in use'
+                    errEnMessage: 'Email or phone number already in use',
+                    errViMessage: 'Email hoặc số điện thoại đã được sử dụng'
                 });
             }
 
@@ -581,7 +583,8 @@ const createDoctorService = (data, imageFilename) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 5,
-                    errMessage: 'Doctor role not found'
+                    errEnMessage: 'Doctor role not found',
+                    errViMessage: 'Chuyên khoa không tồn tại'
                 });
             }
 
@@ -615,7 +618,8 @@ const createDoctorService = (data, imageFilename) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 1,
-                    errMessage: 'Missing required parameters'
+                    errEnMessage: 'Missing required parameters',
+                    errViMessage: 'Thiếu các tham số bắt buộc'
                 });
             }
 
@@ -639,7 +643,8 @@ const createDoctorService = (data, imageFilename) => {
 
             return resolve({
                 errCode: 0,
-                message: `Create doctor successful`
+                enMessage: `Create doctor successful`,
+                viMessage: `Tạo bác sĩ thành công`
             });
         } catch (e) {
             await trans.rollback();
@@ -662,7 +667,8 @@ const updateDoctorService = (userId, data, imageFile) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 2,
-                    errMessage: 'User not found'
+                    errEnMessage: 'User not found',
+                    errViMessage: 'Người dùng không tồn tại'
                 });
             }
 
@@ -675,7 +681,8 @@ const updateDoctorService = (userId, data, imageFile) => {
                     await trans.rollback();
                     return resolve({
                         errCode: 3,
-                        errMessage: 'Email already in use'
+                        errEnMessage: 'Email already in use',
+                        errViMessage: 'Email đã được sử dụng'
                     });
                 }
             }
@@ -688,7 +695,8 @@ const updateDoctorService = (userId, data, imageFile) => {
                     await trans.rollback();
                     return resolve({
                         errCode: 4,
-                        errMessage: 'Phone number already in use'
+                        errEnMessage: 'Phone number already in use',
+                        errViMessage: 'Số điện thoại đã được sử dụng'
                     });
                 }
             }
@@ -752,7 +760,8 @@ const updateDoctorService = (userId, data, imageFile) => {
 
             return resolve({
                 errCode: 0,
-                message: 'Update user successful'
+                enMessage: 'Update user successful',
+                viMessage: 'Cập nhật người dùng thành công'
             });
         } catch (e) {
             trans.rollback();
@@ -1273,100 +1282,124 @@ const getSchedulesService = (doctorId) => {
     });
 };
 
-const createScheduleAndSlotService = (
-    doctorId,
-    name,
-    workDate,
-    shift,
-    status
-) => {
+const createScheduleAndSlotService = (doctorId, data) => {
     return new Promise(async (resolve, reject) => {
         const trans = await db.sequelize.transaction();
         const SLOT_DURATION_MINUTES = 30;
+        const results = [];
 
         try {
-            const shiftList = Array.isArray(shift) ? shift : [shift];
+            for (const schedule of data) {
+                const { name, workDate, shift, status } = schedule;
 
-            const dateObj = new Date(workDate);
-            dateObj.setHours(0, 0, 0, 0);
-            const normalizedWorkDate = dateObj;
-
-            for (const currentShift of shiftList) {
-                const shiftTime = getShiftTime(currentShift);
-
-                if (!shiftTime) {
+                if (!name || !workDate || !shift || !status) {
                     await trans.rollback();
                     return resolve({
-                        errCode: 2,
-                        errMessage: `Invalid shift ${currentShift}`
+                        errCode: 1,
+                        errEnMessage: `Missing required parameters in one of the schedule objects. workDate: ${workDate}`,
+                        errViMessage: `Thiếu các tham số bắt buộc trong một trong các đối tượng lịch. workDate: ${workDate}`
                     });
                 }
 
-                const existingSchedule = await db.Schedule.findOne({
-                    where: {
-                        doctorId: doctorId,
-                        workDate: normalizedWorkDate,
-                        shift: currentShift
-                    },
-                    transaction: trans
-                });
+                const shiftList = Array.isArray(shift) ? shift : [shift];
 
-                if (existingSchedule) {
-                    await trans.rollback();
-                    return resolve({
-                        errCode: 3,
-                        errMessage: `Schedule for shift ${currentShift} on ${
-                            normalizedWorkDate.toISOString().split('T')[0]
-                        } already exists`
+                for (const currentShift of shiftList) {
+                    const dateObj = new Date(workDate);
+                    dateObj.setHours(0, 0, 0, 0);
+                    const normalizedWorkDate = dateObj;
+
+                    const shiftTime = getShiftTime(currentShift);
+
+                    if (!shiftTime) {
+                        await trans.rollback();
+                        return resolve({
+                            errCode: 2,
+                            errEnMessage: `Invalid shift ${currentShift}`,
+                            errViMessage: `Ca không hợp lệ ${currentShift}`
+                        });
+                    }
+
+                    const existingSchedule = await db.Schedule.findOne({
+                        where: {
+                            doctorId: doctorId,
+                            workDate: normalizedWorkDate,
+                            shift: currentShift
+                        },
+                        transaction: trans
                     });
-                }
 
-                const newSchedule = await db.Schedule.create(
-                    {
-                        doctorId: doctorId,
-                        name: name,
-                        workDate: normalizedWorkDate,
-                        shift: currentShift,
-                        status: status
-                    },
-                    { transaction: trans }
-                );
+                    if (existingSchedule) {
+                        await trans.rollback();
+                        return resolve({
+                            errCode: 3,
+                            errEnMessage: `Schedule for shift ${currentShift} on ${
+                                normalizedWorkDate.toISOString().split('T')[0]
+                            } already exists`,
+                            errViMessage: `Lịch đã tồn tại cho ca ${currentShift} ngày ${
+                                normalizedWorkDate.toISOString().split('T')[0]
+                            }`
+                        });
+                    }
 
-                const slots = [];
-
-                const startTime = new Date(normalizedWorkDate);
-                startTime.setHours(shiftTime.startHour, 0, 0, 0);
-
-                const endTime = new Date(normalizedWorkDate);
-                endTime.setHours(shiftTime.endHour, 0, 0, 0);
-
-                let currentTime = new Date(startTime);
-
-                while (currentTime < endTime) {
-                    const nextTime = new Date(
-                        currentTime.getTime() + SLOT_DURATION_MINUTES * 60000
+                    const newSchedule = await db.Schedule.create(
+                        {
+                            doctorId: doctorId,
+                            name: name,
+                            workDate: normalizedWorkDate,
+                            shift: currentShift,
+                            status: status
+                        },
+                        { transaction: trans }
                     );
 
-                    slots.push({
-                        doctorId: doctorId,
+                    const slots = [];
+
+                    const startTime = new Date(normalizedWorkDate);
+                    startTime.setHours(shiftTime.startHour, 0, 0, 0);
+
+                    const endTime = new Date(normalizedWorkDate);
+                    endTime.setHours(shiftTime.endHour, 0, 0, 0);
+
+                    let currentTime = new Date(startTime);
+
+                    while (currentTime < endTime) {
+                        const nextTime = new Date(
+                            currentTime.getTime() +
+                                SLOT_DURATION_MINUTES * 60000
+                        );
+
+                        slots.push({
+                            doctorId: doctorId,
+                            scheduleId: newSchedule.id,
+                            startTime: currentTime,
+                            endTime: nextTime,
+                            capacity: 3,
+                            status: 'available'
+                        });
+
+                        currentTime = nextTime;
+                    }
+
+                    await db.Slot.bulkCreate(slots, { transaction: trans });
+
+                    results.push({
                         scheduleId: newSchedule.id,
-                        startTime: currentTime,
-                        endTime: nextTime,
-                        capacity: 3,
-                        status: 'available'
+                        workDate: normalizedWorkDate
+                            .toISOString()
+                            .split('T')[0],
+                        shift: currentShift,
+                        status: 'success'
                     });
-
-                    currentTime = nextTime;
                 }
-
-                await db.Slot.bulkCreate(slots, { transaction: trans });
             }
 
             await trans.commit();
 
             return resolve({
                 errCode: 0,
-                message: 'Create schedule and slot successful'
+                enMessage: 'Create data and slots successful',
+                viMessage: 'Tạo dữ liệu và ca thành công',
+                data: results
             });
         } catch (e) {
             await trans.rollback();
@@ -1375,31 +1408,44 @@ const createScheduleAndSlotService = (
     });
 };
 
-const deleteScheduleService = (scheduleId) => {
+const deleteScheduleService = (scheduleIds) => {
     return new Promise(async (resolve, reject) => {
         const trans = await db.sequelize.transaction();
 
         try {
-            const schedule = await db.Schedule.findOne({
-                where: { id: scheduleId },
+            const existingSchedules = await db.Schedule.findAll({
+                where: { id: { [Op.in]: scheduleIds } },
+                attributes: ['id'],
                 transaction: trans
             });
 
-            if (!schedule) {
+            if (existingSchedules.length !== scheduleIds.length) {
+                const existingIds = existingSchedules.map((s) =>
+                    s.id.toString()
+                );
+                const notFoundIds = scheduleIds.filter(
+                    (id) => !existingIds.includes(id.toString())
+                );
+
                 await trans.rollback();
                 return resolve({
                     errCode: 2,
-                    errMessage: 'Schedule not found'
+                    errEnMessage: `One or more schedules not found. Missing IDs: ${notFoundIds.join(
+                        ', '
+                    )}`,
+                    errViMessage: `Một hoặc nhiều lịch không tồn tại. ID thiếu: ${notFoundIds.join(
+                        ', '
+                    )}`
                 });
             }
 
             const delSlots = await db.Slot.destroy({
-                where: { scheduleId: scheduleId },
+                where: { scheduleId: { [Op.in]: scheduleIds } },
                 transaction: trans
             });
 
-            await db.Schedule.destroy({
-                where: { id: scheduleId },
+            const delSchedules = await db.Schedule.destroy({
+                where: { id: { [Op.in]: scheduleIds } },
                 transaction: trans
             });
 
@@ -1407,10 +1453,11 @@ const deleteScheduleService = (scheduleId) => {
 
             return resolve({
                 errCode: 0,
-                message: `Delete schedule successful. Deleted ${delSlots} slots.`
+                enMessage: `Delete successful. Deleted ${delSchedules} schedules and ${delSlots} slots.`,
+                viMessage: `Xóa thành công. Xóa ${delSchedules} lịch và ${delSlots} ca.`
             });
         } catch (e) {
-            trans.rollback();
+            await trans.rollback();
             return reject(e);
         }
     });
@@ -1426,14 +1473,16 @@ const setPriceDoctorService = (doctorId, price) => {
             if (!doctor) {
                 return resolve({
                     errCode: 2,
-                    errMessage: 'Doctor not found'
+                    errEnMessage: 'Doctor not found',
+                    errViMessage: 'Bác sĩ không tồn tại'
                 });
             }
 
             if (price <= 0) {
                 return resolve({
                     errCode: 3,
-                    errMessage: 'Price must be greater than 0'
+                    errEnMessage: 'Price must be greater than 0',
+                    errViMessage: 'Giá phải lớn hơn 0'
                 });
             }
 
@@ -1444,7 +1493,8 @@ const setPriceDoctorService = (doctorId, price) => {
 
             return resolve({
                 errCode: 0,
-                message: 'Set price successful'
+                enMessage: 'Set price successful',
+                viMessage: 'Cập nhật giá thành công'
             });
         } catch (e) {
             return reject(e);

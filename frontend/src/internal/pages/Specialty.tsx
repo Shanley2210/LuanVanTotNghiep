@@ -403,8 +403,8 @@ export default function Specialty() {
           ];
 
     useEffect(() => {
-        if (specialties.length === 0) dispatch(fetchSpecilties());
-    }, [dispatch, specialties.length]);
+        dispatch(fetchSpecilties());
+    }, [dispatch]);
 
     return (
         <div className='m-5'>

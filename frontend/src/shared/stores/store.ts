@@ -3,13 +3,15 @@ import authReducer from './authSlice';
 import specialtiesReducer from './specialtySlice';
 import servicesReducer from './serviceSlice';
 import doctorsReducer from './doctorSlice';
+import scheduleReducer from './ScheduleSlice';
 
 export const store = configureStore({
     reducer: {
         auth: authReducer,
         specialties: specialtiesReducer,
         services: servicesReducer,
-        doctors: doctorsReducer
+        doctors: doctorsReducer,
+        schedules: scheduleReducer
     }
 });
 

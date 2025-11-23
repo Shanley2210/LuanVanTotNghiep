@@ -60,11 +60,11 @@ export default function AdminSideBar() {
     };
 
     return (
-        <Sider trigger={null} collapsible className='h-screen'>
-            <div className='text-2xl text-center font-bold text-blue-700 py-4'>
-                ADMIN PANEL
-            </div>
-
+        <Sider
+            trigger={null}
+            collapsible
+            className='fixed! top-16! left-0! h-screen overflow-auto'
+        >
             <Menu
                 mode='inline'
                 selectedKeys={[currentKey]}
