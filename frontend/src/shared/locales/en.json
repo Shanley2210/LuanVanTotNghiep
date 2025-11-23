@@ -82,5 +82,23 @@
         "sd": "Delete schedule",
         "wo": "Working",
         "dn": "Off"
+    },
+    "patient": {
+        "tt": "Patients",
+        "ds": "Dashboard / Patients",
+        "epg": "Entries per page",
+        "na": "Full Name",
+        "ph": "Phone",
+        "bd": "Birthday",
+        "gd": "Gender",
+        "et": "Ethnicity",
+        "ad": "Address",
+        "fa": "Family Address",
+        "in": "Insurance Number",
+        "it": "Insurance Term",
+        "np": " Note PMH",
+        "ma": "Male",
+        "fm": "Female",
+        "ot": "Other"
     }
 }

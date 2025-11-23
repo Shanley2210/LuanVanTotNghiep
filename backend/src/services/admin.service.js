@@ -1539,7 +1539,30 @@ const setPriceServiceService = (serviceId, price) => {
             return reject(e);
         }
     });
-    s;
+};
+
+const getPatientsService = () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const patients = await db.Patient.findAll({
+                include: [
+                    {
+                        model: db.User,
+                        as: 'user',
+                        attributes: ['name', 'email', 'phone']
+                    }
+                ]
+            });
+
+            return resolve({
+                errCode: 0,
+                message: 'Get patients successful',
+                data: patients
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
 };
 
 module.exports = {
@@ -1570,5 +1593,6 @@ module.exports = {
     deleteScheduleService,
     getSchedulesService,
     setPriceDoctorService,
-    setPriceServiceService
+    setPriceServiceService,
+    getPatientsService
 };

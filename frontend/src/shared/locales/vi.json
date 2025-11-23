@@ -82,5 +82,23 @@
         "sd": "Xóa lịch",
         "wo": "Làm việc",
         "dn": "Nghỉ"
+    },
+    "patient": {
+        "tt": "Bệnh nhân",
+        "ds": "Bảng điều khiển / Bệnh nhân",
+        "epg": "Số mục mỗi trang",
+        "na": "Họ và tên",
+        "ph": "Số điện thoại",
+        "bd": "Ngày sinh",
+        "gd": "Giới tính",
+        "et": "Quốc tịch",
+        "ad": "Địa chỉ",
+        "fa": "Địa chỉ gia đình",
+        "in": "Số thẻ bảo hiểm",
+        "it": "Thời hạn thẻ",
+        "np": "Ghi chú PMH",
+        "ma": "Nam",
+        "fm": "Nữ",
+        "ot": "Khác"
     }
 }

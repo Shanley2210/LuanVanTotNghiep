@@ -6,6 +6,7 @@ import { Route, Routes } from 'react-router-dom';
 import AdminProtectedRoute from './AdminProtectedRoute';
 import Service from '@/internal/pages/Service';
 import DoctorManage from '@/internal/pages/DoctorManage';
+import PatientManage from '@/internal/pages/PatientManage';
 
 export default function AdminRouter() {
     return (
@@ -17,6 +18,7 @@ export default function AdminRouter() {
                     <Route path='specialties' element={<Specialty />} />
                     <Route path='services' element={<Service />} />
                     <Route path='doctors' element={<DoctorManage />} />
+                    <Route path='patients' element={<PatientManage />} />
                 </Route>
             </Route>
         </Routes>

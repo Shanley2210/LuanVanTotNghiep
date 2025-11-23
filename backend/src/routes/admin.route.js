@@ -235,4 +235,12 @@ router.post(
     adminController.setPriceServiceController
 );
 
+router.get(
+    '/patients',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
+    authMiddleware.verifyPermission('user_view_all'),
+    adminController.getPatientsController
+);
+
 module.exports = router;
