@@ -100,5 +100,26 @@
         "ma": "Nam",
         "fm": "Nữ",
         "ot": "Khác"
+    },
+    "receptionist": {
+        "tt": "Lễ tân",
+        "ds": "Bảng điều khiển / Lễ tân",
+        "epg": "Số mục mỗi trang",
+        "na": "Họ và tên",
+        "ph": "Số điện thoại",
+        "pa": "Mật khẩu",
+        "cp": "Xác nhận mật khẩu",
+        "bd": "Ngày sinh",
+        "gd": "Giới tính",
+        "et": "Quốc tịch",
+        "ad": "Địa chỉ",
+        "st": "Trạng thái",
+        "at": "Hành động",
+        "an": "Thêm Lễ tân Mới",
+        "ed": "Cập nhật Lễ tân",
+        "im": "Hình ảnh",
+        "ma": "Nam",
+        "fm": "Nữ",
+        "ot": "Khác"
     }
 }

@@ -265,19 +265,21 @@ export default function Specialty() {
             key: 'image',
             align: 'center' as const,
             render: (image: string) => (
-                <img
-                    src={
-                        image.startsWith(BACKEND_URL)
-                            ? image
-                            : `${BACKEND_URL}${image}`
-                    }
-                    alt='Specialty Image'
-                    style={{
-                        width: '50px',
-                        height: '50px',
-                        objectFit: 'cover'
-                    }}
-                />
+                <div className='flex items-center justify-center'>
+                    <img
+                        src={
+                            image.startsWith(BACKEND_URL)
+                                ? image
+                                : `${BACKEND_URL}${image}`
+                        }
+                        alt='Specialty Image'
+                        style={{
+                            width: '50px',
+                            height: '50px',
+                            objectFit: 'cover'
+                        }}
+                    />
+                </div>
             )
         },
         {
@@ -304,15 +306,17 @@ export default function Specialty() {
                 loadingStatusId == record.key ? (
                     <Spin indicator={<LoadingOutlined spin />} />
                 ) : (
-                    <ToggleSwitch
-                        checked={record.status}
-                        onToggle={() => {
-                            handleToggleStatus(
-                                Number(record.key),
-                                record.status
-                            );
-                        }}
-                    />
+                    <div className='flex items-center justify-center'>
+                        <ToggleSwitch
+                            checked={record.status}
+                            onToggle={() => {
+                                handleToggleStatus(
+                                    Number(record.key),
+                                    record.status
+                                );
+                            }}
+                        />
+                    </div>
                 )
         },
         {
@@ -321,38 +325,40 @@ export default function Specialty() {
             key: 'action',
             align: 'center' as const,
             render: (_: any, record: ISpecialty) => (
-                <div className='flex gap-5'>
-                    <button
-                        onClick={() => {
-                            const id = Number(record.key);
-
-                            const old = (specialties as ISpecialtyApi[]).find(
-                                (sp) => sp.id === id
-                            );
-
-                            setEditItem(old || null);
-
-                            setFormData({
-                                name: old?.name,
-                                description: old?.description,
-                                status: old?.status === 'active',
-                                image: old?.image
-                            });
-
-                            setIsOpen(true);
-                        }}
-                    >
-                        <GoPencil className='text-2xl text-blue-500 cursor-pointer' />
-                    </button>
-                    {loadingDeleteId == record.key ? (
-                        <Spin indicator={<LoadingOutlined spin />} />
-                    ) : (
+                <div className='flex items-center justify-center'>
+                    <div className='flex gap-5'>
                         <button
-                            onClick={() => handleDelete(Number(record.key))}
+                            onClick={() => {
+                                const id = Number(record.key);
+
+                                const old = (
+                                    specialties as ISpecialtyApi[]
+                                ).find((sp) => sp.id === id);
+
+                                setEditItem(old || null);
+
+                                setFormData({
+                                    name: old?.name,
+                                    description: old?.description,
+                                    status: old?.status === 'active',
+                                    image: old?.image
+                                });
+
+                                setIsOpen(true);
+                            }}
                         >
-                            <AiOutlineDelete className='text-2xl text-red-500 cursor-pointer' />
+                            <GoPencil className='text-2xl text-blue-500 cursor-pointer' />
                         </button>
-                    )}
+                        {loadingDeleteId == record.key ? (
+                            <Spin indicator={<LoadingOutlined spin />} />
+                        ) : (
+                            <button
+                                onClick={() => handleDelete(Number(record.key))}
+                            >
+                                <AiOutlineDelete className='text-2xl text-red-500 cursor-pointer' />
+                            </button>
+                        )}
+                    </div>
                 </div>
             )
         }

@@ -4,83 +4,41 @@
 module.exports = {
     async up(queryInterface, Sequelize) {
         const UserPermissions = [
-            // ===== System Admin (userId: 1) =====
-            { userId: 1, permissionId: 1 }, // system_management
-            { userId: 1, permissionId: 2 }, // user_manage_all
-            { userId: 1, permissionId: 3 }, // user_view_all
-            { userId: 1, permissionId: 11 }, // view_user_detail
+            // System Admin (userId: 1): system_management, user_manage_all, user_view_all, view_user_detail
+            { userId: 1, permissionId: 1 },
+            { userId: 1, permissionId: 2 },
+            { userId: 1, permissionId: 3 },
+            { userId: 1, permissionId: 11 },
 
-            // ===== Hospital Admin (userId: 2) =====
-            { userId: 2, permissionId: 2 }, // user_manage_all
-            { userId: 2, permissionId: 3 }, // user_view_all
-            { userId: 2, permissionId: 4 }, // doctor_manage
-            { userId: 2, permissionId: 7 }, // service_manage
-            { userId: 2, permissionId: 10 }, // doctor_schedule_manage
-            { userId: 2, permissionId: 11 }, // view_user_detail
+            // Hospital Admin (userId: 2): user_manage_all, user_view_all, doctor_manage, service_manage, doctor_schedule_manage, view_user_detail
+            { userId: 2, permissionId: 2 },
+            { userId: 2, permissionId: 3 },
+            { userId: 2, permissionId: 4 },
+            { userId: 2, permissionId: 7 },
+            { userId: 2, permissionId: 10 },
+            { userId: 2, permissionId: 11 },
 
-            // ===== Patients (userId: 3 → 11) =====
-            { userId: 3, permissionId: 8 }, // patient_book_appointment
-            { userId: 3, permissionId: 9 }, // profile_manage
+            // Doctors (userId: 3 to 52): patient_view_medical_history, view_user_detail, view_doctor_schedule, view_doctor_appointment
+            ...Array.from({ length: 50 }, (_, i) => i + 3).flatMap((userId) => [
+                { userId, permissionId: 5 },
+                { userId, permissionId: 11 },
+                { userId, permissionId: 12 },
+                { userId, permissionId: 13 }
+            ]),
 
-            { userId: 4, permissionId: 8 },
-            { userId: 4, permissionId: 9 },
+            // Receptionists (userId: 53 to 57): queue_manage, comfirm_appointment
+            ...Array.from({ length: 5 }, (_, i) => i + 53).flatMap((userId) => [
+                { userId, permissionId: 14 },
+                { userId, permissionId: 15 }
+            ]),
 
-            { userId: 5, permissionId: 8 },
-            { userId: 5, permissionId: 9 },
-
-            { userId: 6, permissionId: 8 },
-            { userId: 6, permissionId: 9 },
-
-            { userId: 7, permissionId: 8 },
-            { userId: 7, permissionId: 9 },
-
-            { userId: 8, permissionId: 8 },
-            { userId: 8, permissionId: 9 },
-
-            { userId: 9, permissionId: 8 },
-            { userId: 9, permissionId: 9 },
-
-            { userId: 10, permissionId: 8 },
-            { userId: 10, permissionId: 9 },
-
-            { userId: 11, permissionId: 8 },
-            { userId: 11, permissionId: 9 },
-
-            // ===== Doctors (userId: 12 → 16) =====
-            { userId: 12, permissionId: 5 }, // patient_view_medical_history
-            { userId: 12, permissionId: 11 }, // view_user_detail
-            { userId: 12, permissionId: 12 }, // view_doctor_schedule
-            { userId: 12, permissionId: 13 }, //view_doctor_appointment
-
-            { userId: 13, permissionId: 5 },
-            { userId: 13, permissionId: 11 },
-            { userId: 13, permissionId: 12 },
-            { userId: 13, permissionId: 13 },
-
-            { userId: 14, permissionId: 5 },
-            { userId: 14, permissionId: 11 },
-            { userId: 14, permissionId: 12 },
-            { userId: 14, permissionId: 13 },
-
-            { userId: 15, permissionId: 5 },
-            { userId: 15, permissionId: 11 },
-            { userId: 15, permissionId: 12 },
-            { userId: 15, permissionId: 13 },
-
-            { userId: 16, permissionId: 5 },
-            { userId: 16, permissionId: 11 },
-            { userId: 16, permissionId: 12 },
-            { userId: 16, permissionId: 13 },
-
-            // ===== Receptionists (userId: 17 → 19) =====
-            { userId: 17, permissionId: 14 }, // queue_manage
-            { userId: 17, permissionId: 15 }, //comfirm_appointment
-
-            { userId: 18, permissionId: 14 },
-            { userId: 18, permissionId: 15 },
-
-            { userId: 19, permissionId: 14 },
-            { userId: 19, permissionId: 15 }
+            // Patients (userId: 58 to 107): patient_book_appointment, profile_manage
+            ...Array.from({ length: 50 }, (_, i) => i + 58).flatMap(
+                (userId) => [
+                    { userId, permissionId: 8 },
+                    { userId, permissionId: 9 }
+                ]
+            )
         ];
         // Thêm trường thời gian
         const finalUserPermissions = UserPermissions.map((item) => ({

@@ -780,7 +780,8 @@ const createReceptionistService = (data, imageFilename) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 3,
-                    errMessage: 'Password and confirm password do not match'
+                    errEnMessage: 'Password and confirm password do not match',
+                    errViMessage: 'Mật khẩu và xác nhận mật khẩu không khớp'
                 });
             }
 
@@ -794,7 +795,8 @@ const createReceptionistService = (data, imageFilename) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 4,
-                    errMessage: 'Email or phone number already in use'
+                    errEnMessage: 'Email or phone number already in use',
+                    errViMessage: 'Email hoặc số điện thoại đã được sử dụng'
                 });
             }
 
@@ -825,7 +827,8 @@ const createReceptionistService = (data, imageFilename) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 5,
-                    errMessage: 'Receptionist role not found'
+                    errEnMessage: 'Receptionist role not found',
+                    errViMessage: 'Role lễ tân không tồn tại'
                 });
             }
 
@@ -843,7 +846,8 @@ const createReceptionistService = (data, imageFilename) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 1,
-                    errMessage: 'Missing required parameters'
+                    errEnMessage: 'Missing required parameters',
+                    errViMessage: 'Thiếu các tham số bắt buộc'
                 });
             }
 
@@ -864,7 +868,8 @@ const createReceptionistService = (data, imageFilename) => {
 
             return resolve({
                 errCode: 0,
-                message: `Create receptionist successful`
+                enMessage: `Create receptionist successful`,
+                viMessage: `Tạo lễ tân thành công`
             });
         } catch (e) {
             await trans.rollback();
@@ -887,7 +892,8 @@ const updatereceptionistService = (userId, data, imageFile) => {
                 await trans.rollback();
                 return resolve({
                     errCode: 2,
-                    errMessage: 'User not found'
+                    errEnMessage: 'User not found',
+                    errViMessage: 'Người dùng không tồn tại'
                 });
             }
 
@@ -900,7 +906,8 @@ const updatereceptionistService = (userId, data, imageFile) => {
                     await trans.rollback();
                     return resolve({
                         errCode: 3,
-                        errMessage: 'Email already in use'
+                        errEnMessage: 'Email already in use',
+                        errViMessage: 'Email đã được sử dụng'
                     });
                 }
             }
@@ -913,7 +920,8 @@ const updatereceptionistService = (userId, data, imageFile) => {
                     await trans.rollback();
                     return resolve({
                         errCode: 4,
-                        errMessage: 'Phone number already in use'
+                        errEnMessage: 'Phone number already in use',
+                        errViMessage: 'Số điện thoại đã được sử dụng'
                     });
                 }
             }
@@ -976,7 +984,8 @@ const updatereceptionistService = (userId, data, imageFile) => {
 
             return resolve({
                 errCode: 0,
-                message: 'Update user successful'
+                enMessage: 'Update user successful',
+                viMessage: 'Cập nhật người dùng thành công'
             });
         } catch (e) {
             trans.rollback();
@@ -1565,6 +1574,31 @@ const getPatientsService = () => {
     });
 };
 
+const getReceptionistsService = () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const receptionists = await db.Receptionist.findAll({
+                include: [
+                    {
+                        model: db.User,
+                        as: 'user',
+                        attributes: ['name', 'email', 'phone']
+                    }
+                ],
+                order: [['createdAt', 'DESC']]
+            });
+
+            return resolve({
+                errCode: 0,
+                message: 'Get receptionists successful',
+                data: receptionists
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
 module.exports = {
     createHopistalAdminService,
     getRolesService,
@@ -1594,5 +1628,6 @@ module.exports = {
     getSchedulesService,
     setPriceDoctorService,
     setPriceServiceService,
-    getPatientsService
+    getPatientsService,
+    getReceptionistsService
 };

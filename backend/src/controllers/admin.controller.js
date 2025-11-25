@@ -393,14 +393,16 @@ const createReceptionistController = async (req, res) => {
 
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
             });
         }
 
         if (!req.file) {
             return res.status(200).json({
                 errCode: 2,
-                errMessage: 'Missing required image'
+                errEnMessage: 'Missing required image',
+                errViMessage: 'Thiếu hình ảnh bắt buộc'
             });
         }
 
@@ -443,7 +445,8 @@ const updatereceptionistController = async (req, res) => {
         if (!userId || !data) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
             });
         }
 
@@ -807,6 +810,20 @@ const getPatientsController = async (req, res) => {
     }
 };
 
+const getReceptionistsController = async (req, res) => {
+    try {
+        const response = await adminService.getReceptionistsService();
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in getReceptionists:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
 module.exports = {
     createHopistalAdminController,
     getRolesController,
@@ -836,5 +853,6 @@ module.exports = {
     getSchedulesController,
     setPriceDoctorController,
     setPriceServiceController,
-    getPatientsController
+    getPatientsController,
+    getReceptionistsController
 };

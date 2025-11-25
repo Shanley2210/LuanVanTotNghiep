@@ -7,6 +7,7 @@ import AdminProtectedRoute from './AdminProtectedRoute';
 import Service from '@/internal/pages/Service';
 import DoctorManage from '@/internal/pages/DoctorManage';
 import PatientManage from '@/internal/pages/PatientManage';
+import ReceptionistsManage from '@/internal/pages/ReceptionistsManage';
 
 export default function AdminRouter() {
     return (
@@ -19,6 +20,10 @@ export default function AdminRouter() {
                     <Route path='services' element={<Service />} />
                     <Route path='doctors' element={<DoctorManage />} />
                     <Route path='patients' element={<PatientManage />} />
+                    <Route
+                        path='receptionists'
+                        element={<ReceptionistsManage />}
+                    />
                 </Route>
             </Route>
         </Routes>

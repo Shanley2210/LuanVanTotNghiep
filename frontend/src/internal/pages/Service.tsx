@@ -376,15 +376,17 @@ export default function Service() {
                 loadingStatusId === record.id ? (
                     <LoadingOutlined spin className='text-lg text-gray-500' />
                 ) : (
-                    <ToggleSwitch
-                        checked={record.status === 'active'}
-                        onToggle={() =>
-                            handleToggleStatus(
-                                Number(record.id),
-                                record.status === 'active'
-                            )
-                        }
-                    />
+                    <div className='flex items-center justify-center'>
+                        <ToggleSwitch
+                            checked={record.status === 'active'}
+                            onToggle={() =>
+                                handleToggleStatus(
+                                    Number(record.id),
+                                    record.status === 'active'
+                                )
+                            }
+                        />
+                    </div>
                 )
         },
         {
@@ -393,7 +395,7 @@ export default function Service() {
             key: 'action',
             align: 'center' as const,
             render: (_: any, record: IService) => (
-                <div className='flex gap-5'>
+                <div className='flex gap-5 justify-center'>
                     <button
                         onClick={() => {
                             const id = Number(record.id);

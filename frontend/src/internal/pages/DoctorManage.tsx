@@ -60,7 +60,6 @@ export default function DoctorManage() {
         Record<string, any>
     >({});
     const [excludedDates, setExcludedDates] = useState<Set<string>>(new Set());
-    // Set chứa ID của các lịch làm việc đã có được chọn để xóa
     const [schedulesToDelete, setSchedulesToDelete] = useState<Set<number>>(
         new Set()
     );
@@ -621,20 +620,17 @@ export default function DoctorManage() {
             key: 'image',
             align: 'center' as const,
             render: (image: string) => (
-                <img
-                    src={
-                        image.startsWith(BACKEND_URL)
-                            ? image
-                            : `${BACKEND_URL}${image}`
-                    }
-                    alt='Doctor Image'
-                    style={{
-                        width: '50px',
-                        height: '50px',
-                        objectFit: 'cover'
-                    }}
-                    className='rounded-full'
-                />
+                <div className='flex items-center justify-center'>
+                    <img
+                        src={
+                            image.startsWith(BACKEND_URL)
+                                ? image
+                                : `${BACKEND_URL}${image}`
+                        }
+                        alt='Doctor Image'
+                        className='rounded-full h-15 w-15 text-center'
+                    />
+                </div>
             )
         },
         {
@@ -700,15 +696,17 @@ export default function DoctorManage() {
                 loadingStatusId === record.userId ? (
                     <LoadingOutlined spin className='text-3xl text-gray-500' />
                 ) : (
-                    <ToggleSwitch
-                        checked={record.status === 'active'}
-                        onToggle={() => {
-                            handleToggleStatus(
-                                Number(record.userId),
-                                record.status === 'active'
-                            );
-                        }}
-                    />
+                    <div className='flex items-center justify-center'>
+                        <ToggleSwitch
+                            checked={record.status === 'active'}
+                            onToggle={() => {
+                                handleToggleStatus(
+                                    Number(record.userId),
+                                    record.status === 'active'
+                                );
+                            }}
+                        />
+                    </div>
                 )
         },
         {
@@ -717,7 +715,7 @@ export default function DoctorManage() {
             key: 'action',
             align: 'center' as const,
             render: (_: any, record: IDoctor) => (
-                <div className='flex gap-5'>
+                <div className='flex gap-5 justify-center'>
                     <button
                         onClick={() => {
                             const userId = Number(record.userId);

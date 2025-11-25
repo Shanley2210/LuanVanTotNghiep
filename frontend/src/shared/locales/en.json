@@ -100,5 +100,26 @@
         "ma": "Male",
         "fm": "Female",
         "ot": "Other"
+    },
+    "receptionist": {
+        "tt": "Receptionists",
+        "ds": "Dashboard / Receptionists",
+        "epg": "Entries per page",
+        "na": "Full Name",
+        "ph": "Phone",
+        "pa": "Password",
+        "cp": "Confirm Password",
+        "bd": "Birthday",
+        "gd": "Gender",
+        "et": "Ethnicity",
+        "ad": "Address",
+        "st": "Status",
+        "at": "Actions",
+        "an": "Add New Receptionist",
+        "ed": "Edit Receptionist",
+        "im": "Image",
+        "ma": "Male",
+        "fm": "Female",
+        "ot": "Other"
     }
 }

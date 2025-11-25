@@ -243,4 +243,12 @@ router.get(
     adminController.getPatientsController
 );
 
+router.get(
+    '/receptionists',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
+    authMiddleware.verifyPermission('user_view_all'),
+    adminController.getReceptionistsController
+);
+
 module.exports = router;

@@ -109,8 +109,6 @@ export default function PatientManage() {
         }
     ];
 
-    console.log(patients);
-
     useEffect(() => {
         dispatch(fetchPatients());
     }, [dispatch]);
@@ -156,6 +154,7 @@ export default function PatientManage() {
 
                 <div className={isDark ? 'text-black' : 'text-blue-500'}>
                     <Table
+                        rowKey='id'
                         dataSource={currentData}
                         columns={columns}
                         showSorterTooltip={false}
