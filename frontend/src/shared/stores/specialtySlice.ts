@@ -12,32 +12,61 @@ export interface ISpecialty {
     description: string;
     image: string;
     status: string;
+    doctorCount: number;
     createdAt: string;
     updatedAt: string;
 }
 
+interface IPaginationMeta {
+    page: number;
+    limit: number;
+    totalRows: number;
+    totalPages: number;
+}
+
+interface IFetchSpecialtiesResponse {
+    list: ISpecialty[];
+    meta: IPaginationMeta;
+}
+
 interface ISpecialtyState {
     list: ISpecialty[];
+    totalSpecialties: number;
+    currentPage: number;
+    totalPages: number;
+    limit: number;
     loading: boolean;
     error: string | null;
 }
 
 const initialState: ISpecialtyState = {
     list: [],
+    totalSpecialties: 0,
+    currentPage: 1,
+    totalPages: 0,
+    limit: 10,
     loading: false,
     error: null
 };
 
-export const fetchSpecilties = createAsyncThunk<
-    ISpecialty[],
-    void,
+export const fetchSpecialties = createAsyncThunk<
+    IFetchSpecialtiesResponse,
+    { page: number; limit: number },
     { rejectValue: string }
->('specialties/fetchSpecilties', async (_, { rejectWithValue }) => {
+>('specialties/fetchSpecialties', async (params, { rejectWithValue }) => {
     try {
-        const response = await api.get('/specialty');
-        const { errCode, message, data } = response.data;
+        const { page, limit } = params;
+        const response = await api.get(
+            `/specialty?page=${page}&limit=${limit}`
+        );
+
+        const { errCode, message, data, meta } = response.data;
+
         if (errCode === 0 && Array.isArray(data)) {
-            return data as ISpecialty[];
+            return {
+                list: data as ISpecialty[],
+                meta: meta as IPaginationMeta
+            };
         }
 
         return rejectWithValue(message || 'Failed to fetch specialties');
@@ -51,28 +80,45 @@ export const fetchSpecilties = createAsyncThunk<
 export const specialtiesSlice = createSlice({
     name: 'specialties',
     initialState,
-    reducers: {},
+    reducers: {
+        resetSpecialtyState: (state) => {
+            state.list = [];
+            state.totalSpecialties = 0;
+            state.currentPage = 1;
+            state.error = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
-            .addCase(fetchSpecilties.pending, (state) => {
+            .addCase(fetchSpecialties.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(
-                fetchSpecilties.fulfilled,
-                (state, action: PayloadAction<ISpecialty[]>) => {
+                fetchSpecialties.fulfilled,
+                (state, action: PayloadAction<IFetchSpecialtiesResponse>) => {
+                    const { list, meta } = action.payload;
                     state.loading = false;
-                    state.list = action.payload;
+                    state.list = list;
                     state.error = null;
+
+                    state.totalSpecialties = meta.totalRows;
+                    state.currentPage = meta.page;
+                    state.totalPages = meta.totalPages;
+                    state.limit = meta.limit;
                 }
             )
-            .addCase(fetchSpecilties.rejected, (state, action) => {
+            .addCase(fetchSpecialties.rejected, (state, action) => {
                 state.loading = false;
                 state.list = [];
-                state.error = action.payload as string;
+                state.totalSpecialties = 0;
+                state.error =
+                    (action.payload as string) || 'Failed to fetch specialties';
             });
     }
 });
+
+export const { resetSpecialtyState } = specialtiesSlice.actions;
 
 export const selectSpecialty = (state: RootState) => state.specialties;
 

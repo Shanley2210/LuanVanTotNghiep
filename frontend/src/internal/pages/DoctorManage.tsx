@@ -19,7 +19,7 @@ import AdminFilter from '../components/AdminFilter';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'react-toastify';
 import {
-    fetchSpecilties,
+    fetchSpecialties,
     selectSpecialty
 } from '@/shared/stores/specialtySlice';
 import {
@@ -41,9 +41,16 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function DoctorManage() {
     const { isDark } = useContext(ThemeContext);
     const dispatch = useAppDispatch();
-    const { list: doctors } = useAppSelector(selectDoctor);
+
+    // 1. Lấy dữ liệu list, totalDoctors và loading từ Redux
+    const {
+        list: doctors,
+        totalDoctors,
+        loading: tableLoading
+    } = useAppSelector(selectDoctor);
     const { list: specialties } = useAppSelector(selectSpecialty);
     const { list: schedules } = useAppSelector(selectSchedules);
+
     const [isOpen, setIsOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
@@ -64,10 +71,24 @@ export default function DoctorManage() {
         new Set()
     );
 
-    const currentData = doctors.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    );
+    // 2. useEffect gọi API với tham số phân trang
+    useEffect(() => {
+        dispatch(fetchDoctors({ page: currentPage, limit: pageSize }));
+    }, [dispatch, currentPage, pageSize]);
+
+    // Lấy danh sách chuyên khoa (lấy nhiều để hiển thị trong select)
+    useEffect(() => {
+        dispatch(fetchSpecialties({ page: 1, limit: 100 }));
+    }, [dispatch]);
+
+    // Hàm refresh dữ liệu tại trang hiện tại
+    const refreshData = () => {
+        dispatch(fetchDoctors({ page: currentPage, limit: pageSize }));
+    };
+
+    // Loại bỏ logic slice client-side
+    // const currentData = doctors.slice(...) -> KHÔNG CẦN NỮA
+
     const onPanelChange = (value: Dayjs) => {
         setScheduleFormData((prev) => ({
             ...prev,
@@ -247,7 +268,7 @@ export default function DoctorManage() {
             setIsOpen(false);
             setIsLoading(false);
             setFormData({});
-            dispatch(fetchDoctors());
+            refreshData(); // Refresh lại dữ liệu trang hiện tại
         } catch (e: any) {
             console.error('Error submitting form:', e);
 
@@ -273,7 +294,7 @@ export default function DoctorManage() {
                 );
 
                 setLoadingStatusId(null);
-                dispatch(fetchDoctors());
+                refreshData(); // Refresh lại dữ liệu
             } else {
                 toast.error(
                     language === 'vi'
@@ -338,8 +359,6 @@ export default function DoctorManage() {
             updateData.append('image', formData.image);
         }
 
-        console.log(formData.specialty);
-
         try {
             setIsLoading(true);
 
@@ -364,7 +383,7 @@ export default function DoctorManage() {
             setIsLoading(false);
             setEditItem(null);
             setFormData({});
-            dispatch(fetchDoctors());
+            refreshData(); // Refresh lại dữ liệu
         } catch (e: any) {
             console.error('Error update form:', e);
 
@@ -415,7 +434,7 @@ export default function DoctorManage() {
             setIsOpen(false);
             setPriceItem(null);
             setFormData({});
-            dispatch(fetchDoctors());
+            refreshData(); // Refresh lại dữ liệu
         } catch (e: any) {
             console.error('Error setprice form:', e);
 
@@ -578,8 +597,6 @@ export default function DoctorManage() {
         }
 
         const listIdsToDelete = Array.from(schedulesToDelete);
-
-        console.log(listIdsToDelete);
 
         try {
             setIsLoading(true);
@@ -760,34 +777,36 @@ export default function DoctorManage() {
             )
         }
     ];
+
+    // Cập nhật cấu hình Filter modal
     let modalConfigs: filterConfig[] = [];
     if (editItem) {
         modalConfigs = [
             {
                 name: 'image',
-                label: t('doctor.im'),
-                type: 'upload',
-                placeholder: t('doctor.ul')
+                label: t('doctor.im') as string,
+                type: 'upload' as const,
+                placeholder: t('doctor.ul') as string
             },
             {
                 name: 'name',
-                label: t('doctor.na'),
-                type: 'input'
+                label: t('doctor.na') as string,
+                type: 'input' as const
             },
             {
                 name: 'email',
                 label: 'Email',
-                type: 'input'
+                type: 'input' as const
             },
             {
                 name: 'phone',
-                label: t('doctor.ph'),
-                type: 'input'
+                label: t('doctor.ph') as string,
+                type: 'input' as const
             },
             {
                 name: 'specialty',
-                label: t('doctor.sp'),
-                type: 'select',
+                label: t('doctor.sp') as string,
+                type: 'select' as const,
                 options: specialties.map((s) => ({
                     value: String(s.id),
                     label: s.name
@@ -796,23 +815,23 @@ export default function DoctorManage() {
             },
             {
                 name: 'room',
-                label: t('doctor.ro'),
-                type: 'input'
+                label: t('doctor.ro') as string,
+                type: 'input' as const
             },
             {
                 name: 'dob',
-                label: t('doctor.bd'),
-                type: 'date'
+                label: t('doctor.bd') as string,
+                type: 'date' as const
             },
             {
                 name: 'ethnicity',
-                label: t('doctor.et'),
-                type: 'input'
+                label: t('doctor.et') as string,
+                type: 'input' as const
             },
             {
                 name: 'gender',
-                label: t('doctor.gd'),
-                type: 'select',
+                label: t('doctor.gd') as string,
+                type: 'select' as const,
                 width: 100,
                 options: [
                     { value: '1', label: t('doctor.ma') },
@@ -822,60 +841,60 @@ export default function DoctorManage() {
             },
             {
                 name: 'address',
-                label: t('doctor.ad'),
-                type: 'input'
+                label: t('doctor.ad') as string,
+                type: 'input' as const
             },
             {
                 name: 'degree',
-                label: t('doctor.dg'),
-                type: 'input'
+                label: t('doctor.dg') as string,
+                type: 'input' as const
             }
         ];
     } else if (priceItem) {
         modalConfigs = [
             {
                 name: 'price',
-                label: t('doctor.pr'),
-                type: 'input'
+                label: t('doctor.pr') as string,
+                type: 'input' as const
             }
         ];
     } else {
         modalConfigs = [
             {
                 name: 'image',
-                label: t('doctor.im'),
-                type: 'upload',
-                placeholder: t('doctor.ul')
+                label: t('doctor.im') as string,
+                type: 'upload' as const,
+                placeholder: t('doctor.ul') as string
             },
             {
                 name: 'name',
-                label: t('doctor.na'),
-                type: 'input'
+                label: t('doctor.na') as string,
+                type: 'input' as const
             },
             {
                 name: 'email',
                 label: 'Email',
-                type: 'input'
+                type: 'input' as const
             },
             {
                 name: 'phone',
-                label: t('doctor.ph'),
-                type: 'input'
+                label: t('doctor.ph') as string,
+                type: 'input' as const
             },
             {
                 name: 'password',
-                label: t('doctor.pa'),
-                type: 'input'
+                label: t('doctor.pa') as string,
+                type: 'input' as const
             },
             {
                 name: 'confirmPassword',
-                label: t('doctor.cp'),
-                type: 'input'
+                label: t('doctor.cp') as string,
+                type: 'input' as const
             },
             {
                 name: 'specialty',
-                label: t('doctor.sp'),
-                type: 'select',
+                label: t('doctor.sp') as string,
+                type: 'select' as const,
                 options: specialties.map((s) => ({
                     value: String(s.id),
                     label: s.name
@@ -884,23 +903,23 @@ export default function DoctorManage() {
             },
             {
                 name: 'room',
-                label: t('doctor.ro'),
-                type: 'input'
+                label: t('doctor.ro') as string,
+                type: 'input' as const
             },
             {
                 name: 'dob',
-                label: t('doctor.bd'),
-                type: 'date'
+                label: t('doctor.bd') as string,
+                type: 'date' as const
             },
             {
                 name: 'ethnicity',
-                label: t('doctor.et'),
-                type: 'input'
+                label: t('doctor.et') as string,
+                type: 'input' as const
             },
             {
                 name: 'gender',
-                label: t('doctor.gd'),
-                type: 'select',
+                label: t('doctor.gd') as string,
+                type: 'select' as const,
                 width: 100,
                 options: [
                     { value: '1', label: t('doctor.ma') },
@@ -910,23 +929,16 @@ export default function DoctorManage() {
             },
             {
                 name: 'address',
-                label: t('doctor.ad'),
-                type: 'input'
+                label: t('doctor.ad') as string,
+                type: 'input' as const
             },
             {
                 name: 'degree',
-                label: t('doctor.dg'),
-                type: 'input'
+                label: t('doctor.dg') as string,
+                type: 'input' as const
             }
         ];
     }
-
-    useEffect(() => {
-        dispatch(fetchDoctors());
-    }, [dispatch]);
-    useEffect(() => {
-        dispatch(fetchSpecilties());
-    }, [dispatch]);
 
     return (
         <div className='m-5'>
@@ -977,14 +989,15 @@ export default function DoctorManage() {
 
                 <div className={isDark ? 'text-black' : 'text-blue-500'}>
                     <Table
-                        dataSource={currentData}
+                        loading={tableLoading} // Hiển thị loading trên Table
+                        dataSource={doctors} // Dữ liệu từ Redux (đã phân trang)
                         columns={columns}
                         rowKey='id'
                         showSorterTooltip={false}
                         pagination={false}
                         footer={() => (
                             <Pagination
-                                total={doctors.length}
+                                total={totalDoctors} // Tổng số bản ghi từ Server
                                 pageSize={pageSize}
                                 current={currentPage}
                                 onChange={(page) => setCurrentPage(page)}
@@ -1034,18 +1047,18 @@ export default function DoctorManage() {
                             filters={[
                                 {
                                     name: 'month',
-                                    label: t('doctor.cm'),
-                                    type: 'month'
+                                    label: t('doctor.cm') as string,
+                                    type: 'month' as const
                                 },
                                 {
                                     name: 'tenlich',
-                                    label: t('doctor.sn'),
-                                    type: 'input'
+                                    label: t('doctor.sn') as string,
+                                    type: 'input' as const
                                 },
                                 {
                                     name: 'ca',
-                                    label: t('doctor.ss'),
-                                    type: 'checkboxGroup',
+                                    label: t('doctor.ss') as string,
+                                    type: 'checkboxGroup' as const,
                                     options: [
                                         { value: 'C1', label: t('doctor.cs') },
                                         { value: 'C2', label: t('doctor.cc') },
@@ -1074,7 +1087,7 @@ export default function DoctorManage() {
                                     isDark
                                         ? 'border-red-500!'
                                         : 'bg-red-500! border-red-500!'
-                                }  `}
+                                }  `}
                                 onClick={handledeleteSchedules}
                             >
                                 {t('doctor.sd')}

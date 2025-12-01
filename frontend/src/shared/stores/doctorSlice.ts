@@ -1,4 +1,8 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {
+    createAsyncThunk,
+    createSlice,
+    type PayloadAction
+} from '@reduxjs/toolkit';
 import api from '../apis/api';
 
 export interface IDoctor {
@@ -26,27 +30,59 @@ export interface IDoctor {
     } | null;
 }
 
+interface IPaginationMeta {
+    page: number;
+    limit: number;
+    totalRows: number;
+    totalPages: number;
+}
+
+interface IFetchDoctorsResponse {
+    list: IDoctor[];
+    meta: IPaginationMeta;
+}
+
 interface IDoctorState {
     list: IDoctor[];
+    totalDoctors: number;
+    currentPage: number;
+    totalPages: number;
+    limit: number;
     loading: boolean;
     error: string | null;
 }
 
 const initialState: IDoctorState = {
     list: [],
+    totalDoctors: 0,
+    currentPage: 1,
+    totalPages: 0,
+    limit: 10,
     loading: false,
     error: null
 };
 
 export const fetchDoctors = createAsyncThunk<
-    IDoctor[],
-    void,
+    IFetchDoctorsResponse,
+    { page: number; limit: number },
     { rejectValue: string }
->('doctor/fetchDoctor', async (_, { rejectWithValue }) => {
+>('doctor/fetchDoctor', async (params, { rejectWithValue }) => {
     try {
-        const response = await api.get('/doctor/all');
-        const { data } = response.data;
-        return data;
+        const { page, limit } = params;
+        const response = await api.get(
+            `/doctor/all?page=${page}&limit=${limit}`
+        );
+
+        const { errCode, message, data, meta } = response.data;
+
+        if (errCode === 0 && Array.isArray(data)) {
+            return {
+                list: data as IDoctor[],
+                meta: meta as IPaginationMeta
+            };
+        }
+
+        return rejectWithValue(message || 'Failed to fetch doctors');
     } catch (e: any) {
         const errMessage =
             e.response?.data?.errMessage || 'Server error occurred';
@@ -57,26 +93,43 @@ export const fetchDoctors = createAsyncThunk<
 export const doctorsSlice = createSlice({
     name: 'doctor',
     initialState,
-    reducers: {},
+    reducers: {
+        resetDoctorState: (state) => {
+            state.list = [];
+            state.totalDoctors = 0;
+            state.currentPage = 1;
+            state.error = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(fetchDoctors.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
-            .addCase(fetchDoctors.fulfilled, (state, action) => {
-                state.loading = false;
-                state.list = action.payload;
-                state.error = null;
-            })
+            .addCase(
+                fetchDoctors.fulfilled,
+                (state, action: PayloadAction<IFetchDoctorsResponse>) => {
+                    const { list, meta } = action.payload;
+                    state.loading = false;
+                    state.list = list;
+                    state.error = null;
+
+                    state.totalDoctors = meta.totalRows;
+                    state.totalPages = meta.totalPages;
+                    state.currentPage = meta.page;
+                    state.limit = meta.limit;
+                }
+            )
             .addCase(fetchDoctors.rejected, (state, action) => {
                 state.loading = false;
                 state.list = [];
+                state.totalDoctors = 0;
                 state.error = action.payload || 'Server error occurred';
             });
     }
 });
 
+export const { resetDoctorState } = doctorsSlice.actions;
 export const selectDoctor = (state: { doctors: IDoctorState }) => state.doctors;
-
 export default doctorsSlice.reducer;

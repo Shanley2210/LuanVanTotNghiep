@@ -28,4 +28,5 @@ router.get(
     doctorController.getAppointmentsController
 );
 
+
 module.exports = router;

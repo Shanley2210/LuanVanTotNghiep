@@ -18,6 +18,7 @@ import {
     RiMenuUnfoldLine
 } from 'react-icons/ri';
 import { useNavigate } from 'react-router-dom';
+import Logo from '@shared/images/Logo.png';
 
 export default function PatientHeader() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -56,13 +57,13 @@ export default function PatientHeader() {
 
     return (
         <header
-            className={`flex flex-col ${
+            className={`flex flex-col sticky top-0 z-50 ${
                 isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'
             }`}
         >
             <div
-                className={`px-4 md:px-20 hidden md:flex justify-between py-3 text-sm ${
-                    isDark ? 'bg-gray-800 text-white' : 'bg-gray-50 text-black'
+                className={`px-4 md:px-20 hidden md:flex justify-between pt-2 text-sm ${
+                    isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'
                 }`}
             >
                 <div className='flex gap-5'>
@@ -132,7 +133,7 @@ export default function PatientHeader() {
                 </div>
             </div>
 
-            <div className='flex justify-between items-center py-3 px-4 md:px-20 '>
+            <div className='flex justify-between items-center py-3 px-4 md:px-20'>
                 <div className='md:hidden flex items-center z-50'>
                     <button
                         onClick={toggleMenu}
@@ -147,51 +148,46 @@ export default function PatientHeader() {
                     </button>
                 </div>
                 <div className='hidden md:block w-40'>
-                    <img
-                        src='https://doccure.dreamstechnologies.com/html/template/assets/img/logo.svg'
-                        alt='Logo'
-                    />
+                    <img src={Logo} alt='Logo' />
                 </div>
 
                 <div className='md:hidden w-full flex justify-center absolute left-1/2 transform -translate-x-1/2'>
-                    <img
-                        className='h-12'
-                        src='https://doccure.dreamstechnologies.com/html/template/assets/img/logo.svg'
-                        alt='Logo'
-                    />
+                    <img className='h-12' src={Logo} alt='Logo' />
                 </div>
                 <div className='hidden md:flex gap-3 items-center'>
                     <div className='flex gap-10 mr-10 items-center'>
-                        <div className='flex flex-col'>
-                            <span className='font-bold cursor-pointer'>
-                                Chuyên Khoa
+                        <div className='flex flex-col cursor-pointer'>
+                            <span className='font-bold'>
+                                {t('homePage.sp')}
                             </span>
                             <span className='text-sm'>
-                                Tim bac si theo chuyen khoa
+                                {t('homePage.subSp')}
                             </span>
                         </div>
-                        <div className='flex flex-col'>
-                            <span className='font-bold cursor-pointer'>
-                                Dịch vụ
+                        <div className='flex flex-col cursor-pointer'>
+                            <span className='font-bold'>
+                                {t('homePage.sv')}
                             </span>
                             <span className='text-sm'>
-                                Nhiều dịch vụ hấp dẫn
+                                {t('homePage.subSv')}
                             </span>
                         </div>
-                        <div className='flex flex-col'>
-                            <span className='font-bold cursor-pointer'>
-                                Bác sĩ
+                        <div className='flex flex-col cursor-pointer'>
+                            <span className='font-bold'>
+                                {t('homePage.dt')}
                             </span>
-                            <span className='text-sm'>Tìm bác sĩ hàng đầu</span>
+                            <span className='text-sm'>
+                                {t('homePage.subDt')}
+                            </span>
                         </div>
-                        <div>Lịch hẹn</div>
+                        <div>{t('homePage.ap')}</div>
                     </div>
 
                     <Button
-                        className='rounded-none p-3 cursor-pointer text-white font-bold bg-linear-to-r from-blue-500 to-blue-300 hover:brightness-110 active:brightness-90'
+                        className='rounded-none p-3 cursor-pointer w-30 text-white font-bold bg-linear-to-r from-blue-500 to-blue-300 hover:brightness-110 active:brightness-90'
                         onClick={() => navigate('/login')}
                     >
-                        <MdLogin /> Đăng nhập
+                        <MdLogin /> {t('homePage.lg')}
                     </Button>
                 </div>
             </div>
@@ -206,7 +202,7 @@ export default function PatientHeader() {
                 <div className='pt-16 flex bg-white flex-col border-none '>
                     <div className='absolute top-0 left-4'>
                         <Button className='rounded-none p-3 w-20 h-8 cursor-pointer text-white font-bold bg-linear-to-r from-blue-500 to-blue-300 hover:brightness-110 active:brightness-90 mt-4 mr-2'>
-                            Đăng nhập
+                            {t('homePage.lg')}
                         </Button>
                     </div>
                     <div className='absolute top-6 right-4'>
@@ -216,12 +212,18 @@ export default function PatientHeader() {
                     </div>
 
                     <div className={`${isDark ? 'bg-gray-900' : 'bg-sky-800'}`}>
-                        <div className='py-3 px-6 cursor-pointer'>Lich hen</div>
-                        <div className='py-3 px-6 cursor-pointer'>CBac Si</div>
                         <div className='py-3 px-6 cursor-pointer'>
-                            Chuyen khoas
+                            {t('homePage.ap')}
                         </div>
-                        <div className='py-3 px-6 cursor-pointer'>Dich vu</div>
+                        <div className='py-3 px-6 cursor-pointer'>
+                            {t('homePage.dt')}
+                        </div>
+                        <div className='py-3 px-6 cursor-pointer'>
+                            {t('homePage.sp')}
+                        </div>
+                        <div className='py-3 px-6 cursor-pointer'>
+                            {t('homePage.sv')}
+                        </div>
                     </div>
 
                     <div

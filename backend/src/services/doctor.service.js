@@ -1,10 +1,15 @@
 const { where, Op } = require('sequelize');
 const db = require('../models');
 
-const getAllDoctorsService = () => {
+const getAllDoctorsService = (page, limit) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const doctors = await db.Doctor.findAll({
+            const offset = (page - 1) * limit;
+
+            const { count, rows } = await db.Doctor.findAndCountAll({
+                offset: offset,
+                limit: limit,
+                distinct: true,
                 include: [
                     {
                         model: db.User,
@@ -20,17 +25,32 @@ const getAllDoctorsService = () => {
                 order: [['createdAt', 'DESC']]
             });
 
-            if (!doctors) {
+            if (!rows || rows.length === 0) {
                 return resolve({
-                    errCode: 1,
-                    errMessage: 'Doctor not found'
+                    errCode: 0,
+                    message: 'No doctors found',
+                    data: [],
+                    meta: {
+                        page: page,
+                        limit: limit,
+                        totalRows: 0,
+                        totalPages: 0
+                    }
                 });
             }
+
+            const totalPages = Math.ceil(count / limit);
 
             return resolve({
                 errCode: 0,
                 message: 'Get doctors successful',
-                data: doctors
+                data: rows,
+                meta: {
+                    page: page,
+                    limit: limit,
+                    totalRows: count,
+                    totalPages: totalPages
+                }
             });
         } catch (e) {
             return reject(e);

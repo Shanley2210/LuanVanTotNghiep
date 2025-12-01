@@ -29,7 +29,14 @@ import { IoPricetagsOutline } from 'react-icons/io5';
 export default function Service() {
     const { isDark } = useContext(ThemeContext);
     const dispatch = useAppDispatch();
-    const { list: services } = useAppSelector(selectServices);
+
+    // 1. Lấy dữ liệu list, totalServices và loading từ Redux
+    const {
+        list: services,
+        totalServices,
+        loading: tableLoading
+    } = useAppSelector(selectServices);
+
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [isOpen, setIsOpen] = useState(false);
@@ -37,21 +44,30 @@ export default function Service() {
     const [formData, setFormData] = useState<Record<string, any>>({});
     const { t, i18n } = useTranslation();
     const language = i18n.language;
+
+    // Loading cho các hành động Submit/Update
     const [isLoading, setIsLoading] = useState(false);
+
     const [editItem, setEditItem] = useState<IService | null>(null);
     const [priceItem, setPriceItem] = useState<IService | null>(null);
     const [loadingDeleteId, setLoadingDeleteId] = useState<number | null>(null);
     const [loadingStatusId, setLoadingStatusId] = useState<number | null>(null);
 
-    const currentData = services.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize
-    );
+    // 2. useEffect gọi API với tham số phân trang
+    useEffect(() => {
+        dispatch(fetchServices({ page: currentPage, limit: pageSize }));
+    }, [dispatch, currentPage, pageSize]);
+
+    // Hàm refresh dữ liệu tại trang hiện tại (dùng sau khi CRUD)
+    const refreshData = () => {
+        dispatch(fetchServices({ page: currentPage, limit: pageSize }));
+    };
 
     const handlePageSizeChange = (value: string) => {
         setPageSize(Number(value));
-        setCurrentPage(1);
+        setCurrentPage(1); // Reset về trang 1 khi đổi số lượng hiển thị
     };
+
     const handleSubmit = async () => {
         if (
             !formData.name ||
@@ -59,36 +75,33 @@ export default function Service() {
             !formData.durationMinutes ||
             !formData.price
         ) {
-            if (language === 'en') {
-                toast.warning('Please fill in all required fields');
-                return;
-            } else if (language === 'vi') {
-                toast.warning('Vui lòng điền đầy đủ thông tin');
-                return;
-            }
+            toast.warning(
+                language === 'en'
+                    ? 'Please fill in all required fields'
+                    : 'Vui lòng điền đầy đủ thông tin'
+            );
+            return;
         }
 
         if (
             !Number.isInteger(Number(formData.durationMinutes)) ||
             Number(formData.durationMinutes) <= 0
         ) {
-            if (language === 'en') {
-                toast.warning('Duration Minutes must be a positive integer');
-                return;
-            } else if (language === 'vi') {
-                toast.warning('Thời lượng phải là số nguyên dương');
-                return;
-            }
+            toast.warning(
+                language === 'en'
+                    ? 'Duration Minutes must be a positive integer'
+                    : 'Thời lượng phải là số nguyên dương'
+            );
+            return;
         }
 
         if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-            if (language === 'en') {
-                toast.warning('Price must be a positive number');
-                return;
-            } else if (language === 'vi') {
-                toast.warning('Giá phải là số dương');
-                return;
-            }
+            toast.warning(
+                language === 'en'
+                    ? 'Price must be a positive number'
+                    : 'Giá phải là số dương'
+            );
+            return;
         }
 
         const postData = {
@@ -101,119 +114,88 @@ export default function Service() {
 
         try {
             setIsLoading(true);
-
             const res = await postService(postData);
 
             if (res.data && res.data.errCode !== 0) {
-                if (language === 'en') {
-                    toast.error(
-                        res.data.errEnMessage || 'Failed to add service'
-                    );
-                } else if (language === 'vi') {
-                    toast.error(
-                        res.data.errViMessage || 'Thêm dịch vụ thất bại'
-                    );
-                }
+                toast.error(
+                    language === 'en'
+                        ? res.data.errEnMessage || 'Failed to add service'
+                        : res.data.errViMessage || 'Thêm dịch vụ thất bại'
+                );
+            } else if (res.data && res.data.errCode === 0) {
+                toast.success(
+                    language === 'en' ? res.data.enMessage : res.data.viMessage
+                );
+                setIsOpen(false);
+                setFormData({});
+                refreshData(); // Refresh data
             }
-
-            if (res.data && res.data.errCode === 0) {
-                if (language === 'en') {
-                    toast.success(res.data.enMessage);
-                } else if (language === 'vi') {
-                    toast.success(res.data.viMessage);
-                }
-            }
-
-            setIsLoading(false);
-            dispatch(fetchServices());
         } catch (e) {
             console.error('Error submitting form:', e);
-            if (language === 'en') {
-                toast.error('Error from Server');
-            } else if (language === 'vi') {
-                toast.error('Lỗi phí Server');
-            }
+            toast.error(
+                language === 'en' ? 'Error from Server' : 'Lỗi phía Server'
+            );
+        } finally {
+            setIsLoading(false);
         }
-
-        setIsOpen(false);
-        setFormData({});
     };
-    const handleDelete = async (id: number) => {
-        if (!id) {
-            if (language === 'en') {
-                toast.error('Invalid service ID');
-            } else if (language === 'vi') {
-                toast.error('ID dịch vụ không hợp lệ');
-            }
-            return;
-        }
 
+    const handleDelete = async (id: number) => {
+        if (!id) return;
         setLoadingDeleteId(id);
 
         try {
             const res = await deleteService(id);
-
             if (res.data && res.data.errCode !== 0) {
-                if (language === 'en') {
-                    toast.error(
-                        res.data.errEnMessage || 'Failed to delete service'
-                    );
-                } else if (language === 'vi') {
-                    toast.error(
-                        res.data.errViMessage || 'Xóa dịch vụ thất bại'
-                    );
-                }
-            }
-
-            if (res.data && res.data.errCode === 0) {
-                if (language === 'en') {
-                    toast.success(res.data.enMessage);
-                } else if (language === 'vi') {
-                    toast.success(res.data.viMessage);
-                }
+                toast.error(
+                    language === 'en'
+                        ? res.data.errEnMessage || 'Failed to delete service'
+                        : res.data.errViMessage || 'Xóa dịch vụ thất bại'
+                );
+            } else if (res.data && res.data.errCode === 0) {
+                toast.success(
+                    language === 'en' ? res.data.enMessage : res.data.viMessage
+                );
+                refreshData(); // Refresh data
             }
         } catch (e: any) {
             console.log('Error deleting service:', e);
-            if (language === 'en') {
-                toast.error('Error from Server');
-            } else if (language === 'vi') {
-                toast.error('Lỗi phí Server');
-            }
+            toast.error(
+                language === 'en' ? 'Error from Server' : 'Lỗi phía Server'
+            );
+        } finally {
+            setLoadingDeleteId(null);
         }
-
-        setLoadingDeleteId(null);
-        dispatch(fetchServices());
     };
+
     const handleToggleStatus = async (id: number, currentStatus: boolean) => {
         const newStatus = currentStatus ? 'inactive' : 'active';
-
         setLoadingStatusId(id);
 
-        const res = await updateService(id, { status: newStatus });
-
-        if (res.data.errCode !== 0) {
-            if (language === 'en') {
+        try {
+            const res = await updateService(id, { status: newStatus });
+            if (res.data.errCode !== 0) {
                 toast.error(
-                    res.data.errEnMessage || 'Failed to update specialty status'
+                    language === 'en'
+                        ? res.data.errEnMessage || 'Failed to update status'
+                        : res.data.errViMessage ||
+                              'Cập nhật trạng thái thất bại'
                 );
-            } else if (language === 'vi') {
-                toast.error(
-                    res.data.errViMessage ||
-                        'Cập nhật trạng thái chuyên khoa thất bại'
+            } else {
+                toast.success(
+                    language === 'en' ? res.data.enMessage : res.data.viMessage
                 );
+                refreshData(); // Refresh data
             }
+        } catch (e) {
+            toast.error(
+                language === 'en' ? 'Error from Server' : 'Lỗi phía Server'
+            );
+        } finally {
+            setLoadingStatusId(null);
         }
-        if (res.data.errCode === 0) {
-            if (language === 'en') {
-                toast.success(res.data.enMessage);
-            } else if (language === 'vi') {
-                toast.success(res.data.viMessage);
-            }
-        }
-
-        setLoadingStatusId(null);
-        dispatch(fetchServices());
     };
+
     const handleUpdate = async () => {
         if (!editItem) return;
 
@@ -221,23 +203,21 @@ export default function Service() {
             !Number.isInteger(Number(formData.durationMinutes)) ||
             Number(formData.durationMinutes) <= 0
         ) {
-            if (language === 'en') {
-                toast.warning('Duration Minutes must be a positive integer');
-                return;
-            } else if (language === 'vi') {
-                toast.warning('Thời lượng phải là số nguyên dương');
-                return;
-            }
+            toast.warning(
+                language === 'en'
+                    ? 'Duration Minutes must be a positive integer'
+                    : 'Thời lượng phải là số nguyên dương'
+            );
+            return;
         }
 
         if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-            if (language === 'en') {
-                toast.warning('Price must be a positive number');
-                return;
-            } else if (language === 'vi') {
-                toast.warning('Giá phải là số dương');
-                return;
-            }
+            toast.warning(
+                language === 'en'
+                    ? 'Price must be a positive number'
+                    : 'Giá phải là số dương'
+            );
+            return;
         }
 
         const updatedData = {
@@ -248,38 +228,42 @@ export default function Service() {
         };
 
         setIsLoading(true);
-
-        const res = await updateService(Number(editItem.id), updatedData);
-
-        if (res.data.errCode === 0) {
-            toast.success(
-                language === 'en' ? res.data.enMessage : res.data.viMessage
-            );
-        } else {
+        try {
+            const res = await updateService(Number(editItem.id), updatedData);
+            if (res.data.errCode === 0) {
+                toast.success(
+                    language === 'en' ? res.data.enMessage : res.data.viMessage
+                );
+                setIsOpen(false);
+                setEditItem(null);
+                setFormData({});
+                refreshData(); // Refresh data
+            } else {
+                toast.error(
+                    language === 'en'
+                        ? res.data.errEnMessage
+                        : res.data.errViMessage
+                );
+            }
+        } catch (e) {
             toast.error(
-                language === 'en'
-                    ? res.data.errEnMessage
-                    : res.data.errViMessage
+                language === 'en' ? 'Error from Server' : 'Lỗi phía Server'
             );
+        } finally {
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
-        setIsOpen(false);
-        setEditItem(null);
-        setFormData({});
-        dispatch(fetchServices());
     };
+
     const handleUpdatePrice = async () => {
         if (!priceItem) return;
 
         if (isNaN(Number(formData.price)) || Number(formData.price) <= 0) {
-            if (language === 'en') {
-                toast.warning('Price must be a positive number');
-                return;
-            } else if (language === 'vi') {
-                toast.warning('Giá phải là số dương');
-                return;
-            }
+            toast.warning(
+                language === 'en'
+                    ? 'Price must be a positive number'
+                    : 'Giá phải là số dương'
+            );
+            return;
         }
 
         const updatedData = {
@@ -287,26 +271,33 @@ export default function Service() {
         };
 
         setIsLoading(true);
-
-        const res = await setPriceService(Number(priceItem.id), updatedData);
-
-        if (res.data.errCode === 0) {
-            toast.success(
-                language === 'en' ? res.data.enMessage : res.data.viMessage
+        try {
+            const res = await setPriceService(
+                Number(priceItem.id),
+                updatedData
             );
-        } else {
+            if (res.data.errCode === 0) {
+                toast.success(
+                    language === 'en' ? res.data.enMessage : res.data.viMessage
+                );
+                setIsPriceOpen(false);
+                setPriceItem(null);
+                setFormData({});
+                refreshData(); // Refresh data
+            } else {
+                toast.error(
+                    language === 'en'
+                        ? res.data.errEnMessage
+                        : res.data.errViMessage
+                );
+            }
+        } catch (e) {
             toast.error(
-                language === 'en'
-                    ? res.data.errEnMessage
-                    : res.data.errViMessage
+                language === 'en' ? 'Error from Server' : 'Lỗi phía Server'
             );
+        } finally {
+            setIsLoading(false);
         }
-
-        setIsLoading(false);
-        setIsPriceOpen(false);
-        setPriceItem(null);
-        setFormData({});
-        dispatch(fetchServices());
     };
 
     const columns = [
@@ -314,9 +305,7 @@ export default function Service() {
             title: 'ID',
             dataIndex: 'id',
             key: 'id',
-            sorter: (a: any, b: any) => {
-                return a.id - b.id;
-            }
+            sorter: (a: any, b: any) => a.id - b.id
         },
         {
             title: t('service.na'),
@@ -351,13 +340,8 @@ export default function Service() {
                             const old = services.find(
                                 (s) => Number(s.id) === id
                             );
-
                             setPriceItem(old || null);
-
-                            setFormData({
-                                price: old?.price
-                            });
-
+                            setFormData({ price: old?.price });
                             setIsPriceOpen(true);
                         }}
                         className='flex items-center gap-2 justify-center cursor-pointer'
@@ -402,16 +386,13 @@ export default function Service() {
                             const old = services.find(
                                 (s) => Number(s.id) === id
                             );
-
                             setEditItem(old || null);
-
                             setFormData({
                                 name: old?.name,
                                 description: old?.description,
                                 durationMinutes: old?.durationMinutes,
                                 price: old?.price
                             });
-
                             setIsOpen(true);
                         }}
                     >
@@ -424,11 +405,7 @@ export default function Service() {
                             className='text-lg text-gray-500'
                         />
                     ) : (
-                        <button
-                            onClick={() => {
-                                handleDelete(Number(record.id));
-                            }}
-                        >
+                        <button onClick={() => handleDelete(Number(record.id))}>
                             <AiOutlineDelete className='text-2xl text-red-500 cursor-pointer' />
                         </button>
                     )}
@@ -436,69 +413,67 @@ export default function Service() {
             )
         }
     ];
+
     const modalConfigs: filterConfig[] = editItem
         ? [
               {
                   name: 'name',
                   label: t('service.ns') as string,
-                  type: 'input'
+                  type: 'input' as const
               },
               {
                   name: 'description',
                   label: t('service.dc') as string,
-                  type: 'textarea',
+                  type: 'textarea' as const,
                   rows: 4
               },
               {
                   name: 'durationMinutes',
                   label: t('service.dm') as string,
-                  type: 'input'
+                  type: 'input' as const
               },
               {
                   name: 'price',
                   label: t('service.pr') as string,
-                  type: 'input'
+                  type: 'input' as const
               }
           ]
         : [
               {
                   name: 'name',
                   label: t('service.ns') as string,
-                  type: 'input'
+                  type: 'input' as const
               },
               {
                   name: 'description',
                   label: t('service.dc') as string,
-                  type: 'textarea',
+                  type: 'textarea' as const,
                   rows: 4
               },
               {
                   name: 'durationMinutes',
                   label: t('service.dm') as string,
-                  type: 'input'
+                  type: 'input' as const
               },
               {
                   name: 'price',
                   label: t('service.pr') as string,
-                  type: 'input'
+                  type: 'input' as const
               },
               {
                   name: 'status',
                   label: t('service.st') as string,
-                  type: 'checkbox'
+                  type: 'checkbox' as const
               }
           ];
+
     const priceModalConfigs: filterConfig[] = [
         {
             name: 'price',
             label: t('service.pr') as string,
-            type: 'input'
+            type: 'input' as const
         }
     ];
-
-    useEffect(() => {
-        dispatch(fetchServices());
-    }, [dispatch]);
 
     return (
         <div className='m-5'>
@@ -585,14 +560,15 @@ export default function Service() {
 
                 <div className={isDark ? 'text-black' : 'text-blue-500'}>
                     <Table
-                        dataSource={currentData}
+                        loading={tableLoading} // Binding trạng thái loading vào bảng
+                        dataSource={services} // Dùng trực tiếp list services từ Redux
                         columns={columns}
                         rowKey='id'
                         showSorterTooltip={false}
                         pagination={false}
                         footer={() => (
                             <Pagination
-                                total={services.length}
+                                total={totalServices} // Binding tổng số bản ghi từ Server
                                 pageSize={pageSize}
                                 current={currentPage}
                                 onChange={(page) => setCurrentPage(page)}

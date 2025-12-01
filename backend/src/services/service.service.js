@@ -1,21 +1,43 @@
 const db = require('../models');
 
-const getServiceService = () => {
+const getServiceService = (page, limit) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const services = await db.Service.findAll();
+            const offset = (page - 1) * limit;
 
-            if (!services) {
+            const { count, rows } = await db.Service.findAndCountAll({
+                offset: offset,
+                limit: limit,
+
+                order: [['createdAt', 'DESC']]
+            });
+
+            if (!rows || rows.length === 0) {
                 return resolve({
-                    errCode: 1,
-                    errMessage: 'Service not found'
+                    errCode: 0,
+                    message: 'No services found',
+                    data: [],
+                    meta: {
+                        page: page,
+                        limit: limit,
+                        totalRows: 0,
+                        totalPages: 0
+                    }
                 });
             }
+
+            const totalPages = Math.ceil(count / limit);
 
             return resolve({
                 errCode: 0,
                 message: 'Get service successful',
-                data: services
+                data: rows,
+                meta: {
+                    page: page,
+                    limit: limit,
+                    totalRows: count,
+                    totalPages: totalPages
+                }
             });
         } catch (e) {
             return reject(e);
