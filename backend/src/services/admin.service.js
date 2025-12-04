@@ -603,7 +603,9 @@ const createDoctorService = (data, imageFilename) => {
                 ethnicity,
                 address,
                 degree,
-                room
+                room,
+                introduce,
+                workExperience
             } = data;
 
             if (
@@ -633,6 +635,8 @@ const createDoctorService = (data, imageFilename) => {
                     address: address,
                     degree: degree,
                     room: room,
+                    introduce: introduce,
+                    workExperience: workExperience,
                     image: imagePath,
                     status: 'active'
                 },
@@ -734,6 +738,10 @@ const updateDoctorService = (userId, data, imageFile) => {
             if (data.address !== undefined) doctorData.address = data.address;
             if (data.degree !== undefined) doctorData.degree = data.degree;
             if (data.room !== undefined) doctorData.room = data.room;
+            if (data.introduce !== undefined)
+                doctorData.introduce = data.introduce;
+            if (data.workExperience !== undefined)
+                doctorData.workExperience = data.workExperience;
             if (data.status !== undefined) doctorData.status = data.status;
             if (imageFile !== undefined)
                 doctorData.image = `/uploads/doctors/${imageFile.filename}`;

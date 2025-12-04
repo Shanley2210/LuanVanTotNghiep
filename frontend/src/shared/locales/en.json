@@ -126,7 +126,9 @@
         "sc": "Create schedule",
         "sd": "Delete schedule",
         "wo": "Working",
-        "dn": "Off"
+        "dn": "Off",
+        "intro": "Introduce",
+        "exp": "Word Experience"
     },
     "patient": {
         "tt": "Patients",
@@ -218,5 +220,21 @@
         "csbm": "Privacy Policy",
         "dksd": "Terms of Use",
         "lhe": "Contact"
+    },
+    "detalDoctor": {
+        "dt": "Doctor",
+        "ro": "Clinic: ",
+        "dc": "Address",
+        "pr": "Examination fee",
+        "subPr": "The examination fee does not include imaging and lab tests.",
+        "mt": "The hospital accepts the following payment methods: Bank transfer, cash, and credit card.",
+        "bh": "Types of insurance accepted",
+        "nhnn": "State Health Insurance",
+        "subBh": "Applies to patients registered for initial medical examination and treatment at the hospital or those with a referral letter from another facility.",
+        "lk": "Examination schedule",
+        "nlk": "No appointment schedule",
+        "cdt": "Select appointment time (booking fee 0 VND).",
+        "int": "Brief introduction",
+        "exp": "Work experience"
     }
 }

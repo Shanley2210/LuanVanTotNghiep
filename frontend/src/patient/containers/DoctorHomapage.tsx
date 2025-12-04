@@ -12,6 +12,7 @@ import { fetchDoctors, selectDoctor } from '@/shared/stores/doctorSlice';
 import { useAppDispatch, useAppSelector } from '@/shared/stores/hooks';
 import { useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -20,11 +21,19 @@ export default function DoctorHomapage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const { list: doctors } = useAppSelector(selectDoctor);
+    const navigate = useNavigate();
 
-    console.log(doctors);
+    const slugify = (text: string) =>
+        text
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
 
     useEffect(() => {
-        dispatch(fetchDoctors({ page: 1, limit: 10 }));
+        dispatch(fetchDoctors({ page: 1, limit: 10, status: 'active' }));
     }, [dispatch]);
 
     return (
@@ -160,6 +169,14 @@ export default function DoctorHomapage() {
                                                                 : 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white'
                                                         }
                                                     `}
+                                                    onClick={() =>
+                                                        navigate(
+                                                            `/bac-si/${slugify(
+                                                                doctor?.user
+                                                                    ?.name || ''
+                                                            )}/${doctor?.id}`
+                                                        )
+                                                    }
                                                 >
                                                     {t('homePage.xct')}
                                                 </Button>

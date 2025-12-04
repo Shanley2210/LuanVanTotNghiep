@@ -1,4 +1,4 @@
-import { Checkbox, DatePicker, Form, Input, Select, Space, Upload } from 'antd';
+import { Checkbox, DatePicker, Form, Input, Select, Upload } from 'antd';
 import { useContext, useState } from 'react';
 import ToggleSwitch from './ToggleSwitch';
 import type { Dayjs } from 'dayjs';
@@ -6,11 +6,13 @@ import { ThemeContext } from '@/shared/contexts/ThemeContext';
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import dayjs from 'dayjs';
+import AdminEditor from './AdminEditor';
 
 type baseFilter = {
     name: string;
     label?: string;
     placeholder?: string;
+    width?: string | number;
 };
 
 type inputFilter = baseFilter & {
@@ -20,6 +22,10 @@ type inputFilter = baseFilter & {
 type textareaFilter = baseFilter & {
     type: 'textarea';
     rows?: number;
+};
+
+type editorFilter = baseFilter & {
+    type: 'editor';
 };
 
 type selectFilter = baseFilter & {
@@ -57,6 +63,7 @@ export type filterConfig =
     | inputFilter
     | selectFilter
     | textareaFilter
+    | editorFilter
     | dateFilter
     | monthFilter
     | checkboxFilter
@@ -102,186 +109,181 @@ export default function AdminFilter({
         return false;
     };
 
+    const renderInput = (filter: filterConfig) => {
+        switch (filter.type) {
+            case 'input':
+                return (
+                    <Input
+                        placeholder={filter.placeholder || ''}
+                        allowClear
+                        value={values[filter.name]}
+                        onChange={(e) =>
+                            handleChange(filter.name, e.target.value)
+                        }
+                    />
+                );
+
+            case 'textarea':
+                return (
+                    <Input.TextArea
+                        placeholder={filter.placeholder || ''}
+                        allowClear
+                        rows={filter.rows || 3}
+                        value={values[filter.name]}
+                        onChange={(e) =>
+                            handleChange(filter.name, e.target.value)
+                        }
+                        style={{ width: '100%' }}
+                    />
+                );
+
+            case 'editor':
+                return (
+                    <AdminEditor
+                        content={values[filter.name] || ''}
+                        onChange={(html) => handleChange(filter.name, html)}
+                    />
+                );
+
+            case 'select':
+                return (
+                    <Select
+                        placeholder={filter.placeholder || ''}
+                        allowClear
+                        options={filter.options}
+                        value={values[filter.name]}
+                        onChange={(value) => handleChange(filter.name, value)}
+                        style={{ width: filter.width || '100%' }}
+                    />
+                );
+
+            case 'date':
+                return (
+                    <DatePicker
+                        placeholder={filter.placeholder || ''}
+                        allowClear
+                        value={values[filter.name]}
+                        onChange={(date: Dayjs) =>
+                            handleChange(filter.name, date)
+                        }
+                        style={{ width: '100%' }}
+                    />
+                );
+
+            case 'month':
+                return (
+                    <DatePicker
+                        picker='month'
+                        placeholder={filter.placeholder || ''}
+                        allowClear
+                        value={
+                            values[filter.name]
+                                ? dayjs(values[filter.name])
+                                : null
+                        }
+                        onChange={(date: Dayjs) =>
+                            handleChange(
+                                filter.name,
+                                date ? date.format('YYYY-MM') : null
+                            )
+                        }
+                        style={{ width: '100%' }}
+                    />
+                );
+
+            case 'checkbox':
+                return (
+                    <ToggleSwitch
+                        checked={!!values[filter.name]}
+                        onToggle={(checked) =>
+                            handleChange(filter.name, checked)
+                        }
+                    />
+                );
+
+            case 'checkboxGroup':
+                return (
+                    <Checkbox.Group
+                        options={filter.options}
+                        value={values[filter.name] || []}
+                        onChange={(checkedValues) =>
+                            handleChange(filter.name, checkedValues)
+                        }
+                    />
+                );
+
+            case 'upload':
+                return (
+                    <Upload
+                        maxCount={1}
+                        beforeUpload={beforeUpload}
+                        listType='picture-card'
+                        showUploadList={{ showPreviewIcon: false }}
+                        onPreview={() => false}
+                        defaultFileList={
+                            initialValues?.image &&
+                            typeof initialValues.image === 'string'
+                                ? [
+                                      {
+                                          uid: '-1',
+                                          name: 'current.png',
+                                          status: 'done',
+                                          url: initialValues.image.startsWith(
+                                              BACKEND_URL
+                                          )
+                                              ? initialValues.image
+                                              : `${BACKEND_URL}${initialValues.image}`
+                                      }
+                                  ]
+                                : []
+                        }
+                        onChange={(info) => {
+                            const file =
+                                info.fileList[0]?.originFileObj || null;
+                            handleChange(filter.name, file);
+                        }}
+                        style={{ borderRadius: 0 }}
+                    >
+                        {values[filter.name] ? null : filter.placeholder}
+                    </Upload>
+                );
+
+            default:
+                return null;
+        }
+    };
+
     return (
-        <Space wrap>
+        <div className='flex flex-wrap w-full -mx-2'>
             {filters.map((filter: filterConfig) => {
-                const { key, ...restProps } = {
-                    key: filter.name,
-                    label: filter.label ? (
-                        <span
-                            className={`${
-                                isDark ? 'text-gray-100' : 'text-neutral-900'
-                            }`}
+                const wrapperWidth = filter.width || '50%';
+
+                const labelNode = filter.label ? (
+                    <span
+                        className={`${
+                            isDark ? 'text-gray-100' : 'text-neutral-900'
+                        }`}
+                    >
+                        {filter.label}
+                    </span>
+                ) : null;
+
+                return (
+                    <div
+                        key={filter.name}
+                        style={{ width: wrapperWidth }}
+                        className='px-2 mb-4'
+                    >
+                        <Form.Item
+                            label={labelNode}
+                            layout='vertical'
+                            style={{ marginBottom: 0, width: '100%' }}
                         >
-                            {filter.label}
-                        </span>
-                    ) : (
-                        ''
-                    ),
-                    layout: 'vertical' as const,
-                    style: { marginBottom: 16, width: '100%' }
-                };
-
-                switch (filter.type) {
-                    case 'input':
-                        return (
-                            <Form.Item key={key} {...restProps}>
-                                <Input
-                                    placeholder={filter.placeholder || ''}
-                                    allowClear
-                                    value={values[filter.name]}
-                                    onChange={(e) =>
-                                        handleChange(
-                                            filter.name,
-                                            e.target.value
-                                        )
-                                    }
-                                />
-                            </Form.Item>
-                        );
-
-                    case 'textarea':
-                        return (
-                            <Form.Item key={key} {...restProps}>
-                                <Input.TextArea
-                                    placeholder={filter.placeholder || ''}
-                                    allowClear
-                                    rows={filter.rows || 3}
-                                    value={values[filter.name]}
-                                    onChange={(e) =>
-                                        handleChange(
-                                            filter.name,
-                                            e.target.value
-                                        )
-                                    }
-                                    style={{ width: '470px' }}
-                                />
-                            </Form.Item>
-                        );
-
-                    case 'select':
-                        return (
-                            <Form.Item key={key} {...restProps}>
-                                <Select
-                                    placeholder={filter.placeholder || ''}
-                                    allowClear
-                                    options={filter.options}
-                                    value={values[filter.name]}
-                                    onChange={(value) =>
-                                        handleChange(filter.name, value)
-                                    }
-                                    style={{ width: filter.width || '100%' }}
-                                />
-                            </Form.Item>
-                        );
-
-                    case 'date':
-                        return (
-                            <Form.Item key={key} {...restProps}>
-                                <DatePicker
-                                    placeholder={filter.placeholder || ''}
-                                    allowClear
-                                    value={values[filter.name]}
-                                    onChange={(date: Dayjs) =>
-                                        handleChange(filter.name, date)
-                                    }
-                                    style={{ width: '100%' }}
-                                />
-                            </Form.Item>
-                        );
-
-                    case 'month':
-                        return (
-                            <Form.Item key={key} {...restProps}>
-                                <DatePicker
-                                    picker='month'
-                                    placeholder={filter.placeholder || ''}
-                                    allowClear
-                                    value={
-                                        values[filter.name]
-                                            ? dayjs(values[filter.name])
-                                            : null
-                                    }
-                                    onChange={(date: Dayjs) =>
-                                        handleChange(
-                                            filter.name,
-                                            date ? date.format('YYYY-MM') : null
-                                        )
-                                    }
-                                    style={{ width: '100%' }}
-                                />
-                            </Form.Item>
-                        );
-
-                    case 'checkbox':
-                        return (
-                            <Form.Item key={key} {...restProps}>
-                                <ToggleSwitch
-                                    checked={!!values[filter.name]}
-                                    onToggle={(checked) =>
-                                        handleChange(filter.name, checked)
-                                    }
-                                />
-                            </Form.Item>
-                        );
-
-                    case 'checkboxGroup':
-                        return (
-                            <Form.Item key={key} {...restProps}>
-                                <Checkbox.Group
-                                    options={filter.options}
-                                    value={values[filter.name] || []}
-                                    onChange={(checkedValues) =>
-                                        handleChange(filter.name, checkedValues)
-                                    }
-                                />
-                            </Form.Item>
-                        );
-                    case 'upload':
-                        return (
-                            <Form.Item key={key} {...restProps}>
-                                <Upload
-                                    maxCount={1}
-                                    beforeUpload={beforeUpload}
-                                    listType='picture-card'
-                                    showUploadList={{ showPreviewIcon: false }}
-                                    onPreview={() => false}
-                                    defaultFileList={
-                                        initialValues?.image &&
-                                        typeof initialValues.image === 'string'
-                                            ? [
-                                                  {
-                                                      uid: '-1',
-                                                      name: 'current.png',
-                                                      status: 'done',
-                                                      url: initialValues.image.startsWith(
-                                                          BACKEND_URL
-                                                      )
-                                                          ? initialValues.image
-                                                          : `${BACKEND_URL}${initialValues.image}`
-                                                  }
-                                              ]
-                                            : []
-                                    }
-                                    onChange={(info) => {
-                                        const file =
-                                            info.fileList[0]?.originFileObj ||
-                                            null;
-                                        handleChange(filter.name, file);
-                                    }}
-                                    style={{ borderRadius: 0 }}
-                                >
-                                    {values[filter.name]
-                                        ? null
-                                        : filter.placeholder}
-                                </Upload>
-                            </Form.Item>
-                        );
-
-                    default:
-                        return null;
-                }
+                            {renderInput(filter)}
+                        </Form.Item>
+                    </div>
+                );
             })}
-        </Space>
+        </div>
     );
 }

@@ -147,12 +147,20 @@ export default function PatientHeader() {
                         )}
                     </button>
                 </div>
-                <div className='hidden md:block w-40'>
+                <div
+                    className='hidden md:block w-40 cursor-pointer'
+                    onClick={() => navigate('/')}
+                >
                     <img src={Logo} alt='Logo' />
                 </div>
 
                 <div className='md:hidden w-full flex justify-center absolute left-1/2 transform -translate-x-1/2'>
-                    <img className='h-12' src={Logo} alt='Logo' />
+                    <img
+                        className='h-12 cursor-pointer'
+                        onClick={() => navigate('/')}
+                        src={Logo}
+                        alt='Logo'
+                    />
                 </div>
                 <div className='hidden md:flex gap-3 items-center'>
                     <div className='flex gap-10 mr-10 items-center'>

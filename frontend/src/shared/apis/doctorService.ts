@@ -19,3 +19,11 @@ export const updateDoctor = async (id: number, data: FormData) => {
 export const setPriceDoctor = async (id: number, data: Record<string, any>) => {
     return await api.post(`/admin/doctor-price/${id}`, data);
 };
+
+export const getDetailDoctor = async (id: number) => {
+    return await api.get(`/doctor/detail/${id}`);
+};
+
+export const getSlotDoctor = async (id: number, date: string) => {
+    return await api.get(`/doctor/slots/${id}?date=${date}`);
+};

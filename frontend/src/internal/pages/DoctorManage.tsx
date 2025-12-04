@@ -41,8 +41,6 @@ const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 export default function DoctorManage() {
     const { isDark } = useContext(ThemeContext);
     const dispatch = useAppDispatch();
-
-    // 1. Lấy dữ liệu list, totalDoctors và loading từ Redux
     const {
         list: doctors,
         totalDoctors,
@@ -71,23 +69,17 @@ export default function DoctorManage() {
         new Set()
     );
 
-    // 2. useEffect gọi API với tham số phân trang
     useEffect(() => {
         dispatch(fetchDoctors({ page: currentPage, limit: pageSize }));
     }, [dispatch, currentPage, pageSize]);
 
-    // Lấy danh sách chuyên khoa (lấy nhiều để hiển thị trong select)
     useEffect(() => {
         dispatch(fetchSpecialties({ page: 1, limit: 100 }));
     }, [dispatch]);
 
-    // Hàm refresh dữ liệu tại trang hiện tại
     const refreshData = () => {
         dispatch(fetchDoctors({ page: currentPage, limit: pageSize }));
     };
-
-    // Loại bỏ logic slice client-side
-    // const currentData = doctors.slice(...) -> KHÔNG CẦN NỮA
 
     const onPanelChange = (value: Dayjs) => {
         setScheduleFormData((prev) => ({
@@ -178,6 +170,7 @@ export default function DoctorManage() {
     };
     const handleSubmit = async () => {
         if (
+            !formData.image ||
             !formData.name ||
             !formData.email ||
             !formData.phone ||
@@ -189,7 +182,9 @@ export default function DoctorManage() {
             !formData.ethnicity ||
             !formData.gender ||
             !formData.address ||
-            !formData.degree
+            !formData.degree ||
+            !formData.introduce ||
+            !formData.workExperience
         ) {
             toast.error(
                 language === 'vi'
@@ -247,6 +242,8 @@ export default function DoctorManage() {
         if (formData.image) {
             postData.append('image', formData.image);
         }
+        postData.append('introduce', formData.introduce);
+        postData.append('workExperience', formData.workExperience);
 
         try {
             setIsLoading(true);
@@ -268,7 +265,7 @@ export default function DoctorManage() {
             setIsOpen(false);
             setIsLoading(false);
             setFormData({});
-            refreshData(); // Refresh lại dữ liệu trang hiện tại
+            refreshData();
         } catch (e: any) {
             console.error('Error submitting form:', e);
 
@@ -294,7 +291,7 @@ export default function DoctorManage() {
                 );
 
                 setLoadingStatusId(null);
-                refreshData(); // Refresh lại dữ liệu
+                refreshData();
             } else {
                 toast.error(
                     language === 'vi'
@@ -312,6 +309,7 @@ export default function DoctorManage() {
     };
     const hanleUpdate = async () => {
         if (
+            !formData.image ||
             !formData.name ||
             !formData.email ||
             !formData.phone ||
@@ -321,7 +319,9 @@ export default function DoctorManage() {
             !formData.ethnicity ||
             !formData.gender ||
             !formData.address ||
-            !formData.degree
+            !formData.degree ||
+            !formData.introduce ||
+            !formData.workExperience
         ) {
             toast.error(
                 language === 'vi'
@@ -358,6 +358,8 @@ export default function DoctorManage() {
         if (formData.image) {
             updateData.append('image', formData.image);
         }
+        updateData.append('introduce', formData.introduce);
+        updateData.append('workExperience', formData.workExperience);
 
         try {
             setIsLoading(true);
@@ -383,7 +385,7 @@ export default function DoctorManage() {
             setIsLoading(false);
             setEditItem(null);
             setFormData({});
-            refreshData(); // Refresh lại dữ liệu
+            refreshData();
         } catch (e: any) {
             console.error('Error update form:', e);
 
@@ -434,7 +436,7 @@ export default function DoctorManage() {
             setIsOpen(false);
             setPriceItem(null);
             setFormData({});
-            refreshData(); // Refresh lại dữ liệu
+            refreshData();
         } catch (e: any) {
             console.error('Error setprice form:', e);
 
@@ -757,7 +759,9 @@ export default function DoctorManage() {
                                 gender: old?.gender,
                                 address: old?.address,
                                 degree: old?.degree,
-                                image: old?.image
+                                image: old?.image,
+                                introduce: old?.introduce,
+                                workExperience: old?.workExperience
                             });
 
                             setIsOpen(true);
@@ -778,8 +782,23 @@ export default function DoctorManage() {
         }
     ];
 
-    // Cập nhật cấu hình Filter modal
     let modalConfigs: filterConfig[] = [];
+
+    const editorFields: filterConfig[] = [
+        {
+            name: 'introduce',
+            label: t('doctor.intro'),
+            type: 'editor',
+            width: '100%'
+        },
+        {
+            name: 'workExperience',
+            label: t('doctor.exp'),
+            type: 'editor',
+            width: '100%'
+        }
+    ];
+
     if (editItem) {
         modalConfigs = [
             {
@@ -810,13 +829,13 @@ export default function DoctorManage() {
                 options: specialties.map((s) => ({
                     value: String(s.id),
                     label: s.name
-                })),
-                width: 200
+                }))
             },
             {
                 name: 'room',
                 label: t('doctor.ro') as string,
-                type: 'input' as const
+                type: 'input' as const,
+                width: '30%'
             },
             {
                 name: 'dob',
@@ -832,7 +851,6 @@ export default function DoctorManage() {
                 name: 'gender',
                 label: t('doctor.gd') as string,
                 type: 'select' as const,
-                width: 100,
                 options: [
                     { value: '1', label: t('doctor.ma') },
                     { value: '0', label: t('doctor.fm') },
@@ -842,20 +860,24 @@ export default function DoctorManage() {
             {
                 name: 'address',
                 label: t('doctor.ad') as string,
-                type: 'input' as const
+                type: 'input' as const,
+                width: '100%'
             },
             {
                 name: 'degree',
                 label: t('doctor.dg') as string,
                 type: 'input' as const
-            }
+            },
+
+            ...editorFields
         ];
     } else if (priceItem) {
         modalConfigs = [
             {
                 name: 'price',
                 label: t('doctor.pr') as string,
-                type: 'input' as const
+                type: 'input' as const,
+                width: '100%'
             }
         ];
     } else {
@@ -898,13 +920,13 @@ export default function DoctorManage() {
                 options: specialties.map((s) => ({
                     value: String(s.id),
                     label: s.name
-                })),
-                width: 200
+                }))
             },
             {
                 name: 'room',
                 label: t('doctor.ro') as string,
-                type: 'input' as const
+                type: 'input' as const,
+                width: '30%'
             },
             {
                 name: 'dob',
@@ -920,7 +942,6 @@ export default function DoctorManage() {
                 name: 'gender',
                 label: t('doctor.gd') as string,
                 type: 'select' as const,
-                width: 100,
                 options: [
                     { value: '1', label: t('doctor.ma') },
                     { value: '0', label: t('doctor.fm') },
@@ -930,13 +951,16 @@ export default function DoctorManage() {
             {
                 name: 'address',
                 label: t('doctor.ad') as string,
-                type: 'input' as const
+                type: 'input' as const,
+                width: '100%'
             },
             {
                 name: 'degree',
                 label: t('doctor.dg') as string,
                 type: 'input' as const
-            }
+            },
+
+            ...editorFields
         ];
     }
 
@@ -989,15 +1013,15 @@ export default function DoctorManage() {
 
                 <div className={isDark ? 'text-black' : 'text-blue-500'}>
                     <Table
-                        loading={tableLoading} // Hiển thị loading trên Table
-                        dataSource={doctors} // Dữ liệu từ Redux (đã phân trang)
+                        loading={tableLoading}
+                        dataSource={doctors}
                         columns={columns}
                         rowKey='id'
                         showSorterTooltip={false}
                         pagination={false}
                         footer={() => (
                             <Pagination
-                                total={totalDoctors} // Tổng số bản ghi từ Server
+                                total={totalDoctors}
                                 pageSize={pageSize}
                                 current={currentPage}
                                 onChange={(page) => setCurrentPage(page)}

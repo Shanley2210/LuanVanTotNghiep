@@ -126,7 +126,9 @@
         "sc": "Tạo lịch",
         "sd": "Xóa lịch",
         "wo": "Làm việc",
-        "dn": "Nghỉ"
+        "dn": "Nghỉ",
+        "intro": "Giới thiệu",
+        "exp": "Kinh nghiệm"
     },
     "patient": {
         "tt": "Bệnh nhân",
@@ -218,5 +220,21 @@
         "csbm": "Chính sách bảo mật",
         "dksd": "Điều khoản sử dụng",
         "lhe": "Liên hệ"
+    },
+    "detalDoctor": {
+        "dt": "Bác sĩ: ",
+        "ro": "Phòng khám: ",
+        "dc": "Địa chỉ khám",
+        "pr": "Giá khám",
+        "subPr": "Giá khám chưa bao gồm chụp chiếu, xét nghiệm",
+        "mt": " Bệnh viện có các hình thức thanh toán: Chuyển khoản, tiền mặt, thẻ tín dụng",
+        "bh": "Loại bảo hiểm áp dụng",
+        "nhnn": "Bảo hiểm Y tế nhà nước",
+        "subBh": "Áp dụng cho bệnh nhân đăng ký khám chữa bệnh ban đầu tại bệnh viện hoặc có giấy chuyển viện từ đơn vị khác",
+        "lk": "Lịch khám",
+        "nlk": "Không có lịch khám",
+        "cdt": "Chọn thời gian đặt lịch (phí đặt lịch 0đ)",
+        "int": "Giới thiệu ngắn",
+        "exp": "Kinh nghiệm làm việc"
     }
 }

@@ -8,7 +8,6 @@ const getServiceService = (page, limit) => {
             const { count, rows } = await db.Service.findAndCountAll({
                 offset: offset,
                 limit: limit,
-
                 order: [['createdAt', 'DESC']]
             });
 

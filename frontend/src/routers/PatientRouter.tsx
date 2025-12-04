@@ -5,6 +5,7 @@ import VerifyEmail from '@/patient/pages/VerifyEmail';
 import ResetPassword from '@/patient/pages/ResetPassword';
 import HomePage from '@/patient/pages/HomePage';
 import PatientLayout from '@/patient/layout/PatientLayout';
+import DoctorDetail from '@/patient/pages/DoctorDetail';
 
 export default function PatientRouter() {
     return (
@@ -20,7 +21,8 @@ export default function PatientRouter() {
                     </PatientLayout>
                 }
             >
-                <Route path='/' element={<HomePage />} />
+                <Route index element={<HomePage />} />
+                <Route path='bac-si/:slug/:id' element={<DoctorDetail />} />
             </Route>
         </Routes>
     );

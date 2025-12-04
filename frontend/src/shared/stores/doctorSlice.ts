@@ -17,6 +17,8 @@ export interface IDoctor {
     image: string;
     price: string;
     status: string;
+    introduce: string;
+    workExperience: string;
     createdAt: string;
     updatedAt: string;
     user: {
@@ -64,14 +66,17 @@ const initialState: IDoctorState = {
 
 export const fetchDoctors = createAsyncThunk<
     IFetchDoctorsResponse,
-    { page: number; limit: number },
+    { page: number; limit: number; status?: string },
     { rejectValue: string }
 >('doctor/fetchDoctor', async (params, { rejectWithValue }) => {
     try {
-        const { page, limit } = params;
-        const response = await api.get(
-            `/doctor/all?page=${page}&limit=${limit}`
-        );
+        const { page, limit, status } = params;
+
+        let url = `/doctor/all?page=${page}&limit=${limit}`;
+        if (status) {
+            url += `&status=${status}`;
+        }
+        const response = await api.get(url);
 
         const { errCode, message, data, meta } = response.data;
 

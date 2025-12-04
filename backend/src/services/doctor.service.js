@@ -1,12 +1,17 @@
 const { where, Op } = require('sequelize');
 const db = require('../models');
 
-const getAllDoctorsService = (page, limit) => {
+const getAllDoctorsService = (page, limit, status = null) => {
     return new Promise(async (resolve, reject) => {
         try {
             const offset = (page - 1) * limit;
+            let whereCondition = {};
+            if (status) {
+                whereCondition.status = status;
+            }
 
             const { count, rows } = await db.Doctor.findAndCountAll({
+                where: whereCondition,
                 offset: offset,
                 limit: limit,
                 distinct: true,

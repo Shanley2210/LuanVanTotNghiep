@@ -51,6 +51,8 @@ module.exports = (sequelize, DataTypes) => {
             room: DataTypes.STRING,
             image: DataTypes.STRING,
             price: DataTypes.DECIMAL,
+            introduce: DataTypes.TEXT,
+            workExperience: DataTypes.TEXT,
             status: DataTypes.STRING
         },
         {

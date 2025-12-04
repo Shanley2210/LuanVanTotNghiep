@@ -49,6 +49,14 @@ module.exports = {
                 type: Sequelize.DECIMAL,
                 allowNull: true
             },
+            introduce: {
+                type: Sequelize.TEXT,
+                allowNull: true
+            },
+            workExperience: {
+                type: Sequelize.TEXT,
+                allowNull: true
+            },
             status: {
                 type: Sequelize.STRING,
                 allowNull: true
