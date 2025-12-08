@@ -5,6 +5,16 @@ const moment = require('moment');
 const { where } = require('sequelize');
 require('moment/locale/vi');
 
+//     patientInfo.user.email,
+//     appointment.id,
+//     patientNameDisplay,
+//     type,
+//     target,
+//     appointmentCreatedTime,
+//     finalPrice,
+//     deposit,
+//     'pending'
+
 const sendAppontment = async (
     email,
     id,
@@ -297,12 +307,9 @@ const getAppointmentsService = async (patientId) => {
     });
 };
 
-const createAppointmentService = async (
-    userId,
-    doctorId,
-    slotId,
-    serviceId
-) => {
+const createAppointmentService = async (data) => {
+    const { userId, doctorId, slotId, serviceId, bookingInfo } = data;
+
     return new Promise(async (resolve, reject) => {
         const trans = await db.sequelize.transaction();
 
@@ -313,7 +320,13 @@ const createAppointmentService = async (
                     {
                         model: db.Patient,
                         as: 'patient',
-                        attributes: ['id']
+                        attributes: [
+                            'id',
+                            'gender',
+                            'dob',
+                            'ethnicity',
+                            'address'
+                        ]
                     }
                 ],
                 transaction: trans
@@ -323,7 +336,8 @@ const createAppointmentService = async (
                 await trans.rollback();
                 return resolve({
                     errCode: 1,
-                    errMessage: 'Patient not found or profile not created.'
+                    errEnMessage: 'Patient not found or profile not created.',
+                    errViMessage: 'Không tìm thấy bệnh nhân hoặc chưa tạo hồ sơ'
                 });
             }
 
@@ -344,7 +358,8 @@ const createAppointmentService = async (
                 await trans.rollback();
                 return resolve({
                     errCode: 2,
-                    errMessage: 'Invalid appointment type'
+                    errEnMessage: 'Invalid appointment type',
+                    errViMessage: 'Loại lịch hẹn không hợp lệ'
                 });
             }
 
@@ -369,7 +384,8 @@ const createAppointmentService = async (
                     await trans.rollback();
                     return resolve({
                         errCode: 3,
-                        errMessage: 'Doctor not found'
+                        errEnMessage: 'Doctor not found',
+                        errViMessage: 'Bác sĩ không tồn tại'
                     });
                 }
 
@@ -381,17 +397,38 @@ const createAppointmentService = async (
                     transaction: trans
                 });
 
-                if (!currentSlot || currentSlot.capacity <= 0) {
+                if (!currentSlot || currentSlot.capacity < 1) {
                     await trans.rollback();
                     return resolve({
                         errCode: 4,
-                        errMessage: 'Slot not found or slot full'
+                        errEnMessage: 'Slot not found or slot full',
+                        errViMessage:
+                            'Khoảng thời gian không tồn tại hoặc đã đầy'
                     });
                 }
 
-                currentSlot.capacity -= 1;
-                currentSlot.status =
-                    currentSlot.capacity <= 0 ? 'full' : 'booked';
+                const checkDuplicate = await db.Appointment.findOne({
+                    where: {
+                        patientId: patientId,
+                        slotId: finalSlotId,
+                        status: ['pending', 'confirmed', 'succeeded']
+                    },
+                    transaction: trans
+                });
+
+                if (checkDuplicate) {
+                    await trans.rollback();
+                    return resolve({
+                        errCode: 7,
+                        errEnMessage:
+                            'You have already booked an appointment in this time slot.',
+                        errViMessage:
+                            'Bạn đã đặt lịch hẹn trong khung giờ này rồi, vui lòng kiểm tra lại!'
+                    });
+                }
+
+                currentSlot.capacity = 0;
+                currentSlot.status = 'full';
                 await currentSlot.save({ transaction: trans });
 
                 finalServiceId = null;
@@ -406,7 +443,8 @@ const createAppointmentService = async (
                     await trans.rollback();
                     return resolve({
                         errCode: 5,
-                        errMessage: 'Service not found'
+                        errEnMessage: 'Service not found',
+                        errViMessage: 'Dịch vụ không tồn tại'
                     });
                 }
 
@@ -414,11 +452,7 @@ const createAppointmentService = async (
                     const doctorInfo = await db.Doctor.findOne({
                         where: { id: finalDoctorId },
                         include: [
-                            {
-                                model: db.User,
-                                as: 'user',
-                                attributes: ['name']
-                            }
+                            { model: db.User, as: 'user', attributes: ['name'] }
                         ]
                     });
 
@@ -426,13 +460,13 @@ const createAppointmentService = async (
                         await trans.rollback();
                         return resolve({
                             errCode: 6,
-                            errMessage: 'Doctor not found for service'
+                            errEnMessage: 'Doctor not found for service',
+                            errViMessage: 'Bác sĩ không tồn tại'
                         });
                     }
 
                     let doctorPrice = Number(doctorInfo.price / 2);
                     let servicePrice = Number(serviceInfo.price);
-
                     finalPrice = doctorPrice + servicePrice;
                     target = `Dịch vụ ${serviceInfo.name} (Bác sĩ: ${
                         doctorInfo.user.name || finalDoctorId
@@ -449,43 +483,71 @@ const createAppointmentService = async (
 
             deposit = finalPrice * 0.2;
 
+            let appointmentData = {
+                doctorId: finalDoctorId,
+                patientId: patientId,
+                slotId: finalSlotId,
+                serviceId: finalServiceId,
+                status: 'pending',
+                deposit: deposit,
+                deposited: 0,
+                type: type,
+                finalPrice: finalPrice,
+                bookingFor: bookingInfo.bookingFor,
+                reason: bookingInfo.reason
+            };
+
+            if (bookingInfo.bookingFor === 'relative') {
+                appointmentData.patientName = bookingInfo.patientName;
+                appointmentData.patientGender = bookingInfo.patientGender;
+                appointmentData.patientPhone = bookingInfo.patientPhone;
+                appointmentData.patientEmail = bookingInfo.patientEmail;
+                appointmentData.patientDob = bookingInfo.patientDob;
+                appointmentData.patientEthnicity = bookingInfo.patientEthnicity;
+                appointmentData.patientAddress = bookingInfo.patientAddress;
+            } else {
+                appointmentData.patientName = findPatient.name;
+                appointmentData.patientGender = findPatient.patient.gender;
+                appointmentData.patientPhone = findPatient.phone;
+                appointmentData.patientEmail = findPatient.email;
+                appointmentData.patientDob = findPatient.patient.dob
+                    ? moment(findPatient.patient.dob).format('YYYY-MM-DD')
+                    : '';
+                appointmentData.patientEthnicity =
+                    findPatient.patient.ethnicity;
+                appointmentData.patientAddress = findPatient.patient.address;
+            }
+
+            const appointment = await db.Appointment.create(appointmentData, {
+                transaction: trans
+            });
+
+            await trans.commit();
+
             const patientInfo = await db.Patient.findOne({
                 where: { id: patientId },
                 include: [
                     {
                         model: db.User,
                         as: 'user',
-                        attributes: ['name', 'email', 'phone']
+                        attributes: ['name', 'email']
                     }
-                ],
-                transaction: trans
+                ]
             });
-
-            const appointment = await db.Appointment.create(
-                {
-                    doctorId: finalDoctorId,
-                    patientId: patientId,
-                    slotId: finalSlotId,
-                    serviceId: finalServiceId,
-                    status: 'pending',
-                    deposit: deposit,
-                    deposited: 0,
-                    type: type,
-                    finalPrice: finalPrice
-                },
-                { transaction: trans }
-            );
-
-            await trans.commit();
 
             const appointmentCreatedTime = moment(appointment.createdAt)
                 .locale('vi')
                 .format('llll');
 
+            const patientNameDisplay =
+                bookingInfo.bookingFor === 'relative'
+                    ? bookingInfo.patientName
+                    : patientInfo.user.name;
+
             await sendAppontment(
                 patientInfo.user.email,
                 appointment.id,
-                patientInfo.user.name,
+                patientNameDisplay,
                 type,
                 target,
                 appointmentCreatedTime,
@@ -496,7 +558,8 @@ const createAppointmentService = async (
 
             return resolve({
                 errCode: 0,
-                message: 'Create appointment successful'
+                enMessage: 'Create appointment successful',
+                viMessage: 'Tạo lịch hẹn thành công'
             });
         } catch (e) {
             if (!trans.finished) await trans.rollback();

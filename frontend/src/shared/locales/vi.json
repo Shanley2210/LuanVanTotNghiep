@@ -226,6 +226,8 @@
     "detalDoctor": {
         "dt": "Bác sĩ: ",
         "ro": "Phòng khám: ",
+        "ck": "Chuyên khoa: ",
+        "bc": "Bằng cấp: ",
         "dc": "Địa chỉ khám",
         "pr": "Giá khám",
         "subPr": "Giá khám chưa bao gồm chụp chiếu, xét nghiệm",

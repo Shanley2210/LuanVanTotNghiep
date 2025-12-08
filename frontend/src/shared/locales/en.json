@@ -227,6 +227,8 @@
         "dt": "Doctor",
         "ro": "Clinic: ",
         "dc": "Address",
+        "ck": "Specialty: ",
+        "bc": "Degree: ",
         "pr": "Examination fee",
         "subPr": "The examination fee does not include imaging and lab tests.",
         "mt": "The hospital accepts the following payment methods: Bank transfer, cash, and credit card.",

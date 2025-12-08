@@ -15,7 +15,7 @@ module.exports = {
                 updatedAt: new Date()
             },
             {
-                name: 'Khám Nội tổng quát',
+                name: 'Nội tổng quát',
                 description:
                     'Khám bệnh lý nội khoa không chuyên sâu, đánh giá các triệu chứng liên quan đến tim, phổi, tiêu hóa, thận.',
                 durationMinutes: 45,
@@ -25,7 +25,7 @@ module.exports = {
                 updatedAt: new Date()
             },
             {
-                name: 'Khám Ngoại tổng quát',
+                name: 'Ngoại tổng quát',
                 description:
                     'Khám bệnh lý cần can thiệp phẫu thuật, đánh giá các khối u, chấn thương hoặc dị tật cần mổ.',
                 durationMinutes: 35,

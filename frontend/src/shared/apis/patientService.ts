@@ -27,3 +27,7 @@ export const createProfile = async (data: Record<string, any>) => {
 export const updateProfile = async (data: Record<string, any>) => {
     return await api.put('/patient/profile', data);
 };
+
+export const bookingAppointment = async (data: Record<string, any>) => {
+    return await api.post('/patient/appointments', data);
+};

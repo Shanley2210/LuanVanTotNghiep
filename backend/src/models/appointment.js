@@ -55,7 +55,16 @@ module.exports = (sequelize, DataTypes) => {
             deposit: DataTypes.DECIMAL,
             deposited: DataTypes.DECIMAL,
             type: DataTypes.STRING,
-            finalPrice: DataTypes.DECIMAL
+            finalPrice: DataTypes.DECIMAL,
+            bookingFor: DataTypes.STRING,
+            patientName: DataTypes.STRING,
+            patientGender: DataTypes.STRING,
+            patientPhone: DataTypes.STRING,
+            patientEmail: DataTypes.STRING,
+            patientDob: DataTypes.STRING,
+            patientEthnicity: DataTypes.STRING,
+            patientAddress: DataTypes.STRING,
+            reason: DataTypes.TEXT
         },
         {
             sequelize,

@@ -86,16 +86,35 @@ export default function DoctorDetail() {
 
                             <div className='flex flex-col gap-2'>
                                 <div className='flex flex-col md:flex-row gap-1 md:gap-2 md:items-center'>
-                                    <span>{t('detalDoctor.dt')}:</span>
+                                    <span>{t('detalDoctor.dt')}</span>
                                     <span className='text-xl md:text-2xl font-bold'>
                                         {dataDetail?.user?.name || 'No data'}
                                     </span>
                                 </div>
-                                <span className='text-gray-500'>
-                                    {dataDetail?.specialty?.name || 'No data'}
-                                </span>
+
                                 <div className='flex gap-1'>
-                                    <span>{t('detalDoctor.ro')}:</span>
+                                    <span className='text-gray-500'>
+                                        {t('detalDoctor.bc')}
+                                    </span>
+                                    <span className='font-semibold'>
+                                        {dataDetail?.degree || 'No data'}
+                                    </span>
+                                </div>
+
+                                <div className='flex gap-1'>
+                                    <span className='text-gray-500'>
+                                        {t('detalDoctor.ck')}
+                                    </span>
+                                    <span className='font-semibold'>
+                                        {dataDetail?.specialty?.name ||
+                                            'No data'}
+                                    </span>
+                                </div>
+
+                                <div className='flex gap-1'>
+                                    <span className='text-gray-500'>
+                                        {t('detalDoctor.ro')}
+                                    </span>
                                     <span className='font-semibold'>
                                         {dataDetail?.room || 'No data'}
                                     </span>
@@ -147,7 +166,13 @@ export default function DoctorDetail() {
                         </div>
                     </div>
 
-                    <ExaminationSchedule doctorId={Number(id)} />
+                    <ExaminationSchedule
+                        doctorId={Number(id)}
+                        degree={dataDetail?.degree || 'No data'}
+                        doctorName={dataDetail?.user?.name || 'No data'}
+                        specialty={dataDetail?.specialty?.name || 'No data'}
+                        price={dataDetail?.price || 0}
+                    />
 
                     <div className='w-full'>
                         <Tabs

@@ -88,14 +88,39 @@ const getAppointmentsController = async (req, res) => {
 
 const createAppointmentController = async (req, res) => {
     const userId = req.user.id;
-    const { doctorId, slotId, serviceId } = req.body;
 
-    const response = await patientService.createAppointmentService(
-        userId,
+    const {
         doctorId,
         slotId,
-        serviceId
-    );
+        serviceId,
+        bookingFor,
+        patientName,
+        patientGender,
+        patientPhone,
+        patientEmail,
+        patientDob,
+        patientEthnicity,
+        patientAddress,
+        reason
+    } = req.body;
+
+    const response = await patientService.createAppointmentService({
+        userId: userId,
+        doctorId: doctorId,
+        slotId: slotId,
+        serviceId: serviceId,
+        bookingInfo: {
+            bookingFor,
+            patientName,
+            patientGender,
+            patientPhone,
+            patientEmail,
+            patientDob,
+            patientEthnicity,
+            patientAddress,
+            reason
+        }
+    });
 
     return res.status(200).json(response);
 };

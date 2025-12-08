@@ -8,6 +8,7 @@ import PatientLayout from '@/patient/layout/PatientLayout';
 import DoctorDetail from '@/patient/pages/DoctorDetail';
 import Profile from '@/patient/pages/Profile';
 import CreateEditProfile from '@/patient/pages/CreateEditProfile';
+import BookingAppointment from '@/patient/pages/BookingAppointment';
 
 export default function PatientRouter() {
     return (
@@ -29,6 +30,10 @@ export default function PatientRouter() {
                 <Route
                     path='/profile/create-profile'
                     element={<CreateEditProfile />}
+                />
+                <Route
+                    path='/booking-appointment'
+                    element={<BookingAppointment />}
                 />
             </Route>
         </Routes>

@@ -12,6 +12,7 @@ import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaRegHandPointUp } from 'react-icons/fa';
 import { PiCalendarDots } from 'react-icons/pi';
+import { useNavigate } from 'react-router-dom';
 
 interface ScheduleSlot {
     id: number;
@@ -20,11 +21,21 @@ interface ScheduleSlot {
     [key: string]: any;
 }
 
-export default function ExaminationSchedule({
-    doctorId
-}: {
+interface ExaminationScheduleProps {
     doctorId: number;
-}) {
+    degree: string;
+    doctorName: string;
+    specialty: string;
+    price: number;
+}
+
+export default function ExaminationSchedule({
+    doctorId,
+    degree,
+    doctorName,
+    specialty,
+    price
+}: ExaminationScheduleProps) {
     const { isDark } = useContext(ThemeContext);
     const todayStr = new Date().toISOString().split('T')[0];
     const [dates, setDates] = useState<string[]>([]);
@@ -32,6 +43,7 @@ export default function ExaminationSchedule({
     const [slotData, setSlotData] = useState<ScheduleSlot[]>([]);
     const { t, i18n } = useTranslation();
     const language = i18n.language;
+    const navigate = useNavigate();
 
     const formatDateLabel = (dateString: string) => {
         const date = new Date(dateString);
@@ -68,6 +80,25 @@ export default function ExaminationSchedule({
             minute: '2-digit',
             hour12: false
         }).format(date);
+    };
+
+    const handleBooking = (slot: ScheduleSlot) => {
+        const timeString = `${formatTime(slot.startTime)} - ${formatTime(
+            slot.endTime
+        )}`;
+
+        navigate('/booking-appointment', {
+            state: {
+                doctorId: doctorId,
+                degree: degree,
+                doctorName: doctorName,
+                specialty: specialty,
+                price: price,
+                date: selectedDate,
+                time: timeString,
+                slotId: slot.id
+            }
+        });
     };
 
     useEffect(() => {
@@ -151,7 +182,7 @@ export default function ExaminationSchedule({
                                 key={index}
                                 onClick={() => {
                                     if (isAvailable) {
-                                        console.log('Selected slot:', slot);
+                                        handleBooking(slot);
                                     }
                                 }}
                                 className={`

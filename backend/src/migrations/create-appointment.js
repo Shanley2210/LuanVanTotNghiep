@@ -49,6 +49,42 @@ module.exports = {
                 type: Sequelize.DECIMAL,
                 allowNull: true
             },
+            bookingFor: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            patientName: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            patientGender: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            patientPhone: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            patientEmail: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            patientDob: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            patientEthnicity: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            patientAddress: {
+                type: Sequelize.STRING,
+                allowNull: true
+            },
+            reason: {
+                type: Sequelize.TEXT,
+                allowNull: true
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE

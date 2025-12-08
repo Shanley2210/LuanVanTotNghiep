@@ -1390,7 +1390,7 @@ const createScheduleAndSlotService = (doctorId, data) => {
                             scheduleId: newSchedule.id,
                             startTime: currentTime,
                             endTime: nextTime,
-                            capacity: 3,
+                            capacity: 1,
                             status: 'available'
                         });
 
