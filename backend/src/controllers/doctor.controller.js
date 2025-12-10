@@ -125,11 +125,44 @@ const getAppointmentsController = async (req, res) => {
     }
 };
 
+const getDoctorByServiceController = async (req, res) => {
+    try {
+        const serviceId = req.params.id;
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        const status = req.query.status;
+
+        if (!serviceId) {
+            return res.json({
+                errCode: 1,
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
+            });
+        }
+
+        const response = await doctorService.getDoctorByServiceService(
+            serviceId,
+            page,
+            limit,
+            status
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in getDoctorByService:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
 module.exports = {
     getAllDoctorsController,
     getDoctorByIdController,
     getSchedulesController,
     getSlotsController,
     getDoctorBySpecialtyController,
-    getAppointmentsController
+    getAppointmentsController,
+    getDoctorByServiceController
 };

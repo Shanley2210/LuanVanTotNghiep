@@ -4,12 +4,23 @@ import { useAppDispatch, useAppSelector } from '@/shared/stores/hooks';
 import { fetchServices, selectServices } from '@/shared/stores/serviceSlice';
 import { useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 export default function SerivceHompage() {
     const { t } = useTranslation();
     const { isDark } = useContext(ThemeContext);
     const dispatch = useAppDispatch();
     const { list: services } = useAppSelector(selectServices);
+    const navigate = useNavigate();
+
+    const slugify = (text: string) =>
+        text
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/^-+|-+$/g, '');
 
     useEffect(() => {
         dispatch(fetchServices({ page: 1, limit: 10 }));
@@ -59,6 +70,13 @@ export default function SerivceHompage() {
                                         : 'border-blue-500 bg-white text-black'
                                 }
                         `}
+                        onClick={() =>
+                            navigate(
+                                `/doctors-by-service/${slugify(item.name)}/${
+                                    item.id
+                                }`
+                            )
+                        }
                     >
                         <div>
                             <p
@@ -77,10 +95,12 @@ export default function SerivceHompage() {
                                 {item.description}
                             </p>
                         </div>
-                        <p className='py-5 text-center'>
-                            {t('homePage.du')} {item.durationMinutes}{' '}
-                            {t('homePage.mi')}
-                        </p>
+                        <div className='py-5 text-center flex flex-col gap-2 items-center'>
+                            <p>
+                                {t('homePage.du')} {item.durationMinutes}{' '}
+                                {t('homePage.mi')}
+                            </p>
+                        </div>
                     </div>
                 ))}
             </div>

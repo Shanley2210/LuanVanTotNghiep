@@ -22,12 +22,14 @@ import {
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoCalendarOutline } from 'react-icons/io5';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import {
     AddressSelector,
     type AddressValue
 } from '../components/AddressSelector';
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
 export default function BookingAppointment() {
     const location = useLocation();
@@ -39,6 +41,7 @@ export default function BookingAppointment() {
     const [isLoading, setIsLoading] = useState(false);
     const { t, i18n } = useTranslation();
     const language = i18n.language;
+    const navigate = useNavigate();
 
     const [addressData, setAddressData] = useState<AddressValue>({
         provinceCode: '',
@@ -54,7 +57,7 @@ export default function BookingAppointment() {
         patientPhone: '',
         patientEmail: '',
         patientDob: '',
-        patientNationality: '',
+        patientEthnicity: '',
         patientAddress: ''
     });
 
@@ -73,6 +76,7 @@ export default function BookingAppointment() {
     };
 
     const handleBooking = async () => {
+        // ... (Giữ nguyên logic handleBooking)
         let payload = {};
         if (mode === 'self') {
             if (!formData.reason.trim()) {
@@ -97,7 +101,7 @@ export default function BookingAppointment() {
                 patientPhone,
                 patientEmail,
                 patientDob,
-                patientNationality,
+                patientEthnicity,
                 patientAddress,
                 reason
             } = formData;
@@ -108,7 +112,7 @@ export default function BookingAppointment() {
                 !patientPhone ||
                 !patientEmail ||
                 !patientDob ||
-                !patientNationality ||
+                !patientEthnicity ||
                 !patientAddress ||
                 !reason
             ) {
@@ -148,22 +152,19 @@ export default function BookingAppointment() {
                 patientPhone: formData.patientPhone,
                 patientEmail: formData.patientEmail,
                 patientDob: formData.patientDob,
-                patientNationality: formData.patientNationality,
+                patientEthnicity: formData.patientEthnicity,
                 patientAddress: formData.patientAddress
             };
         }
 
         try {
             setIsLoading(true);
-
             const res = await bookingAppointment(payload);
-
-            console.log(res);
-
             if (res && res.data && res.data.errCode === 0) {
                 toast.success(
                     language === 'vi' ? res.data.viMessage : res.data.enMessage
                 );
+                navigate('/patient/my-appointment');
             } else {
                 toast.error(
                     language === 'vi'
@@ -186,9 +187,33 @@ export default function BookingAppointment() {
         return new Date(isoDate).toLocaleDateString('vi-VN');
     };
 
+    const formatBookingDate = (dateStr: string) => {
+        if (!dateStr) return '';
+        const dateObj = new Date(dateStr);
+        if (isNaN(dateObj.getTime())) return dateStr;
+
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+
+        if (language === 'vi') {
+            return `${day}/${month}/${year}`;
+        }
+        return `${year}/${month}/${day}`;
+    };
+
+    const formatPrice = (price: any) => {
+        if (!price) return '0 ₫';
+        return new Intl.NumberFormat('vi-VN', {
+            style: 'currency',
+            currency: 'VND'
+        }).format(Number(price));
+    };
+
     useEffect(() => {
         dispatch(fetchPatientProfile());
     }, [dispatch]);
+
     useEffect(() => {
         const addressParts = [
             addressData.detail,
@@ -211,85 +236,105 @@ export default function BookingAppointment() {
             ) : (
                 <div
                     className={`
-                    px-4 lg:px-20 w-screen py-5 my-5
+                    px-4 lg:px-20 w-full py-5 my-5
                     ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'}
                 `}
                 >
-                    <h1 className='text-3xl text-center pt-3 pb-6'>Booking</h1>
-                    <div className='flex justify-between gap-10'>
-                        <div className='flex flex-col w-1/3 gap-5'>
-                            <h1 className='text-xl text-center p-5'>
-                                Booking Summary
+                    <h1 className='text-2xl lg:text-3xl text-center pt-3 pb-6 font-bold'>
+                        {t('bookingAppointment.bkbs')}
+                    </h1>
+
+                    {/* Responsive Container: Column on Mobile, Row on Desktop */}
+                    <div className='flex flex-col lg:flex-row justify-between gap-6 lg:gap-10'>
+                        {/* --- LEFT COLUMN: Doctor Info --- */}
+                        <div className='flex flex-col w-full lg:w-1/3 gap-5'>
+                            <h1 className='text-xl text-center font-semibold lg:p-5'>
+                                {t('bookingAppointment.inbk')}
                             </h1>
-                            <div className='flex border border-gray-200 p-5 gap-5 items-center'>
+
+                            {/* Doctor Card */}
+                            <div className='flex border border-gray-200 p-4 lg:p-5 gap-4 lg:gap-5 items-center'>
                                 <img
-                                    src='https://doccure.dreamstechnologies.com/html/template/assets/img/doctors/doctor-thumb-02.jpg'
+                                    src={
+                                        BACKEND_URL + doctorInfo?.image ||
+                                        'No data'
+                                    }
                                     alt=''
-                                    className='w-20'
+                                    className='w-16 h-16 lg:w-20 lg:h-20 object-cover rounded-full lg:rounded-none'
+                                    // Lưu ý: Avatar thường để tròn cho đẹp, nhưng nếu bạn muốn rounded-none tuyệt đối thì xóa rounded-full
                                 />
-                                <div className='flex flex-col'>
-                                    <div className='text-blue-500'>
-                                        <span>{doctorInfo?.degree}, </span>Bác
-                                        sĩ <span>{doctorInfo?.doctorName}</span>
+                                <div className='flex flex-col text-sm lg:text-base'>
+                                    <div className='text-blue-500 font-medium'>
+                                        <span>{doctorInfo?.degree}, </span>{' '}
+                                        {t('bookingAppointment.bs')}:{' '}
+                                        <span>{doctorInfo?.doctorName}</span>
                                     </div>
-                                    <div>
-                                        Chuyen khoa:{' '}
-                                        <span>{doctorInfo?.specialty}</span>
+                                    <div className='text-gray-600'>
+                                        {t('bookingAppointment.ck')}{' '}
+                                        <span className='font-medium'>
+                                            {doctorInfo?.specialty}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className='flex flex-col border border-gray-200 p-5 gap-1'>
-                                <div className='flex'>
-                                    <span className='flex-1'>
-                                        Booking Date:
+                            {/* Info Blocks */}
+                            <div className='flex flex-col border border-gray-200 p-4 lg:p-5 gap-2 text-sm lg:text-base'>
+                                <div className='flex justify-between'>
+                                    <span className='font-medium'>
+                                        {t('bookingAppointment.ndl')}:
                                     </span>
-                                    <span className='flex-1 text-gray-600'>
-                                        {doctorInfo?.date}
+                                    <span className='text-gray-600 font-bold'>
+                                        {formatBookingDate(doctorInfo?.date)}
                                     </span>
                                 </div>
-
-                                <div className='flex'>
-                                    <span className='flex-1'>
-                                        Booking Time:
+                                <div className='flex justify-between'>
+                                    <span className='font-medium'>
+                                        {t('bookingAppointment.thgian')}:
                                     </span>
-                                    <span className='flex-1 text-gray-600'>
+                                    <span className='text-gray-600'>
                                         {doctorInfo?.time}
                                     </span>
                                 </div>
                             </div>
 
-                            <div className='flex flex-col border border-gray-200 p-5 gap-1'>
-                                <div className='flex'>
-                                    <span className='flex-1'>Booking fee:</span>
-                                    <span className='flex-1 text-gray-600'>
-                                        free
+                            <div className='flex flex-col border border-gray-200 p-4 lg:p-5 gap-2 text-sm lg:text-base'>
+                                <div className='flex justify-between'>
+                                    <span className='font-medium'>
+                                        {t('bookingAppointment.gid')}:
+                                    </span>
+                                    <span className='text-gray-600'>
+                                        {t('bookingAppointment.free')}
                                     </span>
                                 </div>
-                                <div className='flex'>
-                                    <span className='flex-1'>
-                                        Examination fee:
+                                <div className='flex justify-between'>
+                                    <span className='font-medium'>
+                                        {t('bookingAppointment.gkb')}:
                                     </span>
-                                    <span className='flex-1 text-gray-600'>
-                                        {doctorInfo?.price} VND
+                                    <span className='text-gray-600'>
+                                        {formatPrice(doctorInfo?.price)}
                                     </span>
                                 </div>
-                                <div className='flex'>
-                                    <span className='flex-1'>Total:</span>
-                                    <span className='flex-1 text-gray-600'>
-                                        {doctorInfo?.price} VND
+                                <div className='border-t border-gray-100 my-1'></div>
+                                <div className='flex justify-between text-base lg:text-lg'>
+                                    <span className='font-bold'>
+                                        {t('bookingAppointment.tc')}:
+                                    </span>
+                                    <span className='text-blue-600 font-bold'>
+                                        {formatPrice(doctorInfo?.price)}
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className='flex flex-col w-3/5'>
-                            <Card className='w-full p-6 border rounded-none border-gray-200'>
-                                <CardContent className='flex flex-col gap-6'>
+                        {/* --- RIGHT COLUMN: Form --- */}
+                        <div className='flex flex-col w-full lg:w-3/5'>
+                            <Card className='w-full p-4 lg:p-6 border rounded-none border-gray-200 shadow-none'>
+                                <CardContent className='flex flex-col gap-4 lg:gap-6 p-0'>
                                     <RadioGroup
                                         defaultValue='self'
                                         onValueChange={(v) => setMode(v)}
-                                        className='flex gap-5 text-blue-500'
+                                        className='flex flex-col sm:flex-row gap-4 sm:gap-5 text-blue-500 mb-2'
                                     >
                                         <div className='flex items-center space-x-2'>
                                             <RadioGroupItem
@@ -299,9 +344,9 @@ export default function BookingAppointment() {
                                             />
                                             <Label
                                                 htmlFor='self'
-                                                className='cursor-pointer'
+                                                className='cursor-pointer text-base'
                                             >
-                                                Đặt cho bản thân
+                                                {t('bookingAppointment.self')}
                                             </Label>
                                         </div>
 
@@ -313,18 +358,23 @@ export default function BookingAppointment() {
                                             />
                                             <Label
                                                 htmlFor='other'
-                                                className='cursor-pointer'
+                                                className='cursor-pointer text-base'
                                             >
-                                                Đặt cho người thân
+                                                {t('bookingAppointment.rela')}
                                             </Label>
                                         </div>
                                     </RadioGroup>
 
                                     {mode === 'self' && profile && (
-                                        <div className='flex flex-col gap-5'>
-                                            <div className='flex gap-5'>
-                                                <div className='flex flex-col gap-2 w-1/2'>
-                                                    <Label>Họ tên</Label>
+                                        <div className='flex flex-col gap-4 lg:gap-5'>
+                                            {/* Responsive Row: Name + Gender */}
+                                            <div className='flex flex-col sm:flex-row gap-4 lg:gap-5'>
+                                                <div className='flex flex-col gap-2 w-full sm:w-1/2'>
+                                                    <Label>
+                                                        {t(
+                                                            'bookingAppointment.htbn'
+                                                        )}
+                                                    </Label>
                                                     <Input
                                                         type='text'
                                                         value={
@@ -333,27 +383,37 @@ export default function BookingAppointment() {
                                                         }
                                                         readOnly
                                                         disabled
-                                                        className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'
+                                                        className='rounded-none border-gray-300 bg-gray-100 focus-visible:ring-0'
                                                     />
                                                 </div>
-                                                <div className='flex flex-col gap-2 w-1/2'>
-                                                    <Label>Giới tính</Label>
+                                                <div className='flex flex-col gap-2 w-full sm:w-1/2'>
+                                                    <Label>
+                                                        {t(
+                                                            'bookingAppointment.gt'
+                                                        )}
+                                                    </Label>
                                                     <Select
                                                         value={profile.gender}
                                                         disabled
                                                     >
-                                                        <SelectTrigger className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'>
+                                                        <SelectTrigger className='rounded-none border-gray-300 bg-gray-100 focus:ring-0'>
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent className='bg-white rounded-none border-none'>
                                                             <SelectItem value='1'>
-                                                                Nam
+                                                                {t(
+                                                                    'bookingAppointment.na'
+                                                                )}
                                                             </SelectItem>
                                                             <SelectItem value='0'>
-                                                                Nu
+                                                                {t(
+                                                                    'bookingAppointment.fm'
+                                                                )}
                                                             </SelectItem>
                                                             <SelectItem value='2'>
-                                                                Khác
+                                                                {t(
+                                                                    'bookingAppointment.ot'
+                                                                )}
                                                             </SelectItem>
                                                         </SelectContent>
                                                     </Select>
@@ -361,7 +421,11 @@ export default function BookingAppointment() {
                                             </div>
 
                                             <div className='flex flex-col gap-2'>
-                                                <Label>Số điện thoại</Label>
+                                                <Label>
+                                                    {t(
+                                                        'bookingAppointment.sdt'
+                                                    )}
+                                                </Label>
                                                 <Input
                                                     type='text'
                                                     value={
@@ -370,12 +434,12 @@ export default function BookingAppointment() {
                                                     }
                                                     readOnly
                                                     disabled
-                                                    className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 bg-gray-100 focus-visible:ring-0'
                                                 />
                                             </div>
 
                                             <div className='flex flex-col gap-2'>
-                                                <Label>Địa chỉ Email</Label>
+                                                <Label>Email</Label>
                                                 <Input
                                                     type='text'
                                                     value={
@@ -384,13 +448,18 @@ export default function BookingAppointment() {
                                                     }
                                                     readOnly
                                                     disabled
-                                                    className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 bg-gray-100 focus-visible:ring-0'
                                                 />
                                             </div>
 
-                                            <div className='flex gap-5'>
-                                                <div className='flex flex-col gap-2 w-1/2'>
-                                                    <Label>Ngày sinh</Label>
+                                            {/* Responsive Row: DOB + Ethnicity */}
+                                            <div className='flex flex-col sm:flex-row gap-4 lg:gap-5'>
+                                                <div className='flex flex-col gap-2 w-full sm:w-1/2'>
+                                                    <Label>
+                                                        {t(
+                                                            'bookingAppointment.bd'
+                                                        )}
+                                                    </Label>
                                                     <Input
                                                         type='text'
                                                         value={formatDateDisplay(
@@ -398,12 +467,15 @@ export default function BookingAppointment() {
                                                         )}
                                                         readOnly
                                                         disabled
-                                                        className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'
+                                                        className='rounded-none border-gray-300 bg-gray-100 focus-visible:ring-0'
                                                     />
                                                 </div>
-
-                                                <div className='flex flex-col gap-2 w-1/2'>
-                                                    <Label>Dân tộc</Label>
+                                                <div className='flex flex-col gap-2 w-full sm:w-1/2'>
+                                                    <Label>
+                                                        {t(
+                                                            'bookingAppointment.dt'
+                                                        )}
+                                                    </Label>
                                                     <Input
                                                         type='text'
                                                         value={
@@ -412,13 +484,15 @@ export default function BookingAppointment() {
                                                         }
                                                         readOnly
                                                         disabled
-                                                        className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'
+                                                        className='rounded-none border-gray-300 bg-gray-100 focus-visible:ring-0'
                                                     />
                                                 </div>
                                             </div>
 
                                             <div className='flex flex-col gap-2'>
-                                                <Label>Địa chỉ</Label>
+                                                <Label>
+                                                    {t('bookingAppointment.ad')}
+                                                </Label>
                                                 <Input
                                                     type='text'
                                                     value={
@@ -426,13 +500,15 @@ export default function BookingAppointment() {
                                                     }
                                                     readOnly
                                                     disabled
-                                                    className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 bg-gray-100 focus-visible:ring-0'
                                                 />
                                             </div>
 
                                             <div className='flex flex-col gap-2'>
                                                 <Label>
-                                                    Lý do khám{' '}
+                                                    {t(
+                                                        'bookingAppointment.ldk'
+                                                    )}{' '}
                                                     <span className='text-red-500'>
                                                         *
                                                     </span>
@@ -445,20 +521,23 @@ export default function BookingAppointment() {
                                                             e.target.value
                                                         )
                                                     }
-                                                    className='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 focus-visible:ring-0'
                                                 />
                                             </div>
                                         </div>
                                     )}
 
                                     {mode === 'other' && profile && (
-                                        <div className='flex flex-col gap-5'>
-                                            <h1 className='text-center font-semibold uppercase'>
-                                                Thông tin người đặt lịch
+                                        <div className='flex flex-col gap-4 lg:gap-5'>
+                                            <h1 className='text-center font-semibold uppercase text-lg'>
+                                                {t('bookingAppointment.ttdt')}
                                             </h1>
+
                                             <div className='flex flex-col gap-2'>
                                                 <Label>
-                                                    Họ tên người đặt lịch
+                                                    {t(
+                                                        'bookingAppointment.nadl'
+                                                    )}
                                                 </Label>
                                                 <Input
                                                     type='text'
@@ -467,12 +546,14 @@ export default function BookingAppointment() {
                                                     }
                                                     readOnly
                                                     disabled
-                                                    className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 bg-gray-100 focus-visible:ring-0'
                                                 />
                                             </div>
                                             <div className='flex flex-col gap-2'>
                                                 <Label>
-                                                    Số điện thoại người đặt lịch
+                                                    {t(
+                                                        'bookingAppointment.sdtdl'
+                                                    )}
                                                 </Label>
                                                 <Input
                                                     type='text'
@@ -482,18 +563,21 @@ export default function BookingAppointment() {
                                                     }
                                                     readOnly
                                                     disabled
-                                                    className='rounded-none border-gray-300 bg-gray-100 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 bg-gray-100 focus-visible:ring-0'
                                                 />
                                             </div>
 
-                                            <h1 className='text-center font-semibold uppercase pt-5'>
-                                                Thông tin bệnh nhân
+                                            <h1 className='text-center font-semibold uppercase pt-5 text-lg'>
+                                                {t('bookingAppointment.ttbn')}
                                             </h1>
 
-                                            <div className='flex gap-5'>
-                                                <div className='flex flex-col gap-2 w-1/2'>
+                                            {/* Responsive Row: Name + Gender */}
+                                            <div className='flex flex-col sm:flex-row gap-4 lg:gap-5'>
+                                                <div className='flex flex-col gap-2 w-full sm:w-1/2'>
                                                     <Label>
-                                                        Họ tên bệnh nhân{' '}
+                                                        {t(
+                                                            'bookingAppointment.htbn'
+                                                        )}{' '}
                                                         <span className='text-red-500'>
                                                             *
                                                         </span>
@@ -509,12 +593,14 @@ export default function BookingAppointment() {
                                                                 e.target.value
                                                             )
                                                         }
-                                                        className='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'
+                                                        className='rounded-none border-gray-300 focus-visible:ring-0'
                                                     />
                                                 </div>
-                                                <div className='flex flex-col gap-2 w-1/2'>
+                                                <div className='flex flex-col gap-2 w-full sm:w-1/2'>
                                                     <Label>
-                                                        Giới tính{' '}
+                                                        {t(
+                                                            'bookingAppointment.gt'
+                                                        )}{' '}
                                                         <span className='text-red-500'>
                                                             *
                                                         </span>
@@ -530,27 +616,28 @@ export default function BookingAppointment() {
                                                             )
                                                         }
                                                     >
-                                                        <SelectTrigger className='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'>
-                                                            <SelectValue placeholder='Chọn giới tính' />
+                                                        <SelectTrigger className='rounded-none border-gray-300 focus:ring-0'>
+                                                            <SelectValue
+                                                                placeholder={t(
+                                                                    'bookingAppointment.cgt'
+                                                                )}
+                                                            />
                                                         </SelectTrigger>
                                                         <SelectContent className='bg-white rounded-none border-none'>
-                                                            <SelectItem
-                                                                value='1'
-                                                                className='cursor-pointer hover:bg-gray-200 rounded-none'
-                                                            >
-                                                                Nam
+                                                            <SelectItem value='1'>
+                                                                {t(
+                                                                    'bookingAppointment.na'
+                                                                )}
                                                             </SelectItem>
-                                                            <SelectItem
-                                                                value='0'
-                                                                className='cursor-pointer hover:bg-gray-200 rounded-none'
-                                                            >
-                                                                Nữ
+                                                            <SelectItem value='0'>
+                                                                {t(
+                                                                    'bookingAppointment.fm'
+                                                                )}
                                                             </SelectItem>
-                                                            <SelectItem
-                                                                value='2'
-                                                                className='cursor-pointer hover:bg-gray-200 rounded-none'
-                                                            >
-                                                                Khác
+                                                            <SelectItem value='2'>
+                                                                {t(
+                                                                    'bookingAppointment.ot'
+                                                                )}
                                                             </SelectItem>
                                                         </SelectContent>
                                                     </Select>
@@ -559,7 +646,9 @@ export default function BookingAppointment() {
 
                                             <div className='flex flex-col gap-2'>
                                                 <Label>
-                                                    Số điện thoại{' '}
+                                                    {t(
+                                                        'bookingAppointment.sdt'
+                                                    )}{' '}
                                                     <span className='text-red-500'>
                                                         *
                                                     </span>
@@ -575,13 +664,13 @@ export default function BookingAppointment() {
                                                             e.target.value
                                                         )
                                                     }
-                                                    className='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 focus-visible:ring-0'
                                                 />
                                             </div>
 
                                             <div className='flex flex-col gap-2'>
                                                 <Label>
-                                                    Địa chỉ Email{' '}
+                                                    Email{' '}
                                                     <span className='text-red-500'>
                                                         *
                                                     </span>
@@ -597,14 +686,17 @@ export default function BookingAppointment() {
                                                             e.target.value
                                                         )
                                                     }
-                                                    className='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 focus-visible:ring-0'
                                                 />
                                             </div>
 
-                                            <div className='flex gap-5'>
-                                                <div className='flex flex-col gap-2 w-1/2'>
+                                            {/* Responsive Row: DOB + Ethnicity */}
+                                            <div className='flex flex-col sm:flex-row gap-4 lg:gap-5'>
+                                                <div className='flex flex-col gap-2 w-full sm:w-1/2'>
                                                     <Label>
-                                                        Ngày sinh{' '}
+                                                        {t(
+                                                            'bookingAppointment.bd'
+                                                        )}{' '}
                                                         <span className='text-red-500'>
                                                             *
                                                         </span>
@@ -623,7 +715,7 @@ export default function BookingAppointment() {
                                                                         .value
                                                                 )
                                                             }
-                                                            className='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'
+                                                            className='rounded-none border-gray-300 focus-visible:ring-0'
                                                             id='nsinput'
                                                         />
                                                         <button
@@ -642,9 +734,11 @@ export default function BookingAppointment() {
                                                     </div>
                                                 </div>
 
-                                                <div className='flex flex-col gap-2 w-1/2'>
+                                                <div className='flex flex-col gap-2 w-full sm:w-1/2'>
                                                     <Label>
-                                                        Dân tộc{' '}
+                                                        {t(
+                                                            'bookingAppointment.dt'
+                                                        )}{' '}
                                                         <span className='text-red-500'>
                                                             *
                                                         </span>
@@ -652,22 +746,24 @@ export default function BookingAppointment() {
                                                     <Input
                                                         type='text'
                                                         value={
-                                                            formData.patientNationality
+                                                            formData.patientEthnicity
                                                         }
                                                         onChange={(e) =>
                                                             handleInputChange(
-                                                                'patientNationality',
+                                                                'patientEthnicity',
                                                                 e.target.value
                                                             )
                                                         }
-                                                        className='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'
+                                                        className='rounded-none border-gray-300 focus-visible:ring-0'
                                                     />
                                                 </div>
                                             </div>
 
                                             <div className='flex flex-col gap-2'>
                                                 <AddressSelector
-                                                    label='Địa chỉ'
+                                                    label={t(
+                                                        'bookingAppointment.ad'
+                                                    )}
                                                     value={addressData}
                                                     onChange={(newAddress) =>
                                                         setAddressData(
@@ -675,13 +771,15 @@ export default function BookingAppointment() {
                                                         )
                                                     }
                                                     isDark={isDark}
-                                                    inputClass='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'
+                                                    inputClass='rounded-none border-gray-300 focus-visible:ring-0'
                                                 />
                                             </div>
 
                                             <div className='flex flex-col gap-2'>
                                                 <Label>
-                                                    Lý do khám{' '}
+                                                    {t(
+                                                        'bookingAppointment.ldk'
+                                                    )}{' '}
                                                     <span className='text-red-500'>
                                                         *
                                                     </span>
@@ -694,17 +792,17 @@ export default function BookingAppointment() {
                                                             e.target.value
                                                         )
                                                     }
-                                                    className='rounded-none border-gray-300 focus:outline-none focus-visible:ring-0'
+                                                    className='rounded-none border-gray-300 focus-visible:ring-0'
                                                 />
                                             </div>
                                         </div>
                                     )}
 
                                     <Button
-                                        className='w-full mt-4 border rounded-none text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white cursor-pointer transition-all duration-300'
+                                        className='w-full mt-4 border rounded-none text-blue-500 border-blue-500 hover:bg-blue-500 hover:text-white cursor-pointer transition-all duration-300 h-12 text-base'
                                         onClick={handleBooking}
                                     >
-                                        Xác nhận đặt lịch
+                                        {t('bookingAppointment.xndl')}
                                     </Button>
                                 </CardContent>
                             </Card>

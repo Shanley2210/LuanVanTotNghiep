@@ -28,5 +28,9 @@ router.get(
     doctorController.getAppointmentsController
 );
 
+router.get(
+    '/doctor-service/:id',
+    doctorController.getDoctorByServiceController
+);
 
 module.exports = router;

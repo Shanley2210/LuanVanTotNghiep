@@ -44,4 +44,29 @@ const getServiceService = (page, limit) => {
     });
 };
 
-module.exports = { getServiceService };
+const getServiceByIdService = (serviceId) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const service = await db.Service.findOne({
+                where: { id: serviceId }
+            });
+
+            if (!service) {
+                return resolve({
+                    errCode: 2,
+                    errMessage: 'Service not found'
+                });
+            }
+
+            return resolve({
+                errCode: 0,
+                message: 'Get service successful',
+                data: service
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
+module.exports = { getServiceService, getServiceByIdService };

@@ -172,6 +172,7 @@ export default function DoctorDetail() {
                         doctorName={dataDetail?.user?.name || 'No data'}
                         specialty={dataDetail?.specialty?.name || 'No data'}
                         price={dataDetail?.price || 0}
+                        image={dataDetail?.image || 'No data'}
                     />
 
                     <div className='w-full'>

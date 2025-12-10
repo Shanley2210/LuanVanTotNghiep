@@ -294,11 +294,82 @@ const getAppointmentsService = async (userId) => {
     });
 };
 
+const getDoctorByServiceService = (serviceId, page, limit, status) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const offset = (page - 1) * limit;
+
+            let whereCondition = { serviceId: serviceId };
+            if (status) {
+                whereCondition.status = status;
+            }
+
+            const { count, rows } = await db.DoctorService.findAndCountAll({
+                where: whereCondition,
+                limit: limit,
+                offset: offset,
+                attributes: ['price', 'status'],
+                include: [
+                    {
+                        model: db.Doctor,
+                        as: 'doctor',
+                        include: [
+                            {
+                                model: db.User,
+                                as: 'user',
+                                attributes: ['name', 'email', 'phone']
+                            },
+                            {
+                                model: db.Specialty,
+                                as: 'specialty',
+                                attributes: ['name']
+                            }
+                        ]
+                    }
+                ],
+                raw: false,
+                nest: true
+            });
+
+            if (!rows || rows.length === 0) {
+                return resolve({
+                    errCode: 0,
+                    message: 'No doctors found',
+                    data: [],
+                    meta: {
+                        page: page,
+                        limit: limit,
+                        totalRows: 0,
+                        totalPages: 0
+                    }
+                });
+            }
+
+            const totalPages = Math.ceil(count / limit);
+
+            return resolve({
+                errCode: 0,
+                message: 'Get doctors by service successful',
+                data: rows,
+                meta: {
+                    page: page,
+                    limit: limit,
+                    totalRows: count,
+                    totalPages: totalPages
+                }
+            });
+        } catch (e) {
+            return reject(e);
+        }
+    });
+};
+
 module.exports = {
     getAllDoctorsService,
     getDoctorByIdService,
     getSchedulesService,
     getSlotsService,
     getDoctorBySpecialtyService,
-    getAppointmentsService
+    getAppointmentsService,
+    getDoctorByServiceService
 };

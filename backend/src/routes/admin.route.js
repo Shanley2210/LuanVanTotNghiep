@@ -251,4 +251,12 @@ router.get(
     adminController.getReceptionistsController
 );
 
+router.post(
+    '/doctor-service-bulk',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRoles('Hospital_Admin'),
+    authMiddleware.verifyPermission('doctor_manage'),
+    adminController.createDoctorServiceBulkController
+);
+
 module.exports = router;

@@ -20,4 +20,27 @@ const getServiceController = async (req, res) => {
     }
 };
 
-module.exports = { getServiceController };
+const getServiceByIdController = async (req, res) => {
+    try {
+        const serviceId = req.params.id;
+
+        if (!serviceId) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await serviceService.getServiceByIdService(serviceId);
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in getServiceById:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+module.exports = { getServiceController, getServiceByIdController };

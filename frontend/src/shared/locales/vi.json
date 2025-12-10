@@ -221,7 +221,8 @@
         "dksd": "Điều khoản sử dụng",
         "lhe": "Liên hệ",
         "pf": "Hồ sơ cá nhân",
-        "lo": "Đăng xuất"
+        "lo": "Đăng xuất",
+        "dlich": "Đặt lịch"
     },
     "detalDoctor": {
         "dt": "Bác sĩ: ",
@@ -268,5 +269,41 @@
         "ths": "Tạo hồ sơ",
         "ttcb": "Thông tin cơ bản",
         "ttyt": "Thông tin y tế"
+    },
+    "bookingAppointment": {
+        "sv": "Dịch vụ",
+        "tl": "Thời lượng dự kiến",
+        "ph": "phút",
+        "dsbs": "Danh sách bác sĩ",
+        "bs": "Bác sĩ",
+        "gi": "Giá khám",
+        "bkbs": "Đặt lịch bác sĩ",
+        "bkdv": "Đặt lịch dịch vụ",
+        "inbk": "Thông tin đặt lịch",
+        "ck": "Chuyên khoa: ",
+        "ndl": "Ngày đặt lịch: ",
+        "thgian": "Thời gian đặt lịch: ",
+        "gid": "Giá đặt lịch: ",
+        "free": "Miễn phí",
+        "gkb": "Giá khám bệnh: ",
+        "tc": "Tổng cộng: ",
+        "self": "Đặt cho bản thân",
+        "rela": "Đặt cho người thân",
+        "htbn": "Họ tên bệnh nhân",
+        "gt": "Giới tính",
+        "cgt": "Chọn giới tính",
+        "na": "Nam",
+        "fm": "Nữ",
+        "ot": "Khác",
+        "sdt": "Số điện thoại",
+        "bd": "Ngày sinh ",
+        "dt": "Dân tộc",
+        "ad": "Địa chỉ",
+        "ldk": "Lý do khám",
+        "ttdt": "Thông tin người đặt lịch",
+        "nadl": "Họ tên người đặt lịch",
+        "sdtdl": "Số điện thoại người đặt lịch",
+        "ttbn": "Thông tin bệnh nhân",
+        "xndl": "Xác nhận đặt lịch"
     }
 }

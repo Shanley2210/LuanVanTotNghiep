@@ -18,3 +18,7 @@ export const setPriceService = async (
 ) => {
     return await api.post(`/admin/service-price/${id}`, data);
 };
+
+export const getDetailService = async (id: number) => {
+    return await api.get(`/service/detail/${id}`);
+};

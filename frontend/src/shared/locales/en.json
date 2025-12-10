@@ -221,7 +221,8 @@
         "dksd": "Terms of Use",
         "lhe": "Contact",
         "pf": "Personal Information",
-        "lo": "Logout"
+        "lo": "Logout",
+        "dlich": "Book Appointment"
     },
     "detalDoctor": {
         "dt": "Doctor",
@@ -268,5 +269,41 @@
         "ths": "Create profile",
         "ttcb": "Basic Information",
         "ttyt": "Medical Information"
+    },
+    "bookingAppointment": {
+        "sv": "Service",
+        "tl": "Duration expected",
+        "ph": "minutes",
+        "dsbs": "Doctor List",
+        "bs": "Doctor",
+        "gi": "Examination fee",
+        "bkbs": "Book Doctor",
+        "bkdv": "Book Service",
+        "inbk": "Booking Information",
+        "ck": "Specialty: ",
+        "ndl": "Appointment Date: ",
+        "thgian": "Appointment Time: ",
+        "gid": "Booking Price: ",
+        "free": "Free",
+        "gkb": "Medical Examination Fee: ",
+        "tc": "Total: ",
+        "self": "Book for yourself",
+        "rela": "Book for relatives",
+        "htbn": "Patient's Name",
+        "gt": "Gender",
+        "cgt": "Select Gender",
+        "na": "Male",
+        "fm": "Female",
+        "ot": "Other",
+        "sdt": "Phone",
+        "bd": "Birthday",
+        "dt": "Ethnicity",
+        "ad": "Address",
+        "ldk": "Reason for examination",
+        "ttdt": "Patient Information",
+        "nadl": "Patient's Name",
+        "sdtdl": "Patient's Phone",
+        "ttbn": "Patient's Information",
+        "xndl": "Confirm Booking"
     }
 }

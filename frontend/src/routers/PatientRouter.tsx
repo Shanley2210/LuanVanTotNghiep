@@ -9,6 +9,9 @@ import DoctorDetail from '@/patient/pages/DoctorDetail';
 import Profile from '@/patient/pages/Profile';
 import CreateEditProfile from '@/patient/pages/CreateEditProfile';
 import BookingAppointment from '@/patient/pages/BookingAppointment';
+import DoctorService from '@/patient/pages/DoctorService';
+import PatientAppointment from '@/patient/pages/PatientAppointment';
+import BookingService from '@/patient/pages/BookingService';
 
 export default function PatientRouter() {
     return (
@@ -34,6 +37,15 @@ export default function PatientRouter() {
                 <Route
                     path='/booking-appointment'
                     element={<BookingAppointment />}
+                />
+                <Route
+                    path='/doctors-by-service/:slug/:id'
+                    element={<DoctorService />}
+                />
+                <Route path='/booking-service' element={<BookingService />} />
+                <Route
+                    path='/patient/my-appointment'
+                    element={<PatientAppointment />}
                 />
             </Route>
         </Routes>

@@ -824,6 +824,10 @@ const getReceptionistsController = async (req, res) => {
     }
 };
 
+const createDoctorServiceBulkController = async (req, res) => {
+    //Cần viết
+};
+
 module.exports = {
     createHopistalAdminController,
     getRolesController,
@@ -854,5 +858,6 @@ module.exports = {
     setPriceDoctorController,
     setPriceServiceController,
     getPatientsController,
-    getReceptionistsController
+    getReceptionistsController,
+    createDoctorServiceBulkController
 };

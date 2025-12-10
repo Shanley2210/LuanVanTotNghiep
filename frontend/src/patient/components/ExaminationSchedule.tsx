@@ -27,6 +27,11 @@ interface ExaminationScheduleProps {
     doctorName: string;
     specialty: string;
     price: number;
+    service?: boolean;
+    serviceId?: number;
+    serviceName?: string;
+    durationMinutes?: number;
+    image?: string;
 }
 
 export default function ExaminationSchedule({
@@ -34,7 +39,12 @@ export default function ExaminationSchedule({
     degree,
     doctorName,
     specialty,
-    price
+    price,
+    service = false,
+    serviceId = 0,
+    serviceName = '',
+    durationMinutes = 0,
+    image
 }: ExaminationScheduleProps) {
     const { isDark } = useContext(ThemeContext);
     const todayStr = new Date().toISOString().split('T')[0];
@@ -87,18 +97,38 @@ export default function ExaminationSchedule({
             slot.endTime
         )}`;
 
-        navigate('/booking-appointment', {
-            state: {
-                doctorId: doctorId,
-                degree: degree,
-                doctorName: doctorName,
-                specialty: specialty,
-                price: price,
-                date: selectedDate,
-                time: timeString,
-                slotId: slot.id
-            }
-        });
+        if (service) {
+            navigate('/booking-service', {
+                state: {
+                    serviceId: serviceId,
+                    serviceName: serviceName,
+                    durationMinutes: durationMinutes,
+                    doctorId: doctorId,
+                    degree: degree,
+                    doctorName: doctorName,
+                    specialty: specialty,
+                    price: price,
+                    date: selectedDate,
+                    time: timeString,
+                    slotId: slot.id,
+                    image: image
+                }
+            });
+        } else {
+            navigate('/booking-appointment', {
+                state: {
+                    doctorId: doctorId,
+                    degree: degree,
+                    doctorName: doctorName,
+                    specialty: specialty,
+                    price: price,
+                    date: selectedDate,
+                    time: timeString,
+                    slotId: slot.id,
+                    image: image
+                }
+            });
+        }
     };
 
     useEffect(() => {
