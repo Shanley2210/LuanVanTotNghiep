@@ -76,9 +76,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
                             colorText: isDark ? '#F3F4F6' : '#1A1A1A'
                         },
                         Button: {
-                            colorBgContainer: isDark ? '#374151' : '#1677FF',
+                            colorBgContainer: isDark ? '#6CA8F9' : '#1677FF',
                             colorText: isDark ? '#F3F4F6' : '#FFFFFF',
-                            colorBorder: isDark ? '#3B82F6' : '#0D6EFD'
+                            colorBorder: isDark ? '#3B82F6' : '#0D6EFD',
+                            defaultHoverColor: isDark ? '#F3F4F6' : '#FFFFFF',
+                            defaultHoverBg: isDark ? '#3B82F6' : '#3D8BFD'
                         },
                         Input: {
                             colorBgContainer: isDark ? '#374151' : '#FFFFFF',

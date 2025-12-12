@@ -305,5 +305,14 @@
         "sdtdl": "Số điện thoại người đặt lịch",
         "ttbn": "Thông tin bệnh nhân",
         "xndl": "Xác nhận đặt lịch"
+    },
+    "receptionistSideBar": {
+        "dailt": "Hôm nay",
+        "neap": "Lịch hẹn mới",
+        "lisu": "Lịch sử hẹn",
+        "crea": "Tạo lịch hẹn"
+    },
+    "doctorSideBar": {
+        "dailt": "Hôm nay"
     }
 }

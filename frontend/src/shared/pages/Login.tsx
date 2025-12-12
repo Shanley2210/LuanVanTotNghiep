@@ -112,6 +112,12 @@ export default function Login() {
                     case 3:
                         navigate('/');
                         break;
+                    case 4:
+                        navigate('/doctor/dailyboard');
+                        break;
+                    case 5:
+                        navigate('/receptionist/dailyboard');
+                        break;
                     default:
                         navigate('/');
                         break;

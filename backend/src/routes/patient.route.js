@@ -51,4 +51,6 @@ router.delete(
     patientController.deleteAppointmentController
 );
 
+router.post('/fake-payment/:id', patientController.fakePaymentController);
+
 module.exports = router;

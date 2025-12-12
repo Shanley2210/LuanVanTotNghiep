@@ -72,9 +72,19 @@ const updateProfilePatientController = async (req, res) => {
 
 const getAppointmentsController = async (req, res) => {
     try {
-        const patientId = req.user.id;
+        let page = req.query.page ? parseInt(req.query.page) : 1;
+        let limit = req.query.limit ? parseInt(req.query.limit) : 10;
 
-        const response = await patientService.getAppointmentsService(patientId);
+        if (page < 1) page = 1;
+        if (limit < 1) limit = 10;
+
+        const userId = req.user.id;
+
+        const response = await patientService.getAppointmentsService(
+            userId,
+            page,
+            limit
+        );
 
         return res.status(200).json(response);
     } catch (e) {
@@ -181,6 +191,29 @@ const deleteAppointmentController = async (req, res) => {
     }
 };
 
+const fakePaymentController = async (req, res) => {
+    try {
+        const appointmentId = req.params.id;
+
+        if (!appointmentId) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await patientService.fakePaymentService(appointmentId);
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in fakePayment:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
 module.exports = {
     getDetailPatientController,
     createProfilePatientController,
@@ -188,5 +221,6 @@ module.exports = {
     createAppointmentController,
     getAppointmentsController,
     updateAppointmentController,
-    deleteAppointmentController
+    deleteAppointmentController,
+    fakePaymentController
 };

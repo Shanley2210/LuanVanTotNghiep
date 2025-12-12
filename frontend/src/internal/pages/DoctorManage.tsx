@@ -48,7 +48,6 @@ export default function DoctorManage() {
     } = useAppSelector(selectDoctor);
     const { list: specialties } = useAppSelector(selectSpecialty);
     const { list: schedules } = useAppSelector(selectSchedules);
-
     const [isOpen, setIsOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);

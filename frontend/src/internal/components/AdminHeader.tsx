@@ -10,6 +10,7 @@ import { useAppDispatch } from '@/shared/stores/hooks';
 import { useNavigate } from 'react-router-dom';
 import { clientLogout } from '@/shared/stores/authSlice';
 import { MdLogout } from 'react-icons/md';
+import Logo from '@shared/images/Logo.png';
 
 const { Header } = Layout;
 
@@ -75,8 +76,8 @@ export default function AdminHeader() {
 
     return (
         <Header className='flex justify-between items-center bg-white px-6! pr-15! fixed top-0 left-0 w-full z-50 '>
-            <div className='text-2xl text-center font-bold text-blue-700'>
-                ADMIN PANEL
+            <div className='w-40'>
+                <img src={Logo} alt='Logo' />
             </div>
             <div className='flex items-center gap-10'>
                 <button

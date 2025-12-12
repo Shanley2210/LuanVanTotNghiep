@@ -242,7 +242,7 @@ export default function BookingService() {
                                 BACKEND_URL + serviceDoctor?.image || 'No data'
                             }
                             alt='Doctor'
-                            className='w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-full flex-shrink-0'
+                            className='w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-full shrink-0'
                         />
                         <div className='flex flex-col'>
                             <div className='text-blue-500 font-medium'>

@@ -15,3 +15,11 @@ export const updateReceptionist = async (id: number, data: FormData) => {
         }
     });
 };
+
+export const confirmAppointment = async (id: number) => {
+    return await api.put(`/receptionist/appointments/confirm/${id}`);
+};
+
+export const checkInAppointment = async (id: number) => {
+    return await api.post(`/receptionist/appointments/checkin/${id}`);
+};

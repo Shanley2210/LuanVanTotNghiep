@@ -51,6 +51,10 @@ export default function PatientHeader() {
         navigate('/profile');
         setIsMenuOpen(!isMenuOpen);
     };
+    const handleNavigateAppointment = () => {
+        navigate('/patient/my-appointment');
+        setIsMenuOpen(!isMenuOpen);
+    };
 
     const langUI: any = {
         en: (
@@ -252,7 +256,12 @@ export default function PatientHeader() {
                                 {t('homePage.subDt')}
                             </span>
                         </div>
-                        <div>{t('homePage.ap')}</div>
+                        <div
+                            className='cursor-pointer hover:text-blue-500 transition-all'
+                            onClick={handleNavigateAppointment}
+                        >
+                            {t('homePage.ap')}
+                        </div>
                     </div>
 
                     {/* Logic hiển thị Login hoặc Avatar */}
@@ -308,7 +317,10 @@ export default function PatientHeader() {
                             isDark ? 'bg-gray-900' : 'bg-sky-800'
                         } flex-1`}
                     >
-                        <div className='py-3 px-6 cursor-pointer'>
+                        <div
+                            className='py-3 px-6 cursor-pointer'
+                            onClick={handleNavigateAppointment}
+                        >
                             {t('homePage.ap')}
                         </div>
                         <div className='py-3 px-6 cursor-pointer'>

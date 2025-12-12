@@ -24,7 +24,6 @@ export default function DoctorService() {
     const [dataDetail, setDataDetail] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const { t } = useTranslation();
-
     const { listDoctorService, loading } = useAppSelector(selectDoctor);
 
     useEffect(() => {

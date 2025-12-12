@@ -305,5 +305,14 @@
         "sdtdl": "Patient's Phone",
         "ttbn": "Patient's Information",
         "xndl": "Confirm Booking"
+    },
+    "receptionistSideBar": {
+        "dailt": "Today",
+        "neap": "New Appointments",
+        "lisu": "History Appointments",
+        "crea": "Create Appointment"
+    },
+    "doctorSideBar": {
+        "dailt": "Today"
     }
 }
