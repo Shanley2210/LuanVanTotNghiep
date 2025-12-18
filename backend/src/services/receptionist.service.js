@@ -221,6 +221,13 @@ const checkInService = async (appointmentId, userId) => {
 
         const appointment = await db.Appointment.findOne({
             where: { id: appointmentId },
+            include: [
+                {
+                    model: db.Slot,
+                    as: 'slot',
+                    attributes: ['id', 'doctorId', 'startTime']
+                }
+            ],
             transaction: t
         });
 
@@ -242,27 +249,41 @@ const checkInService = async (appointmentId, userId) => {
             };
         }
 
-        const startOfDay = new Date();
+        if (!appointment.slot) {
+            await t.rollback();
+            return {
+                errCode: 5,
+                errEnMessage: 'Slot data not found',
+                errViMessage: 'Dữ liệu slot bị thiếu'
+            };
+        }
+
+        const currentSlotTime = new Date(appointment.slot.startTime);
+        const doctorId = appointment.slot.doctorId;
+
+        const startOfDay = new Date(currentSlotTime);
         startOfDay.setHours(0, 0, 0, 0);
 
-        const endOfDay = new Date();
+        const endOfDay = new Date(currentSlotTime);
         endOfDay.setHours(23, 59, 59, 999);
 
-        const currentQueueCount = await db.Queue.count({
+        const previousSlotsCount = await db.Slot.count({
             where: {
-                createdAt: {
-                    [Op.between]: [startOfDay, endOfDay]
+                doctorId: doctorId,
+                startTime: {
+                    [Op.between]: [startOfDay, endOfDay],
+                    [Op.lt]: currentSlotTime
                 }
             },
             transaction: t
         });
 
-        const nextQueueNumber = currentQueueCount + 1;
+        const slotOrderNumber = previousSlotsCount + 1;
 
         const newQueue = await db.Queue.create(
             {
                 receptionistId: receptionistId,
-                number: nextQueueNumber,
+                number: slotOrderNumber,
                 status: 'waiting'
             },
             { transaction: t }
@@ -281,10 +302,12 @@ const checkInService = async (appointmentId, userId) => {
         return {
             errCode: 0,
             enMessage: 'Check-in successful',
-            viMessage: 'Check-in thành công'
+            viMessage: 'Check-in thành công',
+            queueNumber: slotOrderNumber
         };
     } catch (e) {
         await t.rollback();
+        console.error(e);
         throw e;
     }
 };

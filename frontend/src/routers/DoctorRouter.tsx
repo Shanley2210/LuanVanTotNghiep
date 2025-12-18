@@ -2,6 +2,8 @@ import { Route, Routes } from 'react-router-dom';
 import DoctorProtectedRoute from './DoctorProtectedRoute';
 import DoctorLayout from '@/internal/layout/DoctorLayout';
 import DoctorDailyBoard from '@/internal/pages/DoctorDailyBoard';
+import WorkSchedule from '@/internal/pages/WorkSchedule';
+import DoctorExam from '@/internal/pages/DoctorExam';
 
 export default function DoctorRouter() {
     return (
@@ -13,6 +15,8 @@ export default function DoctorRouter() {
                             path='dailyboard'
                             element={<DoctorDailyBoard />}
                         />
+                        <Route path='schedule' element={<WorkSchedule />} />
+                        <Route path='/exam/:id' element={<DoctorExam />} />
                     </Route>
                 </Route>
             </Routes>

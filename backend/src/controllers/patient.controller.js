@@ -51,23 +51,31 @@ const createProfilePatientController = async (req, res) => {
 };
 
 const updateProfilePatientController = async (req, res) => {
-    const userId = req.user.id;
-    const data = req.body;
+    try {
+        const userId = req.user.id;
+        const data = req.body;
 
-    if (!data) {
-        return res.status(200).json({
-            errCode: 1,
-            errEnMessage: 'Missing required parameters',
-            errViMessage: 'Thiếu tham số bắt buộc'
+        if (!data) {
+            return res.status(200).json({
+                errCode: 1,
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
+            });
+        }
+
+        const response = await patientService.updateProfilePatientService(
+            userId,
+            data
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in updatePatient:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
         });
     }
-
-    const response = await patientService.updateProfilePatientService(
-        userId,
-        data
-    );
-
-    return res.status(200).json(response);
 };
 
 const getAppointmentsController = async (req, res) => {
@@ -166,7 +174,7 @@ const updateAppointmentController = async (req, res) => {
 
 const deleteAppointmentController = async (req, res) => {
     try {
-        const patientId = req.user.id;
+        const userId = req.user.id;
         const appointmentId = req.params.id;
 
         if (!appointmentId) {
@@ -177,7 +185,7 @@ const deleteAppointmentController = async (req, res) => {
         }
 
         const response = await patientService.deleteAppointmentService(
-            patientId,
+            userId,
             appointmentId
         );
 

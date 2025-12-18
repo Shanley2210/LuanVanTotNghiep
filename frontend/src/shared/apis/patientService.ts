@@ -35,3 +35,14 @@ export const bookingAppointment = async (data: Record<string, any>) => {
 export const fakePayment = async (id: number) => {
     return await api.post(`/patient/fake-payment/${id}`);
 };
+
+export const updateAppointment = async (
+    id: number,
+    data: Record<string, any>
+) => {
+    return await api.put(`/patient/appointments/${id}`, data);
+};
+
+export const cancelAppointment = async (id: number) => {
+    return await api.delete(`/patient/appointments/${id}`);
+};

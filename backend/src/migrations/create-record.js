@@ -17,36 +17,32 @@ module.exports = {
                 type: Sequelize.INTEGER,
                 allowNull: true
             },
-            serviceId: {
-                type: Sequelize.INTEGER,
-                allowNull: true
-            },
             appointmentId: {
                 type: Sequelize.INTEGER,
                 allowNull: true
             },
-            examDate: {
-                type: Sequelize.DATE,
+            symptoms: {
+                type: Sequelize.TEXT,
+                allowNull: true
+            },
+            physicalExam: {
+                type: Sequelize.TEXT,
                 allowNull: true
             },
             diagnosis: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
                 allowNull: true
             },
-            symptoms: {
-                type: Sequelize.STRING,
-                allowNull: true
-            },
-            soapNotes: {
-                type: Sequelize.STRING,
+            treatment: {
+                type: Sequelize.TEXT,
                 allowNull: true
             },
             prescription: {
-                type: Sequelize.STRING,
+                type: Sequelize.TEXT,
                 allowNull: true
             },
             reExamDate: {
-                type: Sequelize.DATE,
+                type: Sequelize.DATEONLY,
                 allowNull: true
             },
             createdAt: {

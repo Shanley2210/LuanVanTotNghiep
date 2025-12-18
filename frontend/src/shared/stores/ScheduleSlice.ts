@@ -1,28 +1,35 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import api from '../apis/api';
 
-export interface ISchedule {
-    id: number;
-    doctorId: number;
-    name: string;
-    workDate: string;
-    shift: string;
-    status: string;
-    createdAt: string;
-    updatedAt: string;
-    slots: ISlot[];
-}
-
 export interface ISlot {
     id: number;
-    doctorId: number;
-    scheduleId: number;
     startTime: string;
     endTime: string;
     capacity: number;
     status: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt?: string;
+    updatedAt?: string;
+    appointments: IAppointment[];
+}
+
+interface IAppointment {
+    id: number;
+    patientName: string;
+    patientGender: string;
+    patientEmail: string;
+    patientDob: string;
+    patientEthnicity: string;
+    patientAddress: string;
+    reason: string;
+    patientPhone: string;
+}
+
+export interface ISchedule {
+    id: number;
+    name: string;
+    workDate: string;
+    shift: string;
+    slots: ISlot[];
 }
 
 interface IScheduleState {
@@ -53,6 +60,21 @@ export const fetchSchedulesForAdmin = createAsyncThunk<
     }
 });
 
+export const fetchSchedulesForDoctor = createAsyncThunk<
+    ISchedule[],
+    { date?: string; start?: string; end?: string },
+    { rejectValue: string }
+>('schedules/fetchSchedulesForDoctor', async (params, { rejectWithValue }) => {
+    try {
+        const response = await api.get('/doctor/schedules', { params });
+        return response.data.data;
+    } catch (e: any) {
+        const errMessage =
+            e.response?.data?.message || 'Lỗi khi tải lịch làm việc';
+        return rejectWithValue(errMessage);
+    }
+});
+
 export const schedulesSlice = createSlice({
     name: 'schedules',
     initialState,
@@ -72,6 +94,19 @@ export const schedulesSlice = createSlice({
                 state.loading = false;
                 state.list = [];
                 state.error = action.payload || 'Server error occurred';
+            })
+            .addCase(fetchSchedulesForDoctor.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchSchedulesForDoctor.fulfilled, (state, action) => {
+                state.loading = false;
+                state.list = action.payload;
+            })
+            .addCase(fetchSchedulesForDoctor.rejected, (state, action) => {
+                state.loading = false;
+                state.list = [];
+                state.error = action.payload || 'Error';
             });
     }
 });

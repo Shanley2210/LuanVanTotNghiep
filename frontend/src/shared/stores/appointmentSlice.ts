@@ -196,6 +196,55 @@ export const fetchReceptionistAppointments = createAsyncThunk<
         );
     }
 });
+export const fetchDoctorAppointments = createAsyncThunk<
+    IFetchAppointmentsResponse,
+    {
+        page: number;
+        limit: number;
+        status?: string;
+        date?: string;
+        groupKey: string;
+    },
+    { rejectValue: string }
+>(
+    'appointments/fetchDoctorAppointments',
+    async (params, { rejectWithValue }) => {
+        try {
+            const { page, limit, status, date } = params;
+
+            const response = await api.get('/doctor/appointments', {
+                params: {
+                    page,
+                    limit,
+                    status,
+                    date
+                }
+            });
+
+            const { errCode, message, data, meta } = response.data;
+
+            if (errCode === 0 && Array.isArray(data)) {
+                return {
+                    list: data as IAppointment[],
+                    meta: meta as IPaginationMeta
+                };
+            }
+
+            return rejectWithValue(
+                message || 'Failed to fetch doctor appointments'
+            );
+        } catch (e: any) {
+            console.error('Redux Thunk Error:', e);
+
+            if (e.response && e.response.data && e.response.data.errMessage) {
+                return rejectWithValue(e.response.data.errMessage);
+            }
+            return rejectWithValue(
+                'Server error occurred (Check Network/Console)'
+            );
+        }
+    }
+);
 
 export const appointmentsSlice = createSlice({
     name: 'appointments',
@@ -207,7 +256,6 @@ export const appointmentsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-
             .addCase(fetchAppointments.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -259,7 +307,34 @@ export const appointmentsSlice = createSlice({
                             (action.payload as string) || 'Error';
                     }
                 }
-            );
+            )
+            .addCase(fetchDoctorAppointments.pending, (state, action) => {
+                const { groupKey } = action.meta.arg;
+                if (!state.groups[groupKey]) {
+                    state.groups[groupKey] = { ...initialGroupState };
+                }
+                state.groups[groupKey].loading = true;
+                state.groups[groupKey].error = null;
+            })
+            .addCase(fetchDoctorAppointments.fulfilled, (state, action) => {
+                const { groupKey } = action.meta.arg;
+                const { list, meta } = action.payload;
+
+                state.groups[groupKey] = {
+                    list,
+                    meta,
+                    loading: false,
+                    error: null
+                };
+            })
+            .addCase(fetchDoctorAppointments.rejected, (state, action) => {
+                const { groupKey } = action.meta.arg;
+                if (state.groups[groupKey]) {
+                    state.groups[groupKey].loading = false;
+                    state.groups[groupKey].error =
+                        (action.payload as string) || 'Error';
+                }
+            });
     }
 });
 

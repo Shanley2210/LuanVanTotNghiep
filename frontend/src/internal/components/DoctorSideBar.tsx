@@ -1,6 +1,7 @@
 import { Menu } from 'antd';
 import Sider from 'antd/es/layout/Sider';
 import { useTranslation } from 'react-i18next';
+import { AiOutlineSchedule } from 'react-icons/ai';
 import { MdOutlineDashboard } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 
@@ -15,6 +16,11 @@ export default function DoctorSideBar() {
             key: 'dailyboard',
             icon: <MdOutlineDashboard className='w-5 h-5' />,
             label: t('doctorSideBar.dailt')
+        },
+        {
+            key: 'schedule',
+            icon: <AiOutlineSchedule className='w-5 h-5' />,
+            label: t('doctorSideBar.sche')
         }
     ];
 

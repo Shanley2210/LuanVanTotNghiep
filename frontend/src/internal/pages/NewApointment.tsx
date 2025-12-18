@@ -213,7 +213,7 @@ export default function NewApointment() {
                 page: currentPage,
                 limit: pageSize,
                 status: 'deposited',
-                groupKey: GROUP_KEY // Key quan trọng để lưu vào đúng chỗ trong Redux
+                groupKey: GROUP_KEY
             })
         );
     }, [dispatch, currentPage, pageSize]);

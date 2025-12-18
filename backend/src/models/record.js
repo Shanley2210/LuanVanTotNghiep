@@ -18,11 +18,6 @@ module.exports = (sequelize, DataTypes) => {
                 as: 'patient'
             });
 
-            Record.belongsTo(models.Service, {
-                foreignKey: 'serviceId',
-                as: 'service'
-            });
-
             Record.belongsTo(models.Appointment, {
                 foreignKey: 'appointmentId',
                 as: 'appointment'
@@ -38,14 +33,13 @@ module.exports = (sequelize, DataTypes) => {
         {
             doctorId: DataTypes.INTEGER,
             patientId: DataTypes.INTEGER,
-            serviceId: DataTypes.INTEGER,
             appointmentId: DataTypes.INTEGER,
-            examDate: DataTypes.DATE,
-            diagnosis: DataTypes.STRING,
-            symptoms: DataTypes.STRING,
-            soapNotes: DataTypes.STRING,
-            prescription: DataTypes.STRING,
-            reExamDate: DataTypes.DATE
+            symptoms: DataTypes.TEXT, // S Triệu chứng
+            physicalExam: DataTypes.TEXT, // O Khám thực thể
+            diagnosis: DataTypes.TEXT, // A Chuẩn đoán
+            treatment: DataTypes.TEXT, // P Điều trị
+            prescription: DataTypes.TEXT,
+            reExamDate: DataTypes.DATEONLY
         },
         {
             sequelize,

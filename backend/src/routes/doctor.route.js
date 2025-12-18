@@ -33,4 +33,39 @@ router.get(
     doctorController.getDoctorByServiceController
 );
 
+router.put(
+    '/toggle-slot/:id',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Doctor'),
+    doctorController.toggleSlotController
+);
+
+router.put(
+    '/close-slots-date',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Doctor'),
+    doctorController.closeSlotsByDateController
+);
+
+router.put(
+    '/open-slots-date',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Doctor'),
+    doctorController.openSlotsByDateController
+);
+
+router.get(
+    '/appointment-detail/:id',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Doctor'),
+    doctorController.getAppointmentDetailController
+);
+
+router.post(
+    '/complete-exam',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Doctor'),
+    doctorController.completeExamController
+);
+
 module.exports = router;

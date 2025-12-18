@@ -612,565 +612,534 @@ const getAppointmentsService = async (userId, page, limit) => {
 const createAppointmentService = async (data) => {
     const { userId, doctorId, slotId, serviceId, bookingInfo } = data;
 
-    return new Promise(async (resolve, reject) => {
-        const trans = await db.sequelize.transaction();
+    const trans = await db.sequelize.transaction();
 
+    try {
+        const findPatient = await db.User.findOne({
+            where: { id: userId },
+            include: [
+                {
+                    model: db.Patient,
+                    as: 'patient',
+                    attributes: ['id', 'gender', 'dob', 'ethnicity', 'address']
+                }
+            ],
+            transaction: trans
+        });
+
+        if (!findPatient || !findPatient.patient) {
+            await trans.rollback();
+            return {
+                errCode: 1,
+                errEnMessage: 'Patient not found or profile not created.',
+                errViMessage: 'Không tìm thấy bệnh nhân hoặc chưa tạo hồ sơ'
+            };
+        }
+        const patientId = findPatient.patient.id;
+
+        let bookingDetails;
         try {
-            // BƯỚC 1: LẤY THÔNG TIN BỆNH NHÂN
-            const findPatient = await db.User.findOne({
-                where: { id: userId },
-                include: [
-                    {
-                        model: db.Patient,
-                        as: 'patient',
-                        attributes: [
-                            'id',
-                            'gender',
-                            'dob',
-                            'ethnicity',
-                            'address'
-                        ]
-                    }
-                ],
+            bookingDetails = await calculateBookingDetails(
+                doctorId,
+                serviceId,
+                slotId,
+                trans
+            );
+        } catch (error) {
+            await trans.rollback();
+            return {
+                errCode: error.code || -1,
+                errEnMessage: error.en || 'Error calculating booking',
+                errViMessage: error.vi || 'Lỗi tính toán đặt lịch'
+            };
+        }
+
+        const { type, finalPrice, target, finalDoctorId, slotsToBook } =
+            bookingDetails;
+
+        if (slotsToBook && slotsToBook.length > 0) {
+            const slotIdsToBook = slotsToBook.map((s) => s.id);
+
+            const checkDuplicate = await db.Appointment.findOne({
+                where: {
+                    patientId: patientId,
+                    slotId: { [Op.in]: slotIdsToBook },
+                    status: ['pending', 'confirmed', 'succeeded']
+                },
                 transaction: trans
             });
 
-            if (!findPatient || !findPatient.patient) {
+            if (checkDuplicate) {
                 await trans.rollback();
-                return resolve({
-                    errCode: 1,
-                    errEnMessage: 'Patient not found or profile not created.',
-                    errViMessage: 'Không tìm thấy bệnh nhân hoặc chưa tạo hồ sơ'
-                });
+                return {
+                    errCode: 7,
+                    errEnMessage: 'Duplicate appointment in these slots.',
+                    errViMessage:
+                        'Bạn đã có lịch hẹn trùng vào khoảng thời gian này rồi!'
+                };
             }
-            const patientId = findPatient.patient.id;
 
-            // BƯỚC 2: TÍNH TOÁN VÀ VALIDATE SLOT/DỊCH VỤ
-            let bookingDetails;
+            for (const slot of slotsToBook) {
+                slot.capacity = 0;
+                slot.status = 'full';
+                await slot.save({ transaction: trans });
+            }
+        }
+
+        let deposit = finalPrice * 0.2;
+        let appointmentData = {
+            doctorId: finalDoctorId,
+            patientId: patientId,
+            slotId: slotId || null,
+            serviceId: serviceId || null,
+            status: 'pending',
+            deposit: deposit,
+            deposited: 0,
+            type: type,
+            finalPrice: finalPrice,
+            bookingFor: bookingInfo.bookingFor,
+            reason: bookingInfo.reason
+        };
+
+        if (bookingInfo.bookingFor === 'relative') {
+            appointmentData.patientName = bookingInfo.patientName;
+            appointmentData.patientGender = bookingInfo.patientGender;
+            appointmentData.patientPhone = bookingInfo.patientPhone;
+            appointmentData.patientEmail = bookingInfo.patientEmail;
+            appointmentData.patientDob = bookingInfo.patientDob;
+            appointmentData.patientEthnicity = bookingInfo.patientEthnicity;
+            appointmentData.patientAddress = bookingInfo.patientAddress;
+        } else {
+            appointmentData.patientName = findPatient.name;
+            appointmentData.patientGender = findPatient.patient.gender;
+            appointmentData.patientPhone = findPatient.phone;
+            appointmentData.patientEmail = findPatient.email;
+            appointmentData.patientDob = findPatient.patient.dob
+                ? moment(findPatient.patient.dob).format('YYYY-MM-DD')
+                : '';
+            appointmentData.patientEthnicity = findPatient.patient.ethnicity;
+            appointmentData.patientAddress = findPatient.patient.address;
+        }
+
+        const appointment = await db.Appointment.create(appointmentData, {
+            transaction: trans
+        });
+
+        await trans.commit();
+
+        const patientInfoForEmail = await db.Patient.findOne({
+            where: { id: patientId },
+            include: [
+                {
+                    model: db.User,
+                    as: 'user',
+                    attributes: ['name', 'email']
+                }
+            ]
+        });
+
+        const appointmentCreatedTime = moment(appointment.createdAt)
+            .locale('vi')
+            .format('llll');
+
+        const patientNameDisplay =
+            bookingInfo.bookingFor === 'relative'
+                ? bookingInfo.patientName
+                : patientInfoForEmail.user.name;
+
+        let timeString = '';
+        if (slotsToBook.length > 0) {
+            const firstSlotStart = moment(slotsToBook[0].startTime).format(
+                'HH:mm'
+            );
+            const lastSlotEnd = moment(
+                slotsToBook[slotsToBook.length - 1].endTime
+            ).format('HH:mm DD/MM/YYYY');
+            timeString = `${firstSlotStart} - ${lastSlotEnd}`;
+        }
+
+        await sendAppontment(
+            patientInfoForEmail.user.email,
+            appointment.id,
+            patientNameDisplay,
+            type,
+            `${target} (${timeString})`,
+            appointmentCreatedTime,
+            finalPrice,
+            deposit,
+            'pending'
+        );
+
+        return {
+            errCode: 0,
+            enMessage: 'Create appointment successful',
+            viMessage: 'Tạo lịch hẹn thành công'
+        };
+    } catch (e) {
+        if (!trans.finished) await trans.rollback();
+
+        console.error(e);
+        throw e;
+    }
+};
+
+const updateAppointmentService = async (userId, appointmentId, data) => {
+    const trans = await db.sequelize.transaction();
+    try {
+        const findPatient = await db.User.findOne({
+            where: { id: userId },
+            include: [
+                {
+                    model: db.Patient,
+                    as: 'patient',
+                    attributes: ['id', 'gender', 'dob', 'ethnicity', 'address']
+                }
+            ],
+            transaction: trans
+        });
+
+        if (!findPatient || !findPatient.patient) {
+            await trans.rollback();
+            return resolve({
+                errCode: 1,
+                errEnMessage: 'Patient not found or profile not created.',
+                errViMessage: 'Không tìm thấy bệnh nhân hoặc chưa tạo hồ sơ'
+            });
+        }
+
+        const appointment = await db.Appointment.findOne({
+            where: { id: appointmentId },
+            include: [
+                {
+                    model: db.Patient,
+                    as: 'patient',
+                    where: { userId: userId }
+                }
+            ],
+            lock: trans.LOCK.UPDATE,
+            transaction: trans
+        });
+
+        if (!appointment) {
+            await trans.rollback();
+            return {
+                errCode: 1,
+                errEnMessage: 'Appointment not found or unauthorized',
+                errViMessage:
+                    'Lịch hẹn không tồn tại hoặc không có quyền truy cập'
+            };
+        }
+
+        if (!['pending', 'deposited'].includes(appointment.status)) {
+            await trans.rollback();
+            return {
+                errCode: 2,
+                errEnMessage: 'Cannot update appointment in current status',
+                errViMessage:
+                    'Không thể cập nhật lịch hẹn ở trạng thái hiện tại'
+            };
+        }
+
+        let isReschedule = false;
+        let newBookingDetails = null;
+
+        if (
+            (data.slotId && data.slotId !== appointment.slotId) ||
+            (data.serviceId && data.serviceId !== appointment.serviceId) ||
+            (data.doctorId && data.doctorId !== appointment.doctorId)
+        ) {
+            isReschedule = true;
+
+            const oldStartSlot = await db.Slot.findOne({
+                where: { id: appointment.slotId },
+                transaction: trans
+            });
+
+            if (oldStartSlot) {
+                let slotsToRelease = [oldStartSlot];
+
+                if (appointment.type === 'service' && appointment.serviceId) {
+                    const oldService = await db.Service.findOne({
+                        where: { id: appointment.serviceId },
+                        transaction: trans
+                    });
+
+                    if (oldService) {
+                        const start = moment(oldStartSlot.startTime);
+                        const end = moment(oldStartSlot.endTime);
+                        const slotDurationMinutes = end.diff(start) / 60000;
+                        const serviceDurationMinutes =
+                            Number(oldService.durationMinutes) || 30;
+                        const neededSlotCount = Math.ceil(
+                            serviceDurationMinutes / slotDurationMinutes
+                        );
+
+                        if (neededSlotCount > 1) {
+                            const allSlotsOfDay = await db.Slot.findAll({
+                                where: {
+                                    doctorId: appointment.doctorId,
+                                    scheduleId: oldStartSlot.scheduleId
+                                },
+                                order: [['startTime', 'ASC']],
+                                transaction: trans
+                            });
+
+                            const startIndex = allSlotsOfDay.findIndex(
+                                (s) => s.id === oldStartSlot.id
+                            );
+                            if (startIndex !== -1) {
+                                for (let i = 1; i < neededSlotCount; i++) {
+                                    if (allSlotsOfDay[startIndex + i]) {
+                                        slotsToRelease.push(
+                                            allSlotsOfDay[startIndex + i]
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (const slot of slotsToRelease) {
+                    slot.capacity = 1;
+                    slot.status = 'available';
+                    await slot.save({ transaction: trans });
+                }
+            }
+
             try {
-                bookingDetails = await calculateBookingDetails(
-                    doctorId,
-                    serviceId,
-                    slotId,
+                newBookingDetails = await calculateBookingDetails(
+                    data.doctorId || appointment.doctorId,
+                    data.serviceId || appointment.serviceId,
+                    data.slotId || appointment.slotId,
                     trans
                 );
             } catch (error) {
                 await trans.rollback();
-                return resolve({
+                return {
                     errCode: error.code || -1,
-                    errEnMessage: error.en || 'Error calculating booking',
-                    errViMessage: error.vi || 'Lỗi tính toán đặt lịch'
-                });
+                    errEnMessage: error.en || 'Error calculating new booking',
+                    errViMessage: error.vi || 'Lỗi tính toán lịch hẹn mới'
+                };
             }
 
-            const { type, finalPrice, target, finalDoctorId, slotsToBook } =
-                bookingDetails;
+            const { slotsToBook, finalPrice, type, target, finalDoctorId } =
+                newBookingDetails;
 
-            // BƯỚC 3: KIỂM TRA TRÙNG LỊCH CHO TẤT CẢ CÁC SLOT SẼ BOOK
             if (slotsToBook && slotsToBook.length > 0) {
-                // Lấy ra danh sách ID của các slot sẽ book
-                const slotIdsToBook = slotsToBook.map((s) => s.id);
-
+                const newSlotIds = slotsToBook.map((s) => s.id);
                 const checkDuplicate = await db.Appointment.findOne({
                     where: {
-                        patientId: patientId,
-                        slotId: { [Op.in]: slotIdsToBook }, // Check nếu bệnh nhân đã book bất kỳ slot nào trong list này
-                        status: ['pending', 'confirmed', 'succeeded']
+                        patientId: appointment.patientId,
+                        slotId: { [Op.in]: newSlotIds },
+                        status: ['pending', 'confirmed', 'succeeded'],
+                        id: { [Op.ne]: appointmentId }
                     },
                     transaction: trans
                 });
 
                 if (checkDuplicate) {
                     await trans.rollback();
-                    return resolve({
+                    return {
                         errCode: 7,
-                        errEnMessage: 'Duplicate appointment in these slots.',
+                        errEnMessage: 'Duplicate appointment in new slots.',
                         errViMessage:
-                            'Bạn đã có lịch hẹn trùng vào khoảng thời gian này rồi!'
-                    });
+                            'Bạn đã có lịch hẹn trùng vào khoảng thời gian mới!'
+                    };
                 }
 
-                // BƯỚC 4: CẬP NHẬT TRẠNG THÁI SLOT (FULL)
                 for (const slot of slotsToBook) {
                     slot.capacity = 0;
-                    slot.status = 'full'; // Hoặc trạng thái bận
+                    slot.status = 'full';
                     await slot.save({ transaction: trans });
                 }
             }
 
-            // BƯỚC 5: LƯU APPOINTMENT
-            let deposit = finalPrice * 0.2;
-            let appointmentData = {
-                doctorId: finalDoctorId,
-                patientId: patientId,
-                slotId: slotId || null, // Vẫn lưu slot bắt đầu làm mốc
-                serviceId: serviceId || null,
-                status: 'pending',
-                deposit: deposit,
-                deposited: 0,
-                type: type,
-                finalPrice: finalPrice,
-                bookingFor: bookingInfo.bookingFor,
-                reason: bookingInfo.reason
-                // Thêm trường endTime cho Appointment nếu cần thiết (optional)
-                // endTime: slotsToBook.length > 0 ? slotsToBook[slotsToBook.length-1].endTime : null
-            };
+            appointment.doctorId = finalDoctorId;
+            appointment.slotId = slotsToBook[0].id;
+            appointment.serviceId = data.serviceId || appointment.serviceId;
+            appointment.finalPrice = finalPrice;
+            appointment.deposit = finalPrice * 0.2;
+            appointment.type = type;
+        }
 
-            // Mapping thông tin bệnh nhân
+        const bookingInfo = data.bookingInfo;
+        if (bookingInfo) {
+            if (bookingInfo.reason) appointment.reason = bookingInfo.reason;
+            if (bookingInfo.bookingFor)
+                appointment.bookingFor = bookingInfo.bookingFor;
+
             if (bookingInfo.bookingFor === 'relative') {
-                appointmentData.patientName = bookingInfo.patientName;
-                appointmentData.patientGender = bookingInfo.patientGender;
-                appointmentData.patientPhone = bookingInfo.patientPhone;
-                appointmentData.patientEmail = bookingInfo.patientEmail;
-                appointmentData.patientDob = bookingInfo.patientDob;
-                appointmentData.patientEthnicity = bookingInfo.patientEthnicity;
-                appointmentData.patientAddress = bookingInfo.patientAddress;
+                appointment.patientName = bookingInfo.patientName;
+                appointment.patientGender = bookingInfo.patientGender;
+                appointment.patientPhone = bookingInfo.patientPhone;
+                appointment.patientEmail = bookingInfo.patientEmail;
+                appointment.patientDob = bookingInfo.patientDob;
+                appointment.patientEthnicity = bookingInfo.patientEthnicity;
+                appointment.patientAddress = bookingInfo.patientAddress;
             } else {
-                appointmentData.patientName = findPatient.name;
-                appointmentData.patientGender = findPatient.patient.gender;
-                appointmentData.patientPhone = findPatient.phone;
-                appointmentData.patientEmail = findPatient.email;
-                appointmentData.patientDob = findPatient.patient.dob
+                appointment.patientName = findPatient.name;
+                appointment.patientGender = findPatient.patient.gender;
+                appointment.patientPhone = findPatient.phone;
+                appointment.patientEmail = findPatient.email;
+                appointment.patientDob = findPatient.patient.dob
                     ? moment(findPatient.patient.dob).format('YYYY-MM-DD')
                     : '';
-                appointmentData.patientEthnicity =
-                    findPatient.patient.ethnicity;
-                appointmentData.patientAddress = findPatient.patient.address;
+                appointment.patientEthnicity = findPatient.patient.ethnicity;
+                appointment.patientAddress = findPatient.patient.address;
             }
+        }
 
-            const appointment = await db.Appointment.create(appointmentData, {
-                transaction: trans
-            });
+        await appointment.save({ transaction: trans });
 
-            await trans.commit();
+        await trans.commit();
 
-            // BƯỚC 6: GỬI EMAIL
-            const patientInfoForEmail = await db.Patient.findOne({
-                where: { id: patientId },
-                include: [
-                    {
-                        model: db.User,
-                        as: 'user',
-                        attributes: ['name', 'email']
-                    }
-                ]
-            });
+        const user = await db.User.findOne({ where: { id: userId } });
 
-            const appointmentCreatedTime = moment(appointment.createdAt)
-                .locale('vi')
-                .format('llll');
-
-            const patientNameDisplay =
-                bookingInfo.bookingFor === 'relative'
-                    ? bookingInfo.patientName
-                    : patientInfoForEmail.user.name;
-
-            // Xây dựng nội dung thời gian hiển thị trong email
-            // Ví dụ: 19:00 - 20:00 (nếu book 2 slot)
-            let timeString = '';
-            if (slotsToBook.length > 0) {
-                const firstSlotStart = moment(slotsToBook[0].startTime).format(
-                    'HH:mm'
+        let timeString = '';
+        if (isReschedule && newBookingDetails) {
+            const { slotsToBook } = newBookingDetails;
+            const start = moment(slotsToBook[0].startTime).format('HH:mm');
+            const end = moment(
+                slotsToBook[slotsToBook.length - 1].endTime
+            ).format('HH:mm DD/MM/YYYY');
+            timeString = `${start} - ${end}`;
+        } else {
+            const currentSlot = await db.Slot.findByPk(appointment.slotId);
+            if (currentSlot)
+                timeString = moment(currentSlot.startTime).format(
+                    'HH:mm DD/MM/YYYY'
                 );
-                const lastSlotEnd = moment(
-                    slotsToBook[slotsToBook.length - 1].endTime
-                ).format('HH:mm DD/MM/YYYY');
-                timeString = `${firstSlotStart} - ${lastSlotEnd}`;
-            }
-
-            // Gọi hàm gửi email
-            // Lưu ý: target nên update thêm timeString để email rõ ràng hơn
-            await sendAppontment(
-                patientInfoForEmail.user.email,
-                appointment.id,
-                patientNameDisplay,
-                type,
-                `${target} (${timeString})`, // Thêm giờ vào tên dịch vụ trong mail
-                appointmentCreatedTime,
-                finalPrice,
-                deposit,
-                'pending'
-            );
-
-            return resolve({
-                errCode: 0,
-                enMessage: 'Create appointment successful',
-                viMessage: 'Tạo lịch hẹn thành công'
-            });
-        } catch (e) {
-            if (!trans.finished) await trans.rollback();
-            // Log lỗi ra console để debug nếu cần
-            console.error(e);
-            return reject(e);
         }
-    });
+
+        const mailTarget = isReschedule
+            ? newBookingDetails.target
+            : 'Dịch vụ đã đặt (Thông tin cập nhật)';
+
+        await sendUpdateAppointment(
+            user.email,
+            appointment.id,
+            appointment.patientName,
+            appointment.type,
+            `${mailTarget} (${timeString})`,
+            moment(appointment.updatedAt).format('llll'),
+            appointment.finalPrice,
+            appointment.deposit,
+            'updated'
+        );
+
+        return {
+            errCode: 0,
+            enMessage: 'Update appointment successful',
+            viMessage: 'Cập nhật lịch hẹn thành công'
+        };
+    } catch (e) {
+        if (!trans.finished) await trans.rollback();
+        console.error(e);
+        return {
+            errCode: -1,
+            errEnMessage: 'Error from server',
+            errViMessage: 'Lỗi từ máy chủ'
+        };
+    }
 };
 
-const updateAppointmentService = async (userId, appointmentId, data) => {
-    return new Promise(async (resolve, reject) => {
-        const trans = await db.sequelize.transaction();
+const deleteAppointmentService = async (userId, appointmentId) => {
+    const trans = await db.sequelize.transaction();
 
-        try {
-            const findPatient = await db.User.findOne({
-                where: { id: userId },
-                include: [
-                    {
-                        model: db.Patient,
-                        as: 'patient',
-                        attributes: ['id']
-                    }
-                ],
-                transaction: trans
-            });
+    try {
+        const appointment = await db.Appointment.findOne({
+            where: { id: appointmentId },
+            lock: trans.LOCK.UPDATE,
+            transaction: trans
+        });
 
-            if (!findPatient || !findPatient.patient) {
-                await trans.rollback();
-                return resolve({
-                    errCode: 1,
-                    errMessage: 'Patient not found or profile not created.'
-                });
-            }
-
-            const patientId = findPatient.patient.id;
-
-            const oldAppointment = await db.Appointment.findOne({
-                where: { id: appointmentId },
-                lock: trans.LOCK.UPDATE,
-                transaction: trans
-            });
-
-            if (!oldAppointment) {
-                await trans.rollback();
-                return resolve({
-                    errCode: 2,
-                    errMessage: 'Appointment not found'
-                });
-            }
-
-            if (oldAppointment.patientId !== patientId) {
-                await trans.rollback();
-                return resolve({
-                    errCode: 3,
-                    errMessage: 'You are not the owner of this appointment'
-                });
-            }
-
-            if (
-                oldAppointment.status !== 'pending' &&
-                oldAppointment.status !== 'deposited'
-            ) {
-                await trans.rollback();
-                return resolve({
-                    errCode: 4,
-                    errMessage: 'You can not update this appointment'
-                });
-            }
-
-            const newDoctorId = data.doctorId;
-            const newSlotId = data.slotId;
-            const newServiceId = data.serviceId;
-
-            const isNewDoctorAppointment =
-                newDoctorId && newSlotId && !newServiceId;
-            const isNewServiceAppointment =
-                newServiceId && !newDoctorId && !newSlotId;
-            const isNewServiceWithDoctorAppointment =
-                newServiceId && newDoctorId && !newSlotId;
-
-            if (
-                (!isNewDoctorAppointment &&
-                    !isNewServiceAppointment &&
-                    !isNewServiceWithDoctorAppointment) ||
-                (newDoctorId && newSlotId && newServiceId)
-            ) {
-                await trans.rollback();
-                return resolve({
-                    errCode: 5,
-                    errMessage: 'Invalid appointment type'
-                });
-            }
-
-            let newFinalPrice = 0;
-            let newDeposit = 0;
-            let newType = '';
-            let target = '';
-
-            let finalDoctorId = newDoctorId;
-            let finalSlotId = newSlotId;
-            let finalServiceId = newServiceId;
-
-            if (oldAppointment.slotId) {
-                const oldSlot = await db.Slot.findOne({
-                    where: { id: oldAppointment.slotId },
-                    lock: trans.LOCK.UPDATE,
-                    transaction: trans
-                });
-
-                if (oldSlot) {
-                    oldSlot.capacity += 1;
-                    oldSlot.status =
-                        oldSlot.capacity >= 3 ? 'available' : 'booked';
-                    await oldSlot.save({ transaction: trans });
-                }
-            }
-
-            if (isNewDoctorAppointment) {
-                const doctorInfo = await db.Doctor.findOne({
-                    where: { id: finalDoctorId },
-                    include: [
-                        { model: db.User, as: 'user', attributes: ['name'] }
-                    ]
-                });
-
-                if (!doctorInfo) {
-                    await trans.rollback();
-                    return resolve({
-                        errCode: 6,
-                        errMessage: 'Doctor not found'
-                    });
-                }
-
-                newFinalPrice = doctorInfo.price;
-
-                const currentSlot = await db.Slot.findOne({
-                    where: { id: finalSlotId, doctorId: finalDoctorId },
-                    lock: trans.LOCK.UPDATE,
-                    transaction: trans
-                });
-
-                if (!currentSlot || currentSlot.capacity <= 0) {
-                    await trans.rollback();
-                    return resolve({
-                        errCode: 7,
-                        errMessage: 'New Slot not found or slot full'
-                    });
-                }
-
-                currentSlot.capacity -= 1;
-                currentSlot.status =
-                    currentSlot.capacity <= 0 ? 'full' : 'booked';
-                await currentSlot.save({ transaction: trans });
-
-                finalServiceId = null;
-                newType = 'doctor';
-                target = `Bác sĩ ` + doctorInfo.user.name;
-            } else if (
-                isNewServiceAppointment ||
-                isNewServiceWithDoctorAppointment
-            ) {
-                const serviceInfo = await db.Service.findOne({
-                    where: { id: finalServiceId }
-                });
-
-                if (!serviceInfo) {
-                    await trans.rollback();
-                    return resolve({
-                        errCode: 8,
-                        errMessage: 'Service not found'
-                    });
-                }
-
-                if (isNewServiceWithDoctorAppointment) {
-                    const doctorInfo = await db.Doctor.findOne({
-                        where: { id: finalDoctorId },
-                        include: [
-                            {
-                                model: db.User,
-                                as: 'user',
-                                attributes: ['name']
-                            }
-                        ]
-                    });
-
-                    if (!doctorInfo) {
-                        await trans.rollback();
-                        return resolve({
-                            errCode: 9,
-                            errMessage: 'Doctor not found for service'
-                        });
-                    }
-
-                    let doctorPrice = Number(doctorInfo.price / 2);
-                    let servicePrice = Number(serviceInfo.price);
-
-                    newFinalPrice = doctorPrice + servicePrice;
-                    target = `Dịch vụ ${serviceInfo.name} (Bác sĩ: ${
-                        doctorInfo.user.name || finalDoctorId
-                    })`;
-
-                    finalSlotId = null;
-                } else {
-                    newFinalPrice = serviceInfo.price;
-                    target = `Dịch vụ ${serviceInfo.name}`;
-                    finalDoctorId = null;
-                    finalSlotId = null;
-                }
-
-                newType = 'service';
-            }
-
-            newDeposit = newFinalPrice * 0.2;
-
-            await db.Appointment.update(
-                {
-                    doctorId: finalDoctorId,
-                    slotId: finalSlotId,
-                    serviceId: finalServiceId,
-                    status: 'pending',
-                    deposit: newDeposit,
-                    deposited: oldAppointment.deposited || 0,
-                    type: newType,
-                    finalPrice: newFinalPrice
-                },
-                { where: { id: appointmentId }, transaction: trans }
-            );
-
-            const updatedAppointment = await db.Appointment.findOne({
-                where: { id: appointmentId },
-                include: [
-                    {
-                        model: db.Patient,
-                        as: 'patient',
-                        include: [
-                            {
-                                model: db.User,
-                                as: 'user',
-                                attributes: ['name', 'email', 'phone']
-                            }
-                        ]
-                    }
-                ],
-                transaction: trans
-            });
-
-            if (
-                !updatedAppointment ||
-                !updatedAppointment.patient ||
-                !updatedAppointment.patient.user
-            ) {
-                await trans.rollback();
-                return resolve({
-                    errCode: 10,
-                    errMessage: 'Patient or user not found after update'
-                });
-            }
-
-            await trans.commit();
-
-            const appointmentCreatedTime = moment(updatedAppointment.updatedAt)
-                .locale('vi')
-                .format('llll');
-
-            await sendUpdateAppointment(
-                updatedAppointment.patient.user.email,
-                updatedAppointment.id,
-                updatedAppointment.patient.user.name,
-                updatedAppointment.type,
-                target,
-                appointmentCreatedTime,
-                updatedAppointment.finalPrice,
-                updatedAppointment.deposit,
-                updatedAppointment.status
-            );
-
-            return resolve({
-                errCode: 0,
-                message: 'Update appointment successful'
-            });
-        } catch (e) {
-            if (!trans.finished) await trans.rollback();
-            return reject(e);
-        }
-    });
-};
-
-const deleteAppointmentService = async (patientId, appointmentId) => {
-    return new Promise(async (resolve, reject) => {
-        const trans = await db.sequelize.transaction();
-
-        try {
-            const appointment = await db.Appointment.findOne({
-                where: { id: appointmentId },
-                lock: trans.LOCK.UPDATE,
-                transaction: trans
-            });
-
-            if (!appointment) {
-                await trans.rollback();
-                return resolve({
-                    errCode: 1,
-                    errMessage: 'Appointment not found'
-                });
-            }
-
-            if (appointment.patientId !== patientId) {
-                await trans.rollback();
-                return resolve({
-                    errCode: 2,
-                    errMessage: 'You are not the owner of this appointment'
-                });
-            }
-
-            if (appointment.status !== 'pending') {
-                await trans.rollback();
-                return resolve({
-                    errCode: 3,
-                    errMessage: 'Cannot cancel this appointment'
-                });
-            }
-
-            if (appointment.slotId) {
-                const oldSlot = await db.Slot.findOne({
-                    where: { id: appointment.slotId },
-                    lock: trans.LOCK.UPDATE,
-                    transaction: trans
-                });
-
-                if (oldSlot) {
-                    oldSlot.capacity += 1;
-                    if (oldSlot.capacity >= 3) {
-                        oldSlot.status = 'available';
-                    } else {
-                        oldSlot.status = 'booked';
-                    }
-                    await oldSlot.save({ transaction: trans });
-                }
-            }
-
-            await db.Appointment.update(
-                { status: 'cancelled' },
-                { where: { id: appointmentId }, transaction: trans }
-            );
-
-            await trans.commit();
-
-            const patientInfo = await db.Patient.findOne({
-                where: { userId: patientId },
-                include: [
-                    {
-                        model: db.User,
-                        as: 'user',
-                        attributes: ['name', 'email', 'phone']
-                    }
-                ]
-            });
-
-            await sendCancelAppontment(
-                patientInfo.user.email,
-                appointment.id,
-                patientInfo.user.name,
-                'cancelled'
-            );
-
-            return resolve({
-                errCode: 0,
-                message: 'Cancel appointment successful'
-            });
-        } catch (e) {
+        if (!appointment) {
             await trans.rollback();
-            return reject(e);
+            return {
+                errCode: 1,
+                errEnMessage: 'Appointment not found',
+                errViMessage: 'Lịch hẹn không tồn tại'
+            };
         }
-    });
+
+        const patient = await db.Patient.findOne({
+            where: { userId: userId },
+            transaction: trans
+        });
+
+        const patientId = patient.id;
+
+        if (appointment.patientId !== patientId) {
+            await trans.rollback();
+            return {
+                errCode: 2,
+                errEnMessage: 'You are not the owner of this appointment',
+                errViMessage: 'Bạn không có quyền truy cập lịch hẹn này'
+            };
+        }
+
+        if (
+            appointment.status !== 'pending' &&
+            appointment.status !== 'deposited'
+        ) {
+            await trans.rollback();
+            return {
+                errCode: 3,
+                errEnMessage: 'Cannot cancel this appointment',
+                errViMessage: 'Không thể hủy lịch hẹn này'
+            };
+        }
+
+        if (appointment.slotId) {
+            const oldSlot = await db.Slot.findOne({
+                where: { id: appointment.slotId },
+                lock: trans.LOCK.UPDATE,
+                transaction: trans
+            });
+
+            if (oldSlot) {
+                oldSlot.capacity += 1;
+                oldSlot.status = 'available';
+
+                await oldSlot.save({ transaction: trans });
+            }
+        }
+
+        await db.Appointment.update(
+            { status: 'cancelled' },
+            { where: { id: appointmentId }, transaction: trans }
+        );
+
+        await trans.commit();
+
+        const patientInfo = await db.Patient.findOne({
+            where: { userId: userId },
+            include: [
+                {
+                    model: db.User,
+                    as: 'user',
+                    attributes: ['name', 'email', 'phone']
+                }
+            ]
+        });
+
+        await sendCancelAppontment(
+            patientInfo.user.email,
+            appointment.id,
+            patientInfo.user.name,
+            'cancelled'
+        );
+
+        return {
+            errCode: 0,
+            enMessage: 'Cancel appointment successful',
+            viMessage: 'Hủy lịch hẹn thành công'
+        };
+    } catch (e) {
+        await trans.rollback();
+        throw e;
+    }
 };
 
 const fakePaymentService = (appointmentId) => {
