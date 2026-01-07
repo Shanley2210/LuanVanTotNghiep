@@ -17,7 +17,6 @@ const sendFinishExamEmail = async (dataSend) => {
 
     const subject = 'Kết quả khám bệnh & Đơn thuốc';
 
-    // Format ngày tái khám nếu có
     const reExamString = reExamDate
         ? moment(reExamDate).format('DD/MM/YYYY')
         : 'Theo chỉ định sau';
@@ -83,6 +82,12 @@ const getAllDoctorsService = (page, limit, status = null) => {
                         model: db.Specialty,
                         as: 'specialty',
                         attributes: ['id', 'name']
+                    },
+                    {
+                        model: db.Service,
+                        as: 'services',
+                        attributes: ['id', 'name', 'price'],
+                        through: { attributes: [] }
                     }
                 ],
                 order: [['createdAt', 'DESC']]
@@ -290,42 +295,62 @@ const getSlotsService = (doctorId, date) => {
     });
 };
 
-const getDoctorBySpecialtyService = (specialtyId) => {
+const getDoctorBySpecialtyService = (specialtyId, page, limit, status) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const specialty = await db.Specialty.findOne({
-                where: { id: specialtyId }
-            });
+            const offset = (page - 1) * limit;
 
-            if (!specialty) {
-                return resolve({
-                    errCode: 2,
-                    errMessage: 'Specialty not found'
-                });
+            let whereCondition = { specialtyId: specialtyId };
+            if (status) {
+                whereCondition.status = status;
             }
 
-            const doctors = await db.Doctor.findAll({
-                where: { specialtyId: specialtyId },
+            const { count, rows } = await db.Doctor.findAndCountAll({
+                where: whereCondition,
+                limit: limit,
+                offset: offset,
                 include: [
                     {
                         model: db.User,
                         as: 'user',
                         attributes: ['name', 'email', 'phone']
+                    },
+                    {
+                        model: db.Specialty,
+                        as: 'specialty',
+                        attributes: ['name']
                     }
-                ]
+                ],
+                raw: false,
+                nest: true
             });
 
-            if (doctors.length === 0) {
+            if (!rows || rows.length === 0) {
                 return resolve({
-                    errCode: 3,
-                    errMessage: 'Doctor not found'
+                    errCode: 0,
+                    message: 'No doctors found',
+                    data: [],
+                    meta: {
+                        page: page,
+                        limit: limit,
+                        totalRows: 0,
+                        totalPages: 0
+                    }
                 });
             }
 
+            const totalPages = Math.ceil(count / limit);
+
             return resolve({
                 errCode: 0,
-                message: 'Get doctors successful',
-                data: doctors
+                message: 'Get doctors by specialty successful',
+                data: rows,
+                meta: {
+                    page: page,
+                    limit: limit,
+                    totalRows: count,
+                    totalPages: totalPages
+                }
             });
         } catch (e) {
             return reject(e);

@@ -56,7 +56,7 @@ export default function DoctorService() {
     ) : (
         <div
             className={`
-                flex flex-col px-3 sm:px-4 lg:px-20 w-full py-5 my-5
+                flex flex-col px-3 sm:px-4 lg:px-20 w-screen py-5 my-5
                 ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'}
             `}
         >

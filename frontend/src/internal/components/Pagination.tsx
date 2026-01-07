@@ -62,8 +62,10 @@ export default function Pagination({
                 <button
                     onClick={handlePrev}
                     disabled={current === 1}
-                    className={`px-3 py-1 mx-1 bg-transparent border-none ${
-                        isDark ? '  text-gray-100' : '  text-neutral-900'
+                    className={`px-3 py-1 mx-1 cursor-pointer ${
+                        isDark
+                            ? 'bg-gray-700 border-gray-500 text-white'
+                            : 'bg-white border-gray-300 text-black'
                     }`}
                 >
                     <IoIosArrowBack />

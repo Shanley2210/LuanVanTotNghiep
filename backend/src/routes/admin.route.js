@@ -251,12 +251,51 @@ router.get(
     adminController.getReceptionistsController
 );
 
-router.post(
-    '/doctor-service-bulk',
+router.get(
+    '/doctor-service/:doctorId',
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_manage'),
-    adminController.createDoctorServiceBulkController
+    adminController.getDoctorServicesController
+);
+
+router.post(
+    '/doctor-service',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRoles('Hospital_Admin'),
+    authMiddleware.verifyPermission('doctor_manage'),
+    adminController.createDoctorServicesController
+);
+
+router.put(
+    '/doctor-service/:doctorId/:serviceId',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRoles('Hospital_Admin'),
+    authMiddleware.verifyPermission('doctor_manage'),
+    adminController.updateDoctorServicesController
+);
+
+router.get(
+    '/appointments',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRoles('Hospital_Admin'),
+    adminController.getAppointmentsController
+);
+
+router.get(
+    '/stats/dashboard',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
+    authMiddleware.verifyPermission('report_manage'),
+    adminController.getDashboardStatsController
+);
+
+router.get(
+    '/stats/export',
+    // authMiddleware.verifyToken,
+    // authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
+    // authMiddleware.verifyPermission('report_manage'),
+    adminController.exportStatsController
 );
 
 module.exports = router;

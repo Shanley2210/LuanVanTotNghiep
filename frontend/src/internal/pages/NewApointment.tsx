@@ -70,9 +70,7 @@ export default function NewApointment() {
             }
         } catch (e: any) {
             console.error('Error confirming appointment:', e);
-            toast.error(
-                language === 'vi' ? 'Lỗi phí Server' : 'Error from Server'
-            );
+            toast.error(t('repNew.errServer'));
         } finally {
             setIsLoading(false);
         }
@@ -80,13 +78,13 @@ export default function NewApointment() {
 
     const columns = [
         {
-            title: 'ID',
+            title: t('repNew.colId'),
             dataIndex: 'id',
             key: 'id',
             width: 60
         },
         {
-            title: 'Người đặt lịch',
+            title: t('repNew.colBooker'),
             key: 'book',
             render: (_: any, record: any) => (
                 <div className='flex flex-col'>
@@ -103,7 +101,7 @@ export default function NewApointment() {
             )
         },
         {
-            title: 'Thông tin bệnh nhân',
+            title: t('repNew.colPatientInfo'),
             key: 'patient',
             render: (_: any, record: any) => (
                 <div className='flex flex-col'>
@@ -112,21 +110,23 @@ export default function NewApointment() {
                         {record.patientPhone}
                     </span>
                     <span className='text-xs text-gray-400'>
-                        {record.patientGender === '1' ? 'Nam' : 'Nữ'} -{' '}
-                        {dayjs(record.patientDob).format('DD/MM/YYYY')}
+                        {record.patientGender === '1'
+                            ? t('repNew.genderMale')
+                            : t('repNew.genderFemale')}{' '}
+                        - {dayjs(record.patientDob).format('DD/MM/YYYY')}
                     </span>
                 </div>
             )
         },
         {
-            title: 'Loại lịch hẹn',
+            title: t('repNew.colType'),
             key: 'info',
             render: (_: any, record: any) => {
                 if (record.type === 'doctor') {
                     return (
                         <div className='flex flex-col'>
                             <span className='text-blue-600 font-medium'>
-                                Khám bác sĩ
+                                {t('repNew.typeDoctor')}
                             </span>
                             <span>{record.doctor?.user?.name}</span>
                             <span className='text-xs text-gray-500'>
@@ -138,7 +138,7 @@ export default function NewApointment() {
                 return (
                     <div className='flex flex-col'>
                         <span className='text-green-600 font-medium'>
-                            Dịch vụ
+                            {t('repNew.typeService')}
                         </span>
                         <span>{record.service?.name}</span>
                     </div>
@@ -146,7 +146,7 @@ export default function NewApointment() {
             }
         },
         {
-            title: 'Thời gian khám',
+            title: t('repNew.colTime'),
             key: 'time',
             align: 'center' as const,
             width: 180,
@@ -164,49 +164,51 @@ export default function NewApointment() {
             }
         },
         {
-            title: 'Thanh toán',
+            title: t('repNew.colPayment'),
             key: 'payment',
             align: 'center' as const,
             render: (_: any, record: any) => (
                 <div className='flex flex-col'>
                     <span>
-                        Tổng:{' '}
+                        {t('repNew.paymentTotal')}:{' '}
                         {Number(record.finalPrice).toLocaleString('vi-VN')} đ
                     </span>
                     <span className='text-xs text-green-600'>
-                        Đã cọc:{' '}
+                        {t('repNew.paymentDeposited')}:{' '}
                         {Number(record.deposited).toLocaleString('vi-VN')} đ
                     </span>
                 </div>
             )
         },
         {
-            title: 'Trạng thái',
+            title: t('repNew.colStatus'),
             dataIndex: 'status',
             key: 'status',
             align: 'center' as const,
             render: (status: string) => {
                 let color = status === 'deposited' ? 'processing' : 'default';
-                let text = status === 'deposited' ? 'Đã đặt cọc' : status;
+                let text =
+                    status === 'deposited'
+                        ? t('repNew.statusDeposited')
+                        : status;
                 return <Tag color={color}>{text}</Tag>;
             }
         },
         {
-            title: 'Hành động',
+            title: t('repNew.colAction'),
             dataIndex: 'action',
             key: 'action',
             align: 'center' as const,
             render: (_: any, record: IAppointment) => (
                 <div className='flex gap-5 justify-center'>
                     <Button onClick={() => handleConfirmAppointment(record.id)}>
-                        Xác nhận
+                        {t('repNew.btnConfirm')}
                     </Button>
                 </div>
             )
         }
     ];
 
-    // --- SỬA ĐỔI 3: Thêm groupKey vào useEffect ---
     useEffect(() => {
         dispatch(
             fetchReceptionistAppointments({
@@ -225,7 +227,7 @@ export default function NewApointment() {
                     isDark ? 'text-gray-100' : 'text-neutral-900'
                 }`}
             >
-                Lich hen moi nhat
+                {t('repNew.title')}
             </div>
 
             {isLoading ? (
@@ -249,7 +251,7 @@ export default function NewApointment() {
                                 isDark ? 'text-gray-100' : 'text-neutral-900'
                             }`}
                         >
-                            So muc moi trang
+                            {t('repNew.itemsPerPage')}
                         </div>
                     </div>
 

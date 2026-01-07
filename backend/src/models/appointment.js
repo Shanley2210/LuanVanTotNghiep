@@ -64,7 +64,9 @@ module.exports = (sequelize, DataTypes) => {
             patientDob: DataTypes.STRING,
             patientEthnicity: DataTypes.STRING,
             patientAddress: DataTypes.STRING,
-            reason: DataTypes.TEXT
+            reason: DataTypes.TEXT,
+            // isRemind24h: DataTypes.BOOLEAN,
+            // isRemind2h: DataTypes.BOOLEAN
         },
         {
             sequelize,

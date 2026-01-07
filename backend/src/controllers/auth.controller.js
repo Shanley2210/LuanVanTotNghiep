@@ -119,6 +119,40 @@ const logoutController = async (req, res) => {
     }
 };
 
+const changePasswordController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+        if (
+            !userId ||
+            !currentPassword ||
+            !newPassword ||
+            !confirmNewPassword
+        ) {
+            return res.status(200).json({
+                errCode: 1,
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số yêu cầu'
+            });
+        }
+
+        const response = await authService.changePasswordService(
+            userId,
+            currentPassword,
+            newPassword,
+            confirmNewPassword
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in Change Password:', e);
+        return res
+            .status(500)
+            .json({ errCode: -1, errMessage: 'Error from server' });
+    }
+};
+
 const forgotPasswordController = async (req, res) => {
     try {
         const { emailOrPhone } = req.body;
@@ -195,6 +229,7 @@ module.exports = {
     resendOtpController,
     loginController,
     logoutController,
+    changePasswordController,
     forgotPasswordController,
     resetPasswordController,
     refreshTokenController

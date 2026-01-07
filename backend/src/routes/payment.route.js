@@ -1,8 +1,15 @@
-// const express = require('express');
-// const router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-// const paymentController = require('../controllers/payment.controller');
+const paymentController = require('../controllers/payment.controller');
 
-// router.post('/deposit', paymentController.createDepositPaymentController);
+router.post(
+    '/vnpay/create-payment',
+    paymentController.createVNPayPaymentController
+);
 
-// module.exports = router;
+router.get('/vnpay/return', paymentController.retrunVNPayController);
+
+router.get('/vnpay/:txnRef', paymentController.getPaymentByTxnRefController);
+
+module.exports = router;

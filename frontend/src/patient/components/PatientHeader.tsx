@@ -20,6 +20,7 @@ import { MdLogin, MdLogout, MdPerson } from 'react-icons/md';
 import {
     RiArrowDownSLine,
     RiCloseLine,
+    RiLockPasswordLine,
     RiMenuUnfoldLine
 } from 'react-icons/ri';
 import { useNavigate } from 'react-router-dom';
@@ -53,6 +54,18 @@ export default function PatientHeader() {
     };
     const handleNavigateAppointment = () => {
         navigate('/patient/my-appointment');
+        setIsMenuOpen(!isMenuOpen);
+    };
+    const handleNavigateDoctor = () => {
+        navigate('/bac-si');
+        setIsMenuOpen(!isMenuOpen);
+    };
+    const handleNavigateSpecialty = () => {
+        navigate('/chuyen-khoa');
+        setIsMenuOpen(!isMenuOpen);
+    };
+    const handleNavigateService = () => {
+        navigate('/dich-vu');
         setIsMenuOpen(!isMenuOpen);
     };
 
@@ -111,6 +124,15 @@ export default function PatientHeader() {
                     <MdPerson className='text-lg' />
                     <span>{t('homePage.pf')}</span>
                 </DropdownMenuItem>
+
+                <DropdownMenuItem
+                    className='cursor-pointer gap-2 hover:bg-gray-200 rounded-none'
+                    onClick={() => navigate('/patient/change-password')}
+                >
+                    <RiLockPasswordLine className='text-lg' />
+                    <span>{t('homePage.cp')}</span>
+                </DropdownMenuItem>
+
                 <DropdownMenuItem
                     className='cursor-pointer gap-2 text-red-600 focus:text-red-600 hover:bg-gray-200 rounded-none'
                     onClick={handleLogout}
@@ -124,12 +146,12 @@ export default function PatientHeader() {
 
     return (
         <header
-            className={`flex flex-col sticky top-0 z-50 ${
+            className={`flex flex-col sticky top-0 z-100 ${
                 isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'
             }`}
         >
             <div
-                className={`px-4 md:px-20 hidden md:flex justify-between pt-2 text-sm ${
+                className={`px-4 md:px-20 hidden md:flex justify-between py-2 text-sm ${
                     isDark ? 'bg-gray-900 text-white' : 'bg-gray-50 text-black'
                 }`}
             >
@@ -159,7 +181,7 @@ export default function PatientHeader() {
 
                             <DropdownMenuContent
                                 align='center'
-                                className='bg-white border-none rounded-none'
+                                className='bg-white border-none rounded-none z-101'
                             >
                                 <DropdownMenuItem>
                                     <div
@@ -200,7 +222,6 @@ export default function PatientHeader() {
                 </div>
             </div>
 
-            {/* Main Header Desktop */}
             <div className='flex justify-between items-center py-3 px-4 md:px-20'>
                 <div className='md:hidden flex items-center z-50'>
                     <button
@@ -232,7 +253,10 @@ export default function PatientHeader() {
                 </div>
                 <div className='hidden md:flex gap-3 items-center'>
                     <div className='flex gap-10 mr-10 items-center'>
-                        <div className='flex flex-col cursor-pointer'>
+                        <div
+                            className='flex flex-col cursor-pointer hover:text-blue-500 transition-al'
+                            onClick={handleNavigateSpecialty}
+                        >
                             <span className='font-bold'>
                                 {t('homePage.sp')}
                             </span>
@@ -240,7 +264,10 @@ export default function PatientHeader() {
                                 {t('homePage.subSp')}
                             </span>
                         </div>
-                        <div className='flex flex-col cursor-pointer'>
+                        <div
+                            className='flex flex-col cursor-pointer hover:text-blue-500 transition-al'
+                            onClick={handleNavigateService}
+                        >
                             <span className='font-bold'>
                                 {t('homePage.sv')}
                             </span>
@@ -248,7 +275,10 @@ export default function PatientHeader() {
                                 {t('homePage.subSv')}
                             </span>
                         </div>
-                        <div className='flex flex-col cursor-pointer'>
+                        <div
+                            className='flex flex-col cursor-pointer hover:text-blue-500 transition-al'
+                            onClick={handleNavigateDoctor}
+                        >
                             <span className='font-bold'>
                                 {t('homePage.dt')}
                             </span>
@@ -323,13 +353,22 @@ export default function PatientHeader() {
                         >
                             {t('homePage.ap')}
                         </div>
-                        <div className='py-3 px-6 cursor-pointer'>
+                        <div
+                            className='py-3 px-6 cursor-pointer'
+                            onClick={handleNavigateDoctor}
+                        >
                             {t('homePage.dt')}
                         </div>
-                        <div className='py-3 px-6 cursor-pointer'>
+                        <div
+                            className='py-3 px-6 cursor-pointer'
+                            onClick={handleNavigateSpecialty}
+                        >
                             {t('homePage.sp')}
                         </div>
-                        <div className='py-3 px-6 cursor-pointer'>
+                        <div
+                            className='py-3 px-6 cursor-pointer'
+                            onClick={handleNavigateService}
+                        >
                             {t('homePage.sv')}
                         </div>
                         {isAuthenticated && user?.role === PATIENT_ROLE && (
@@ -372,7 +411,7 @@ export default function PatientHeader() {
 
                                         <DropdownMenuContent
                                             align='center'
-                                            className='bg-white border-none'
+                                            className='bg-white border-none z-101 rounded-none'
                                         >
                                             <DropdownMenuItem>
                                                 <div

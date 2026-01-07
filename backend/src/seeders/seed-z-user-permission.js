@@ -9,6 +9,7 @@ module.exports = {
             { userId: 1, permissionId: 2 },
             { userId: 1, permissionId: 3 },
             { userId: 1, permissionId: 11 },
+            { userId: 1, permissionId: 16 },
 
             // Hospital Admin (userId: 2): user_manage_all, user_view_all, doctor_manage, service_manage, doctor_schedule_manage, view_user_detail
             { userId: 2, permissionId: 2 },
@@ -17,6 +18,7 @@ module.exports = {
             { userId: 2, permissionId: 7 },
             { userId: 2, permissionId: 10 },
             { userId: 2, permissionId: 11 },
+            { userId: 2, permissionId: 16 },
 
             // Doctors (userId: 3 to 52): patient_view_medical_history, view_user_detail, view_doctor_schedule, view_doctor_appointment
             ...Array.from({ length: 50 }, (_, i) => i + 3).flatMap((userId) => [

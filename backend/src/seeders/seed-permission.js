@@ -98,6 +98,12 @@ module.exports = {
                 description: 'Xác nhận lịch hẹn',
                 createdAt: new Date(),
                 updatedAt: new Date()
+            },
+            {
+                name: 'report_manage',
+                description: 'Quản lý báo cáo',
+                createdAt: new Date(),
+                updatedAt: new Date()
             }
         ]);
     },

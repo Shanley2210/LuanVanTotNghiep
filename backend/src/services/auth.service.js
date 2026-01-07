@@ -23,15 +23,35 @@ const sendOtpEmail = async (email, otp) => {
     const subject = 'Mã OTP xác thực ';
     const text = `Mã OTP của bạn là: ${otp}. Mã này sẽ hết hạn sau 3 phút.`; //
     const html = `
-        <div style="max-width:600px;margin:0 auto;background-color:#ffffff;border:1px solid #d0d0d0;padding:25px 30px;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;color:#333;line-height:1.6;">
-            <h2 style="color:#0078d7;margin-bottom:15px;text-transform:uppercase;">MÃ XÁC THỰC TÀI KHOẢN</h2>
-            <p style="margin-bottom:10px;">Vui lòng sử dụng mã OTP sau để hoàn tất:</p>
-            <div style="text-align:center;margin:20px 0;">
-                <span style="display:inline-block;font-size:28px;font-weight:bold;color:#0078d7;background:#f2f2f2;padding:10px 40px;border:1px solid #ccc;">${otp}</span>
-            </div>
-            <p style="margin-bottom:10px;">Mã này sẽ hết hạn sau <strong>3 phút</strong>.</p>
-            <p style="margin-bottom:5px;">Trân trọng,</p>
-            <p style="font-style:italic;margin:0;">Hệ thống Đặt lịch</p>
+        <div style="font-family: Helvetica, Arial, sans-serif; background-color: #eef1f5; padding: 40px 0;">
+            <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border: 1px solid #dcdcdc;">
+                <tr>
+                    <td style="padding: 30px 40px; border-bottom: 4px solid #0056b3;">
+                        <h2 style="margin: 0; color: #0056b3; font-size: 22px; text-transform: uppercase; letter-spacing: 1px;">Mã Xác Thực</h2>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 40px;">
+                        <p style="margin-top: 0; font-size: 16px; color: #333333;">Xin chào,</p>
+                        <p style="font-size: 16px; color: #333333; line-height: 1.5;">Đây là mã xác thực OTP dùng một lần của bạn:</p>
+                        
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin: 30px 0;">
+                            <tr>
+                                <td align="center">
+                                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 36px; font-weight: bold; color: #333333; border: 2px solid #e0e0e0; padding: 12px 48px; display: inline-block; letter-spacing: 5px;">${otp}</span>
+                                </td>
+                            </tr>
+                        </table>
+                        
+                        <p style="font-size: 14px; color: #666666;">Vui lòng không chia sẻ mã này. Mã sẽ hết hạn sau <strong>03 phút</strong>.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background-color: #f4f4f4; padding: 20px 40px; text-align: center;">
+                        <p style="margin: 0; font-size: 12px; color: #999999; font-style: italic;">Được gửi tự động từ Hệ thống Đặt lịch</p>
+                    </td>
+                </tr>
+            </table>
         </div>
     `;
 
@@ -290,6 +310,80 @@ const logoutService = (refreshToken) => {
     });
 };
 
+const changePasswordService = async (
+    userId,
+    currentPassword,
+    newPassword,
+    confirmNewPassword
+) => {
+    try {
+        if (!newPassword || newPassword.length < 6) {
+            return {
+                errCode: 2,
+                errEnMessage: 'Password must be at least 6 characters',
+                errViMessage: 'Mật khẩu phải có ít nhất 6 ký tự'
+            };
+        }
+
+        if (newPassword !== confirmNewPassword) {
+            return {
+                errCode: 3,
+                errEnMessage: 'New password and confirm password do not match',
+                errViMessage: 'Mật khẩu mới và xác nhận mật khẩu không khớp'
+            };
+        }
+
+        const user = await db.User.findOne({ where: { id: userId } });
+
+        if (!user) {
+            return {
+                errCode: 4,
+                errEnMessage: 'User not found',
+                errViMessage: 'Người dùng không tồn tại'
+            };
+        }
+
+        const isPasswordValid = await bcrypt.compare(
+            currentPassword,
+            user.password
+        );
+
+        if (!isPasswordValid) {
+            return {
+                errCode: 5,
+                errEnMessage: 'Current password is incorrect',
+                errViMessage: 'Mật khẩu hiện tại không đúng'
+            };
+        }
+
+        const isSameAsCurrent = await bcrypt.compare(
+            newPassword,
+            user.password
+        );
+        if (isSameAsCurrent) {
+            return {
+                errCode: 6,
+                errEnMessage:
+                    'New password cannot be the same as the current password',
+                errViMessage:
+                    'Mật khẩu mới không được trùng với mật khẩu hiện tại'
+            };
+        }
+
+        const hashPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashPassword;
+        await user.save();
+
+        return {
+            errCode: 0,
+            enMessage: 'Password changed successfully',
+            viMessage: 'Đổi mật khẩu thành công'
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
 const forgotPasswordService = (emailOrPhone) => {
     return new Promise(async (resolve, reject) => {
         try {
@@ -461,6 +555,7 @@ module.exports = {
     resendOtpService,
     loginService,
     logoutService,
+    changePasswordService,
     forgotPasswordService,
     resetPasswordService,
     refreshTokenService

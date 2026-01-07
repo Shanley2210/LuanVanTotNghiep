@@ -12,6 +12,13 @@ import BookingAppointment from '@/patient/pages/BookingAppointment';
 import DoctorService from '@/patient/pages/DoctorService';
 import PatientAppointment from '@/patient/pages/PatientAppointment';
 import BookingService from '@/patient/pages/BookingService';
+import ChangePassword from '@/patient/pages/ChangePassword';
+import AllDoctor from '@/patient/pages/AllDoctor';
+import AllSpecialty from '@/patient/pages/AllSpecialty';
+import AllService from '@/patient/pages/AllService';
+import DoctorSpecialty from '@/patient/pages/DoctorSpecialty';
+import PaymentReturn from '@/patient/pages/PaymentReturn';
+import MedicalRecord from '@/patient/pages/MedicalRecord';
 
 export default function PatientRouter() {
     return (
@@ -38,15 +45,25 @@ export default function PatientRouter() {
                     path='/booking-appointment'
                     element={<BookingAppointment />}
                 />
+                <Route path='/dich-vu/:slug/:id' element={<DoctorService />} />
                 <Route
-                    path='/doctors-by-service/:slug/:id'
-                    element={<DoctorService />}
+                    path='/chuyen-khoa/:slug/:id'
+                    element={<DoctorSpecialty />}
                 />
                 <Route path='/booking-service' element={<BookingService />} />
                 <Route
                     path='/patient/my-appointment'
                     element={<PatientAppointment />}
                 />
+                <Route
+                    path='/patient/change-password'
+                    element={<ChangePassword />}
+                />
+                <Route path='/bac-si' element={<AllDoctor />} />
+                <Route path='/chuyen-khoa' element={<AllSpecialty />} />
+                <Route path='/dich-vu' element={<AllService />} />
+                <Route path='/payment-return' element={<PaymentReturn />} />
+                <Route path='/medical-record/:id' element={<MedicalRecord />} />
             </Route>
         </Routes>
     );

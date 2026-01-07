@@ -12,12 +12,14 @@ export default function PatientLayout({
     return (
         <div
             className={
-                `flex min-h-screen flex-col select-none ` +
+                `flex min-h-screen flex-col select-none w-full overflow-x-hidden ` +
                 (isDark ? 'bg-gray-700 text-white' : 'bg-gray-200 text-black')
             }
         >
             <PatientHeader />
-            <main className='flex-1 container'>{children}</main>
+            <main className='flex-1 container'> 
+                {children}
+            </main>
             <PatientFooter />
         </div>
     );

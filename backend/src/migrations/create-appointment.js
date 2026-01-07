@@ -85,6 +85,16 @@ module.exports = {
                 type: Sequelize.TEXT,
                 allowNull: true
             },
+            isRemind24h: {
+                type: Sequelize.BOOLEAN,
+                allowNull: true,
+                defaultValue: false
+            },
+            isRemind2h: {
+                type: Sequelize.BOOLEAN,
+                allowNull: true,
+                defaultValue: false
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE

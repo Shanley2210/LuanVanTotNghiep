@@ -5,8 +5,6 @@ import {
 } from '@reduxjs/toolkit';
 import api from '../apis/api';
 
-// --- Interfaces ---
-
 export interface IDoctor {
     id: number;
     userId: number;
@@ -71,9 +69,15 @@ interface IFetchDoctorsServiceResponse {
     meta: IPaginationMeta;
 }
 
+interface IFetchDoctorsSpecialtyResponse {
+    listDoctorSpecialty: IDoctor[];
+    meta: IPaginationMeta;
+}
+
 interface IDoctorState {
     list: IDoctor[];
     listDoctorService: IDoctorServiceItem[];
+    listDoctorSpecialty: IDoctor[];
     totalDoctors: number;
     currentPage: number;
     totalPages: number;
@@ -85,6 +89,7 @@ interface IDoctorState {
 const initialState: IDoctorState = {
     list: [],
     listDoctorService: [],
+    listDoctorSpecialty: [],
     totalDoctors: 0,
     currentPage: 1,
     totalPages: 0,
@@ -155,6 +160,39 @@ export const fetchDoctorsByService = createAsyncThunk<
     }
 });
 
+export const fetchDoctorsBySpecialty = createAsyncThunk<
+    IFetchDoctorsSpecialtyResponse,
+    { specialtyId: number; page: number; limit: number; status?: string },
+    { rejectValue: string }
+>('doctor/fetchDoctorsBySpecialty', async (params, { rejectWithValue }) => {
+    try {
+        const { specialtyId, page, limit, status } = params;
+
+        let url = `/doctor/specialty/${specialtyId}?page=${page}&limit=${limit}`;
+        if (status) {
+            url += `&status=${status}`;
+        }
+
+        const response = await api.get(url);
+        const { errCode, message, data, meta } = response.data;
+
+        if (errCode === 0 && Array.isArray(data)) {
+            return {
+                listDoctorSpecialty: data as IDoctor[],
+                meta: meta as IPaginationMeta
+            };
+        }
+
+        return rejectWithValue(
+            message || 'Failed to fetch doctors by specialty'
+        );
+    } catch (e: any) {
+        const errMessage =
+            e.response?.data?.errMessage || 'Server error occurred';
+        return rejectWithValue(errMessage);
+    }
+});
+
 export const doctorsSlice = createSlice({
     name: 'doctor',
     initialState,
@@ -162,6 +200,7 @@ export const doctorsSlice = createSlice({
         resetDoctorState: (state) => {
             state.list = [];
             state.listDoctorService = [];
+            state.listDoctorSpecialty = [];
             state.totalDoctors = 0;
             state.currentPage = 1;
             state.error = null;
@@ -169,7 +208,7 @@ export const doctorsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-
+            // --- Fetch All Doctors ---
             .addCase(fetchDoctors.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -195,13 +234,13 @@ export const doctorsSlice = createSlice({
                 state.error = action.payload || 'Server error occurred';
             })
 
+            // --- Fetch Doctors By Service ---
             .addCase(fetchDoctorsByService.pending, (state) => {
                 state.loading = true;
                 state.error = null;
             })
             .addCase(
                 fetchDoctorsByService.fulfilled,
-
                 (
                     state,
                     action: PayloadAction<IFetchDoctorsServiceResponse>
@@ -220,6 +259,35 @@ export const doctorsSlice = createSlice({
             .addCase(fetchDoctorsByService.rejected, (state, action) => {
                 state.loading = false;
                 state.listDoctorService = [];
+                state.totalDoctors = 0;
+                state.error = action.payload || 'Server error occurred';
+            })
+
+            // --- Fetch Doctors By Specialty ---
+            .addCase(fetchDoctorsBySpecialty.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(
+                fetchDoctorsBySpecialty.fulfilled,
+                (
+                    state,
+                    action: PayloadAction<IFetchDoctorsSpecialtyResponse>
+                ) => {
+                    const { listDoctorSpecialty, meta } = action.payload;
+                    state.loading = false;
+                    state.listDoctorSpecialty = listDoctorSpecialty;
+                    state.error = null;
+
+                    state.totalDoctors = meta.totalRows;
+                    state.totalPages = meta.totalPages;
+                    state.currentPage = meta.page;
+                    state.limit = meta.limit;
+                }
+            )
+            .addCase(fetchDoctorsBySpecialty.rejected, (state, action) => {
+                state.loading = false;
+                state.listDoctorSpecialty = [];
                 state.totalDoctors = 0;
                 state.error = action.payload || 'Server error occurred';
             });

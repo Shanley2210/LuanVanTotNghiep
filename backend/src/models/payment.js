@@ -21,14 +21,14 @@ module.exports = (sequelize, DataTypes) => {
     }
     Payment.init(
         {
-            recordId: DataTypes.INTEGER,
             appointmentId: DataTypes.INTEGER,
+            recordId: DataTypes.INTEGER,
+            type: DataTypes.STRING,
             amount: DataTypes.DECIMAL,
             method: DataTypes.STRING,
-            type: DataTypes.STRING,
             status: DataTypes.STRING,
             txnRef: DataTypes.STRING,
-            callback_data: DataTypes.JSON
+            returnData: DataTypes.JSON
         },
         {
             sequelize,

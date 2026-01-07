@@ -57,7 +57,7 @@ export default function DoctorDailyBoard() {
 
     const commonColumns = [
         {
-            title: 'ID',
+            title: t('doctorDaily.colId'),
             dataIndex: 'id',
             key: 'id',
             width: 60,
@@ -66,7 +66,7 @@ export default function DoctorDailyBoard() {
             )
         },
         {
-            title: 'Thời gian',
+            title: t('doctorDaily.colTime'),
             key: 'time',
             width: 160,
             render: (_: any, record: IAppointment) => {
@@ -90,13 +90,13 @@ export default function DoctorDailyBoard() {
             }
         },
         {
-            title: 'Người đặt',
+            title: t('doctorDaily.colBooker'),
             key: 'booking',
             render: (_: any, record: IAppointment) => (
                 <div className='flex flex-col'>
                     <span className='font-medium flex items-center gap-1'>
                         <BiUser />
-                        {record.patient?.user?.name || 'Khách vãng lai'}
+                        {record.patient?.user?.name || t('doctorDaily.guest')}
                     </span>
                     <span className='text-xs text-gray-500 pl-4'>
                         {record.patient?.user?.phone || 'N/A'}
@@ -105,7 +105,7 @@ export default function DoctorDailyBoard() {
             )
         },
         {
-            title: 'Bệnh nhân',
+            title: t('doctorDaily.colPatient'),
             key: 'patient',
             render: (_: any, record: IAppointment) => (
                 <div className='flex flex-col'>
@@ -114,7 +114,9 @@ export default function DoctorDailyBoard() {
                     </span>
                     <div className='text-xs text-gray-500'>
                         <span>
-                            {record.patientGender === '1' ? 'Nam' : 'Nữ'}
+                            {record.patientGender === '1'
+                                ? t('doctorDaily.male')
+                                : t('doctorDaily.female')}
                         </span>
                         <span className='mx-1'>•</span>
                         <span>
@@ -126,22 +128,24 @@ export default function DoctorDailyBoard() {
 
                     {record.reason && (
                         <div className='mt-1 text-xs text-red-500 bg-red-50 px-2 py-0.5 w-fit'>
-                            Lý do: {record.reason}
+                            {t('doctorDaily.reason')}: {record.reason}
                         </div>
                     )}
                 </div>
             )
         },
         {
-            title: 'Dịch vụ / Loại',
+            title: t('doctorDaily.colServiceType'),
             key: 'info',
             render: (_: any, record: IAppointment) => {
                 if (record.type === 'doctor') {
-                    return <Tag color='blue'>Khám Bác sĩ</Tag>;
+                    return (
+                        <Tag color='blue'>{t('doctorDaily.typeDoctor')}</Tag>
+                    );
                 }
                 return (
                     <div>
-                        <Tag color='green'>Dịch vụ</Tag>
+                        <Tag color='green'>{t('doctorDaily.typeService')}</Tag>
                         <span className='text-xs mt-1'>
                             {record.service?.name}
                         </span>
@@ -154,11 +158,11 @@ export default function DoctorDailyBoard() {
     const columnsQueue = [
         ...commonColumns,
         {
-            title: 'Hành động',
+            title: t('doctorDaily.colAction'),
             key: 'action',
             align: 'center' as const,
             render: (_: any, record: IAppointment) => (
-                <Tooltip title='Bắt đầu khám'>
+                <Tooltip title={t('doctorDaily.tooltipStart')}>
                     <div
                         className='flex justify-center cursor-pointer'
                         onClick={() => {
@@ -175,15 +179,15 @@ export default function DoctorDailyBoard() {
     const columnsHistory = [
         ...commonColumns,
         {
-            title: 'Thao tác',
+            title: t('doctorDaily.colOperation'),
             key: 'action',
             align: 'center' as const,
             render: (_: any, record: IAppointment) => (
                 <div className='flex gap-3 justify-center'>
-                    <Tooltip title='Xem chi tiết'>
+                    <Tooltip title={t('doctorDaily.tooltipView')}>
                         <MdOutlineRemoveRedEye className='text-xl text-blue-500 cursor-pointer' />
                     </Tooltip>
-                    <Tooltip title='Chỉnh sửa hồ sơ'>
+                    <Tooltip title={t('doctorDaily.tooltipEdit')}>
                         <RiPencilLine className='text-xl text-yellow-500 cursor-pointer' />
                     </Tooltip>
                 </div>
@@ -200,14 +204,14 @@ export default function DoctorDailyBoard() {
                             isDark ? 'text-gray-100' : 'text-blue-900'
                         }`}
                     >
-                        Lịch khám hôm nay
+                        {t('doctorDaily.title')}
                     </div>
                     <div
                         className={`${
                             isDark ? 'text-gray-400' : 'text-gray-500'
                         }`}
                     >
-                        {dayjs().format('dddd, DD [tháng] MM [năm] YYYY')}
+                        {dayjs().format(t('doctorDaily.dateFormat'))}
                     </div>
                 </div>
                 <div className='flex gap-2'>
@@ -216,7 +220,7 @@ export default function DoctorDailyBoard() {
                             fetchGroupData('doctor-queue', 'checked_in', 1)
                         }
                     >
-                        Làm mới
+                        {t('doctorDaily.refresh')}
                     </Button>
                 </div>
             </div>
@@ -229,7 +233,7 @@ export default function DoctorDailyBoard() {
                 <div className='flex justify-between gap-4'>
                     <div className='flex-1 border-r border-gray-100 last:border-0 text-center'>
                         <div className='text-xs text-gray-500 uppercase font-semibold mb-1'>
-                            Hàng đợi (Checked-in)
+                            {t('doctorDaily.statQueue')}
                         </div>
                         <div className='text-3xl font-bold text-orange-500'>
                             {queueData.meta.totalRows}
@@ -237,7 +241,7 @@ export default function DoctorDailyBoard() {
                     </div>
                     <div className='flex-1 border-r border-gray-100 last:border-0 text-center'>
                         <div className='text-xs text-gray-500 uppercase font-semibold mb-1'>
-                            Đã hoàn thành
+                            {t('doctorDaily.statCompleted')}
                         </div>
                         <div className='text-3xl font-bold text-green-500'>
                             {historyData.meta.totalRows}
@@ -265,8 +269,8 @@ export default function DoctorDailyBoard() {
                             isDark ? 'text-gray-200' : 'text-blue-800'
                         }`}
                     >
-                        <Users className='text-blue-600' size={20} /> Danh sách
-                        chờ khám
+                        <Users className='text-blue-600' size={20} />{' '}
+                        {t('doctorDaily.queueTitle')}
                     </h2>
                 </div>
 
@@ -276,7 +280,7 @@ export default function DoctorDailyBoard() {
                     dataSource={queueData.list}
                     columns={columnsQueue}
                     pagination={false}
-                    locale={{ emptyText: 'Chưa có bệnh nhân check-in' }}
+                    locale={{ emptyText: t('doctorDaily.queueEmpty') }}
                     rowClassName={(record, index) =>
                         index % 2 === 0
                             ? isDark
@@ -325,8 +329,8 @@ export default function DoctorDailyBoard() {
                             isDark ? 'text-gray-200' : 'text-gray-700'
                         }`}
                     >
-                        <Clock className='text-green-600' size={20} /> Lịch sử
-                        khám hôm nay
+                        <Clock className='text-green-600' size={20} />{' '}
+                        {t('doctorDaily.historyTitle')}
                     </h2>
                 </div>
 
@@ -336,7 +340,7 @@ export default function DoctorDailyBoard() {
                     dataSource={historyData.list}
                     columns={columnsHistory}
                     pagination={false}
-                    locale={{ emptyText: 'Chưa có lượt khám nào hoàn thành' }}
+                    locale={{ emptyText: t('doctorDaily.historyEmpty') }}
                     footer={() => (
                         <div className='flex justify-end'>
                             <Pagination

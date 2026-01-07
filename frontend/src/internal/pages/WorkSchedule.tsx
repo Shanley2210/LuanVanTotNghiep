@@ -78,7 +78,7 @@ export default function WorkSchedule() {
     const { t, i18n } = useTranslation();
     const language = i18n.language;
     const { list: schedules } = useAppSelector(selectSchedules);
-    const [currentDate, setCurrentDate] = useState<Date>(new Date(2025, 11, 8));
+    const [currentDate, setCurrentDate] = useState<Date>(new Date());
     const [isLoading, setIsLoading] = useState(false);
 
     const [confirmModal, setConfirmModal] = useState<ConfirmModalState>({
@@ -139,7 +139,7 @@ export default function WorkSchedule() {
         setCurrentDate(newDate);
     };
 
-    const goToToday = () => setCurrentDate(new Date(2025, 11, 8));
+    const goToToday = () => setCurrentDate(new Date());
 
     const handleSlotClick = (
         dateStr: string,
@@ -218,7 +218,7 @@ export default function WorkSchedule() {
             }
         } catch (error) {
             console.error(error);
-            message.error('Có lỗi xảy ra, vui lòng thử lại');
+            message.error(t('workSchedule.error'));
         } finally {
             setIsLoading(false);
             dispatch(
@@ -241,6 +241,21 @@ export default function WorkSchedule() {
     };
 
     const getSlotStyles = (status: string) => {
+        if (isDark) {
+            switch (status) {
+                case 'full':
+                    return 'bg-blue-900/30 border-blue-700 hover:bg-blue-900/50 text-blue-300';
+                case 'available':
+                    return 'bg-green-900/30 border-green-700 hover:bg-green-900/50 text-green-300';
+                case 'close':
+                    return 'bg-gray-800 border-gray-600 text-gray-500 hover:bg-gray-700';
+                case 'pending':
+                    return 'bg-orange-900/30 border-orange-700 hover:bg-orange-900/50 text-orange-300';
+                default:
+                    return 'bg-gray-900';
+            }
+        }
+
         switch (status) {
             case 'full':
                 return 'bg-blue-50 border-blue-500 hover:bg-blue-100';
@@ -267,25 +282,41 @@ export default function WorkSchedule() {
     return (
         <div className='h-[calc(100vh-80px)] flex flex-col mr-5'>
             <div className='shrink-0 py-2 w-full'>
-                <div className='flex flex-col sm:flex-row justify-between items-center bg-white p-3 shadow-sm border border-gray-200'>
+                <div
+                    className={`flex flex-col sm:flex-row justify-between items-center p-3 shadow-sm border ${
+                        isDark
+                            ? 'bg-[#141414] border-gray-700'
+                            : 'bg-white border-gray-200'
+                    }`}
+                >
                     <div className='flex items-center gap-4'>
                         <Button type='primary' ghost onClick={goToToday}>
-                            Tuần này
+                            {t('workSchedule.navCurrentWeek')}
                         </Button>
                         <div className='flex items-center gap-2'>
                             <Button type='primary' onClick={prevWeek}>
                                 <MdKeyboardArrowLeft />
                             </Button>
-                            <span className='px-4 font-semibold text-gray-700 w-auto text-center select-none text-base'>
-                                Tuần từ{' '}
-                                {weekDates[0].toLocaleDateString('vi-VN', {
-                                    day: '2-digit',
-                                    month: '2-digit'
-                                })}{' '}
-                                đến{' '}
-                                {weekDates[6].toLocaleDateString('vi-VN', {
-                                    day: '2-digit',
-                                    month: '2-digit'
+                            <span
+                                className={`px-4 font-semibold w-auto text-center select-none text-base ${
+                                    isDark ? 'text-gray-200' : 'text-gray-700'
+                                }`}
+                            >
+                                {t('workSchedule.navWeekRange', {
+                                    start: weekDates[0].toLocaleDateString(
+                                        language,
+                                        {
+                                            day: '2-digit',
+                                            month: '2-digit'
+                                        }
+                                    ),
+                                    end: weekDates[6].toLocaleDateString(
+                                        language,
+                                        {
+                                            day: '2-digit',
+                                            month: '2-digit'
+                                        }
+                                    )
                                 })}
                             </span>
                             <Button type='primary' onClick={nextWeek}>
@@ -293,35 +324,87 @@ export default function WorkSchedule() {
                             </Button>
                         </div>
                     </div>
-                    <span className='px-4 font-semibold text-gray-700 w-48 text-center select-none text-base'>
-                        Tháng {currentDate.getMonth() + 1} Năm{' '}
-                        {currentDate.getFullYear()}
+                    <span
+                        className={`px-4 font-semibold w-48 text-center select-none text-base ${
+                            isDark ? 'text-gray-200' : 'text-gray-700'
+                        }`}
+                    >
+                        {t('workSchedule.navMonthYear', {
+                            month: currentDate.getMonth() + 1,
+                            year: currentDate.getFullYear()
+                        })}
                     </span>
-                    <div className='flex items-center gap-4 text-sm text-gray-600'>
+                    <div
+                        className={`flex items-center gap-4 text-sm ${
+                            isDark ? 'text-gray-400' : 'text-gray-600'
+                        }`}
+                    >
                         <div className='flex items-center gap-1.5'>
-                            <div className='w-3 h-3 bg-white border border-dashed border-gray-400'></div>
-                            <span>Trống</span>
+                            <div
+                                className={`w-3 h-3 border border-dashed ${
+                                    isDark
+                                        ? 'bg-[#1f1f1f] border-gray-600'
+                                        : 'bg-white border-gray-400'
+                                }`}
+                            ></div>
+                            <span>{t('workSchedule.legendEmpty')}</span>
                         </div>
                         <div className='flex items-center gap-1.5'>
-                            <div className='w-3 h-3 bg-green-100 border border-green-500'></div>
-                            <span>Có lịch</span>
+                            <div
+                                className={`w-3 h-3 border ${
+                                    isDark
+                                        ? 'bg-green-900 border-green-700'
+                                        : 'bg-green-100 border-green-500'
+                                }`}
+                            ></div>
+                            <span>{t('workSchedule.legendAvailable')}</span>
                         </div>
                         <div className='flex items-center gap-1.5'>
-                            <div className='w-3 h-3 bg-blue-100 border border-green-500'></div>
-                            <span>Đã đặt lịch</span>
+                            <div
+                                className={`w-3 h-3 border ${
+                                    isDark
+                                        ? 'bg-blue-900 border-blue-700'
+                                        : 'bg-blue-100 border-green-500'
+                                }`}
+                            ></div>
+                            <span>{t('workSchedule.legendBooked')}</span>
                         </div>
                         <div className='flex items-center gap-1.5'>
-                            <div className='w-3 h-3 bg-gray-100 border border-gray-400'></div>
-                            <span>Đã đóng</span>
+                            <div
+                                className={`w-3 h-3 border ${
+                                    isDark
+                                        ? 'bg-gray-800 border-gray-600'
+                                        : 'bg-gray-100 border-gray-400'
+                                }`}
+                            ></div>
+                            <span>{t('workSchedule.legendClosed')}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div className='flex-1 min-h-0 w-full mt-2'>
-                <div className='bg-white shadow border border-gray-200 h-full overflow-y-auto relative custom-scrollbar'>
-                    <div className='grid grid-cols-8 border-b border-gray-200 bg-gray-50 sticky top-0 z-30'>
-                        <div className='p-4 border-r border-gray-200 flex items-center justify-center text-gray-400 font-medium bg-gray-50'>
+                <div
+                    className={`shadow border h-full overflow-y-auto relative custom-scrollbar ${
+                        isDark
+                            ? 'bg-[#141414] border-gray-700'
+                            : 'bg-white border-gray-200'
+                    }`}
+                >
+                    <div
+                        className={`grid grid-cols-8 border-b sticky top-0 z-30 ${
+                            isDark
+                                ? 'border-gray-700 bg-[#1f1f1f]'
+                                : 'border-gray-200 bg-gray-50'
+                        }`}
+                    >
+                        <div
+                            className={`p-4 border-r flex items-center justify-center font-medium ${
+                                isDark
+                                    ? 'border-gray-700 bg-[#1f1f1f] text-gray-500'
+                                    : 'border-gray-200 bg-gray-50 text-gray-400'
+                            }`}
+                        >
                             <CiClock2 size={20} />
                         </div>
                         {weekDates.map((date, index) => {
@@ -331,13 +414,17 @@ export default function WorkSchedule() {
                             return (
                                 <Tooltip
                                     key={index}
-                                    title='Nhấn để quản lý lịch ngày này'
+                                    title={t('workSchedule.tooltipManageDay')}
                                 >
                                     <div
-                                        className={`relative p-3 text-center border-r border-gray-200 last:border-r-0 cursor-pointer group hover:bg-blue-50 transition duration-200 ${
-                                            isToday
-                                                ? 'bg-blue-100'
-                                                : 'bg-gray-50'
+                                        className={`relative p-3 text-center border-r last:border-r-0 cursor-pointer group transition duration-200 ${
+                                            isDark
+                                                ? isToday
+                                                    ? 'bg-blue-900/30 border-gray-700'
+                                                    : 'bg-[#1f1f1f] border-gray-700 hover:bg-gray-800'
+                                                : isToday
+                                                ? 'bg-blue-100 border-gray-200'
+                                                : 'bg-gray-50 border-gray-200 hover:bg-blue-50'
                                         }`}
                                         onClick={() =>
                                             handleDayHeaderClick(date)
@@ -345,15 +432,23 @@ export default function WorkSchedule() {
                                     >
                                         <Text
                                             strong
-                                            className='uppercase text-xs block mb-1'
+                                            className={`uppercase text-xs block mb-1 ${
+                                                isDark ? 'text-gray-300' : ''
+                                            }`}
                                         >
-                                            {new Intl.DateTimeFormat('vi-VN', {
+                                            {new Intl.DateTimeFormat(language, {
                                                 weekday: 'short'
                                             }).format(date)}
                                         </Text>
                                         <Text
                                             className={`font-bold text-lg ${
-                                                isToday ? 'text-blue-600' : ''
+                                                isToday
+                                                    ? isDark
+                                                        ? 'text-blue-400'
+                                                        : 'text-blue-600'
+                                                    : isDark
+                                                    ? 'text-gray-200'
+                                                    : ''
                                             }`}
                                         >
                                             {date.getDate()}
@@ -368,9 +463,19 @@ export default function WorkSchedule() {
                         {timeSlots.map((time, timeIndex) => (
                             <div
                                 key={timeIndex}
-                                className='grid grid-cols-8 border-b border-gray-100 last:border-b-0 min-h-[70px]'
+                                className={`grid grid-cols-8 border-b last:border-b-0 min-h-[70px] ${
+                                    isDark
+                                        ? 'border-gray-800'
+                                        : 'border-gray-100'
+                                }`}
                             >
-                                <div className='p-2 border-r border-gray-200 text-xs text-gray-500 font-medium text-center flex flex-col justify-start pt-3 bg-white sticky left-0 z-10'>
+                                <div
+                                    className={`p-2 border-r text-xs font-medium text-center flex flex-col justify-start pt-3 sticky left-0 z-10 ${
+                                        isDark
+                                            ? 'bg-[#141414] border-gray-700 text-gray-400'
+                                            : 'bg-white border-gray-200 text-gray-500'
+                                    }`}
+                                >
                                     {time}
                                 </div>
                                 {weekDates.map((date) => {
@@ -380,9 +485,15 @@ export default function WorkSchedule() {
                                     return (
                                         <div
                                             key={`${dateStr}-${time}`}
-                                            className={`border-r border-gray-100 last:border-r-0 relative p-1 transition-all duration-200 ${
+                                            className={`border-r last:border-r-0 relative p-1 transition-all duration-200 ${
+                                                isDark
+                                                    ? 'border-gray-800'
+                                                    : 'border-gray-100'
+                                            } ${
                                                 !slotData
-                                                    ? 'bg-gray-50/20 hover:bg-gray-100'
+                                                    ? isDark
+                                                        ? 'bg-[#1a1a1a] hover:bg-gray-800'
+                                                        : 'bg-gray-50/20 hover:bg-gray-100'
                                                     : ''
                                             }`}
                                             onClick={() =>
@@ -400,7 +511,13 @@ export default function WorkSchedule() {
                                                     )}`}
                                                 >
                                                     <div className='flex justify-between items-start'>
-                                                        <span className='font-bold text-slate-700'>
+                                                        <span
+                                                            className={`font-bold ${
+                                                                isDark
+                                                                    ? 'text-gray-300'
+                                                                    : 'text-slate-700'
+                                                            }`}
+                                                        >
                                                             {slotData.startTime}{' '}
                                                             - {slotData.endTime}
                                                         </span>
@@ -409,7 +526,9 @@ export default function WorkSchedule() {
                                                     {slotData.status ===
                                                         'close' && (
                                                         <div className='text-gray-500 font-medium italic mt-auto'>
-                                                            Đã đóng
+                                                            {t(
+                                                                'workSchedule.slotClosed'
+                                                            )}
                                                         </div>
                                                     )}
 
@@ -418,23 +537,41 @@ export default function WorkSchedule() {
                                                         <div className='flex items-center gap-1'>
                                                             <LiaUserInjuredSolid className='size-4' />
                                                             <Tag
-                                                                color='success'
-                                                                className='mr-0 w-fit text-[10px] leading-tight px-1 py-0.5 border-0 bg-green-200 text-green-800'
+                                                                color={
+                                                                    isDark
+                                                                        ? 'green-inverse'
+                                                                        : 'success'
+                                                                }
+                                                                className={`mr-0 w-fit text-[10px] leading-tight px-1 py-0.5 border-0 ${
+                                                                    isDark
+                                                                        ? 'bg-green-900 text-green-300'
+                                                                        : 'bg-green-200 text-green-800'
+                                                                }`}
                                                             >
                                                                 {slotData.patientName
                                                                     ? slotData.patientName
-                                                                    : 'Chưa đặt cọc'}
+                                                                    : t(
+                                                                          'workSchedule.slotNoDeposit'
+                                                                      )}
                                                             </Tag>
                                                         </div>
                                                     )}
                                                     {slotData.status ===
                                                         'pending' && (
-                                                        <div className='text-orange-700 font-medium italic mt-auto flex items-center gap-1'>
+                                                        <div
+                                                            className={`${
+                                                                isDark
+                                                                    ? 'text-orange-400'
+                                                                    : 'text-orange-700'
+                                                            } font-medium italic mt-auto flex items-center gap-1`}
+                                                        >
                                                             <MoreVertical
                                                                 size={10}
                                                             />
                                                             <span>
-                                                                Chờ duyệt
+                                                                {t(
+                                                                    'workSchedule.slotPending'
+                                                                )}
                                                             </span>
                                                         </div>
                                                     )}
@@ -450,11 +587,11 @@ export default function WorkSchedule() {
             </div>
 
             <Modal
-                title={`Tùy chọn ngày ${
-                    dayMenuModal.date
-                        ? dayMenuModal.date.toLocaleDateString('vi-VN')
+                title={t('workSchedule.dayMenuTitle', {
+                    date: dayMenuModal.date
+                        ? dayMenuModal.date.toLocaleDateString(language)
                         : ''
-                }`}
+                })}
                 open={dayMenuModal.isOpen}
                 onCancel={() => setDayMenuModal({ isOpen: false, date: null })}
                 footer={null}
@@ -462,8 +599,12 @@ export default function WorkSchedule() {
                 centered
             >
                 <div className='flex flex-col gap-3 py-2'>
-                    <p className='text-gray-600 mb-2'>
-                        Bạn muốn thực hiện hành động gì cho ngày này?
+                    <p
+                        className={`mb-2 ${
+                            isDark ? 'text-gray-300' : 'text-gray-600'
+                        }`}
+                    >
+                        {t('workSchedule.dayMenuQuestion')}
                     </p>
                     <div className='flex gap-3 justify-center'>
                         <Button
@@ -471,14 +612,14 @@ export default function WorkSchedule() {
                             className='bg-green-600 hover:bg-green-500'
                             onClick={() => handleSelectDayAction('OPEN')}
                         >
-                            Mở lịch cả ngày
+                            {t('workSchedule.dayMenuOpenAll')}
                         </Button>
                         <Button
                             type='primary'
                             danger
                             onClick={() => handleSelectDayAction('CLOSE')}
                         >
-                            Đóng lịch cả ngày
+                            {t('workSchedule.dayMenuCloseAll')}
                         </Button>
                     </div>
                 </div>
@@ -488,11 +629,11 @@ export default function WorkSchedule() {
                 title={
                     confirmModal.scope === 'DAY'
                         ? confirmModal.action === 'OPEN'
-                            ? 'Xác nhận mở cả ngày'
-                            : 'Xác nhận đóng cả ngày'
+                            ? t('workSchedule.confirmTitleOpenDay')
+                            : t('workSchedule.confirmTitleCloseDay')
                         : confirmModal.action === 'OPEN'
-                        ? 'Mở lịch khám'
-                        : 'Đóng lịch khám'
+                        ? t('workSchedule.confirmTitleOpenSlot')
+                        : t('workSchedule.confirmTitleCloseSlot')
                 }
                 open={confirmModal.isOpen}
                 confirmLoading={isLoading}
@@ -502,12 +643,12 @@ export default function WorkSchedule() {
                 }
                 okText={
                     confirmModal.scope === 'DAY'
-                        ? 'Đồng ý'
+                        ? t('workSchedule.confirmBtnAgree')
                         : confirmModal.action === 'OPEN'
-                        ? 'Mở lịch'
-                        : 'Đóng lịch'
+                        ? t('workSchedule.confirmBtnOpen')
+                        : t('workSchedule.confirmBtnClose')
                 }
-                cancelText='Hủy'
+                cancelText={t('workSchedule.confirmBtnCancel')}
                 okButtonProps={{
                     danger: confirmModal.action === 'CLOSE',
                     type: 'primary',
@@ -518,62 +659,67 @@ export default function WorkSchedule() {
                             : ''
                 }}
             >
-                {confirmModal.scope === 'DAY' ? (
-                    <p>
-                        Bạn có chắc chắn muốn
-                        <span
-                            className={`font-bold ${
-                                confirmModal.action === 'OPEN'
-                                    ? ' text-green-600'
-                                    : ' text-red-600'
-                            }`}
-                        >
-                            {confirmModal.action === 'OPEN' ? ' MỞ ' : ' ĐÓNG '}
-                            TẤT CẢ
-                        </span>
-                        lịch khám trong ngày
-                        <span className='font-bold text-blue-600'>
-                            {' '}
-                            {confirmModal.date}{' '}
-                        </span>
-                        không?
-                        <br />
-                        <span className='text-xs text-gray-500 italic'>
-                            {confirmModal.action === 'OPEN'
-                                ? '*Hành động này sẽ mở lại toàn bộ các slot đã đóng trong ngày.'
-                                : '*Hành động này sẽ đóng toàn bộ các slot đang mở trong ngày.'}
-                        </span>
-                    </p>
-                ) : (
-                    <>
+                <div className={isDark ? 'text-gray-200' : ''}>
+                    {confirmModal.scope === 'DAY' ? (
                         <p>
-                            Bạn có chắc chắn muốn
-                            <span className='font-bold'>
+                            {t('workSchedule.confirmTextPrefix')}
+                            <span
+                                className={`font-bold ${
+                                    confirmModal.action === 'OPEN'
+                                        ? ' text-green-600'
+                                        : ' text-red-600'
+                                }`}
+                            >
                                 {confirmModal.action === 'OPEN'
-                                    ? ' MỞ '
-                                    : ' ĐÓNG '}
+                                    ? t('workSchedule.confirmActionOpen')
+                                    : t('workSchedule.confirmActionClose')}
                             </span>
-                            lịch khám vào lúc
-                            <span className='font-bold text-blue-600'>
-                                {' '}
-                                {confirmModal.time}{' '}
-                            </span>
-                            ngày
+                            {t('workSchedule.confirmTextAll')}
+                            {t('workSchedule.confirmTextSuffixDay')}
                             <span className='font-bold text-blue-600'>
                                 {' '}
                                 {confirmModal.date}{' '}
                             </span>
-                            không?
+                            {t('workSchedule.confirmTextEnd')}
+                            <br />
+                            <span className='text-xs text-gray-500 italic'>
+                                {confirmModal.action === 'OPEN'
+                                    ? t('workSchedule.confirmNoteOpenDay')
+                                    : t('workSchedule.confirmNoteCloseDay')}
+                            </span>
                         </p>
-                        {confirmModal.action === 'CLOSE' &&
-                            confirmModal.currentSlot?.patientName && (
-                                <p className='text-red-500 mt-2 text-sm italic'>
-                                    * Lưu ý: Slot này đang có bệnh nhân đặt
-                                    lịch.
-                                </p>
-                            )}
-                    </>
-                )}
+                    ) : (
+                        <>
+                            <p>
+                                {t('workSchedule.confirmTextPrefix')}
+                                <span className='font-bold'>
+                                    {confirmModal.action === 'OPEN'
+                                        ? t('workSchedule.confirmActionOpen')
+                                        : t('workSchedule.confirmActionClose')}
+                                </span>
+                                {t('workSchedule.confirmTextSuffixSlot')}
+                                <span className='font-bold text-blue-600'>
+                                    {' '}
+                                    {confirmModal.time}{' '}
+                                </span>
+                                {t('workSchedule.confirmTextOnDay')}
+                                <span className='font-bold text-blue-600'>
+                                    {' '}
+                                    {confirmModal.date}{' '}
+                                </span>
+                                {t('workSchedule.confirmTextEnd')}
+                            </p>
+                            {confirmModal.action === 'CLOSE' &&
+                                confirmModal.currentSlot?.patientName && (
+                                    <p className='text-red-500 mt-2 text-sm italic'>
+                                        {t(
+                                            'workSchedule.confirmNoteBookedWarning'
+                                        )}
+                                    </p>
+                                )}
+                        </>
+                    )}
+                </div>
             </Modal>
         </div>
     );

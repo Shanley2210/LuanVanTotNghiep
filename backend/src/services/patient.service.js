@@ -4,6 +4,9 @@ const { sendMail } = require('../utils/sendMail');
 const moment = require('moment');
 const { where, Op } = require('sequelize');
 require('moment/locale/vi');
+const PDFDocument = require('pdfkit');
+const path = require('path');
+const fs = require('fs');
 
 const sendAppontment = async (
     email,
@@ -137,10 +140,9 @@ const sendCancelAppontment = async (email, id, name, status) => {
 
 const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
     let finalDoctorId = doctorId || null;
-    let slotsToBook = []; // Danh sách các slot cần khóa
-    let currentSlot = null; // Slot bắt đầu
+    let slotsToBook = [];
+    let currentSlot = null;
 
-    // 1. Lấy thông tin Slot bắt đầu
     if (slotId) {
         let whereClause = { id: slotId };
         if (finalDoctorId) whereClause.doctorId = finalDoctorId;
@@ -159,11 +161,9 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
             };
         }
 
-        // Cập nhật lại doctorId chính xác từ slot
         finalDoctorId = currentSlot.doctorId;
     }
 
-    // 2. LOGIC XỬ LÝ THEO DỊCH VỤ (SERVICE) - HỖ TRỢ MULTI-SLOT
     if (serviceId) {
         const serviceInfo = await db.Service.findOne({
             where: { id: serviceId }
@@ -179,7 +179,6 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
         let finalPrice = Number(serviceInfo.price);
         let target = `Dịch vụ: ${serviceInfo.name}`;
 
-        // Xử lý giá và tên bác sĩ nếu có
         if (finalDoctorId) {
             const docService = await db.DoctorService.findOne({
                 where: { doctorId: finalDoctorId, serviceId: serviceId },
@@ -207,15 +206,12 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
             target += ` - BS. ${docService.doctor.user.name}`;
         }
 
-        // --- LOGIC TÍNH TOÁN SLOT THEO THỜI LƯỢNG THỰC TẾ ---
         if (currentSlot) {
-            // Tính thời lượng của 1 slot dựa trên startTime và endTime trong DB
             const start = moment(currentSlot.startTime);
             const end = moment(currentSlot.endTime);
-            const slotDurationMs = end.diff(start); // Thời lượng slot tính bằng mili giây
-            const slotDurationMinutes = slotDurationMs / 60000; // Đổi ra phút (thường là 30)
+            const slotDurationMs = end.diff(start);
+            const slotDurationMinutes = slotDurationMs / 60000;
 
-            // Tính số slot cần thiết (Service duration / Slot duration)
             const serviceDurationMinutes =
                 Number(serviceInfo.durationMinutes) || 30;
             const neededSlotCount = Math.ceil(
@@ -223,19 +219,15 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
             );
 
             if (neededSlotCount > 1) {
-                // Lấy tất cả slot của bác sĩ trong ngày đó (hoặc cùng scheduleId)
-                // Quan trọng: Sắp xếp theo startTime để đảm bảo thứ tự thời gian
                 const allSlotsOfDay = await db.Slot.findAll({
                     where: {
                         doctorId: finalDoctorId,
-                        scheduleId: currentSlot.scheduleId // Lấy cùng lịch trình để đảm bảo cùng ngày
-                        // Hoặc dùng: startTime: { [Op.gte]: startOfToday, [Op.lte]: endOfToday }
+                        scheduleId: currentSlot.scheduleId
                     },
                     order: [['startTime', 'ASC']],
                     transaction: trans
                 });
 
-                // Tìm vị trí của slot bắt đầu trong danh sách đã sort
                 const startIndex = allSlotsOfDay.findIndex(
                     (s) => s.id === currentSlot.id
                 );
@@ -248,7 +240,6 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                     };
                 }
 
-                // Kiểm tra xem có đủ slot phía sau không
                 if (startIndex + neededSlotCount > allSlotsOfDay.length) {
                     throw {
                         code: 8,
@@ -257,7 +248,6 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                     };
                 }
 
-                // Duyệt qua các slot cần thiết để kiểm tra tính liên tục và sẵn sàng
                 for (let i = 0; i < neededSlotCount; i++) {
                     const nextSlot = allSlotsOfDay[startIndex + i];
 
@@ -266,8 +256,6 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                         nextSlot.status !== 'available' &&
                         nextSlot.capacity < 1
                     ) {
-                        // Nếu là slot bắt đầu (currentSlot) thì bỏ qua check này (vì nó đang được chọn)
-                        // Nhưng nếu các slot tiếp theo bị full thì lỗi
                         if (nextSlot.id !== currentSlot.id) {
                             throw {
                                 code: 9,
@@ -275,7 +263,6 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                                 vi: 'Khoảng thời gian liên tiếp đã bị đặt trước'
                             };
                         } else {
-                            // Slot bắt đầu đã full
                             throw {
                                 code: 4,
                                 en: 'Start slot full',
@@ -284,13 +271,11 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                         }
                     }
 
-                    // 2. Kiểm tra tính LIÊN TỤC (Slot sau phải bắt đầu ngay khi Slot trước kết thúc)
                     if (i > 0) {
                         const prevSlot = slotsToBook[i - 1];
                         const prevEndTime = moment(prevSlot.endTime);
                         const nextStartTime = moment(nextSlot.startTime);
 
-                        // Cho phép sai số nhỏ (ví dụ 1 phút) hoặc bắt buộc khớp tuyệt đối
                         if (!prevEndTime.isSame(nextStartTime)) {
                             throw {
                                 code: 10,
@@ -303,7 +288,6 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                     slotsToBook.push(nextSlot);
                 }
             } else {
-                // Nếu dịch vụ ngắn (<= thời lượng 1 slot), chỉ cần slot hiện tại
                 if (
                     currentSlot.status !== 'available' ||
                     currentSlot.capacity < 1
@@ -323,7 +307,6 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
         };
     }
 
-    // 3. LOGIC XỬ LÝ THEO BÁC SĨ (KHÁM THƯỜNG - 1 SLOT)
     if (finalDoctorId) {
         const doctorInfo = await db.Doctor.findOne({
             where: { id: finalDoctorId },
@@ -1142,6 +1125,90 @@ const deleteAppointmentService = async (userId, appointmentId) => {
     }
 };
 
+const searchPublicService = async (q, page, limit) => {
+    try {
+        const searchKeyWord = `%${q.trim()}%`;
+        const offset = (page - 1) * limit;
+
+        const doctors = await db.Doctor.findAndCountAll({
+            limit: limit,
+            offset: offset,
+            include: [
+                {
+                    model: db.User,
+                    as: 'user',
+                    attributes: ['name', 'email', 'phone'],
+                    where: {
+                        name: { [Op.like]: searchKeyWord }
+                    }
+                },
+                {
+                    model: db.Specialty,
+                    as: 'specialty',
+                    attributes: ['name']
+                }
+            ],
+            attributes: ['id', 'image', 'degree', 'price'],
+            raw: true,
+            nest: true
+        });
+
+        const specialties = await db.Specialty.findAndCountAll({
+            limit: limit,
+            offset: offset,
+            where: {
+                name: { [Op.like]: searchKeyWord }
+            },
+            attributes: ['id', 'name', 'description', 'image'],
+            raw: true,
+            nest: true
+        });
+
+        const services = await db.Service.findAndCountAll({
+            limit: limit,
+            offset: offset,
+            where: {
+                name: { [Op.like]: searchKeyWord }
+            },
+            attributes: [
+                'id',
+                'name',
+                'price',
+                'description',
+                'durationMinutes'
+            ],
+            raw: true,
+            nest: true
+        });
+
+        return {
+            errCode: 0,
+            enMessage: 'Search successful',
+            viMessage: 'Tìm kiếm thành công',
+            data: {
+                doctors: { count: doctors.count, rows: doctors.rows },
+                specialties: {
+                    count: specialties.count,
+                    rows: specialties.rows
+                },
+                services: { count: services.count, rows: services.rows },
+                meta: {
+                    page: page,
+                    limit: limit,
+                    totalRows:
+                        doctors.count + specialties.count + services.count,
+                    totalPages: Math.ceil(
+                        (doctors.count + specialties.count + services.count) /
+                            limit
+                    )
+                }
+            }
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
 const fakePaymentService = (appointmentId) => {
     return new Promise(async (resolve, reject) => {
         const t = await db.sequelize.transaction();
@@ -1207,6 +1274,501 @@ const fakePaymentService = (appointmentId) => {
     });
 };
 
+const getRecordService = async (userId, recordId) => {
+    try {
+        const patient = await db.Patient.findOne({
+            where: { userId: userId }
+        });
+
+        if (!patient) {
+            return {
+                errCode: 2,
+                errEnMessage: 'Patient not found',
+                errViMessage: 'Bệnh nhân không tồn tại'
+            };
+        }
+
+        const patientId = patient.id;
+
+        const record = await db.Record.findOne({
+            where: { id: recordId, patientId: patientId },
+            include: [
+                {
+                    model: db.Doctor,
+                    as: 'doctor',
+                    attributes: [],
+                    include: [
+                        {
+                            model: db.User,
+                            as: 'user',
+                            attributes: ['name']
+                        },
+                        {
+                            model: db.Specialty,
+                            as: 'specialty',
+                            attributes: ['name']
+                        }
+                    ]
+                },
+                {
+                    model: db.Patient,
+                    as: 'patient',
+                    attributes: ['address'],
+                    include: [
+                        {
+                            model: db.User,
+                            as: 'user',
+                            attributes: ['name', 'email', 'phone']
+                        }
+                    ]
+                },
+                {
+                    model: db.Appointment,
+                    as: 'appointment',
+                    attributes: [
+                        'patientName',
+                        'patientGender',
+                        'patientPhone',
+                        'patientDob',
+                        'patientAddress'
+                    ]
+                }
+            ]
+        });
+
+        if (!record) {
+            return {
+                errCode: 3,
+                errEnMessage: 'Record not found',
+                errViMessage: 'Bệnh án không tồn tại'
+            };
+        }
+
+        return {
+            errCode: 0,
+            enMessage: 'Get record successful',
+            viMessage: 'Lấy hồ sơ thành công',
+            data: record
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
+const downloadRecordService = async (userId, recordId) => {
+    try {
+        const patient = await db.Patient.findOne({
+            where: { userId: userId },
+            attributes: ['id']
+        });
+
+        if (!patient)
+            return {
+                errCode: 2,
+                errEnMessage: 'Patient not found',
+                errViMessage: 'Bệnh nhân không tồn tại'
+            };
+
+        const record = await db.Record.findOne({
+            where: { id: recordId, patientId: patient.id },
+            include: [
+                {
+                    model: db.Doctor,
+                    as: 'doctor',
+                    attributes: ['degree'],
+                    include: [
+                        { model: db.User, as: 'user', attributes: ['name'] },
+                        {
+                            model: db.Specialty,
+                            as: 'specialty',
+                            attributes: ['name']
+                        }
+                    ]
+                },
+                {
+                    model: db.Patient,
+                    as: 'patient',
+                    attributes: ['id'],
+                    include: [
+                        {
+                            model: db.User,
+                            as: 'user',
+                            attributes: ['name', 'email', 'phone']
+                        }
+                    ]
+                },
+                {
+                    model: db.Appointment,
+                    as: 'appointment',
+                    attributes: [
+                        'patientName',
+                        'patientGender',
+                        'patientPhone',
+                        'patientDob',
+                        'patientAddress'
+                    ]
+                }
+            ],
+            raw: false,
+            nest: true
+        });
+
+        if (!record)
+            return {
+                errCode: 2,
+                errEnMessage: 'Record not found',
+                errViMessage: 'Bệnh án không tồn tại'
+            };
+
+        const doc = new PDFDocument({ margin: 40, size: 'A4' });
+
+        // Load fonts (giữ nguyên logic của bạn)
+        const fontRegular = path.join(__dirname, '../fonts/Roboto-Regular.ttf');
+        const fontBold = path.join(__dirname, '../fonts/Roboto-Bold.ttf');
+        try {
+            doc.registerFont('Roboto-Regular', fontRegular);
+            doc.registerFont('Roboto-Bold', fontBold);
+        } catch (e) {
+            console.warn('Font error');
+        }
+
+        const COLORS = {
+            PRIMARY: '#0f172a',
+            SECONDARY: '#64748b',
+            ACCENT: '#3b82f6',
+            BG_LIGHT: '#f8fafc',
+            BG_RED_LIGHT: '#fef2f2',
+            BG_BLUE_LIGHT: '#eff6ff',
+            BORDER: '#e2e8f0',
+            DARK_BOX: '#0f172a',
+            TEXT_WHITE: '#ffffff',
+            RED_TEXT: '#ef4444',
+            BLUE_TEXT: '#1d4ed8'
+        };
+
+        const drawLine = (posY) => {
+            doc.strokeColor(COLORS.BORDER)
+                .lineWidth(1)
+                .moveTo(40, posY)
+                .lineTo(555, posY)
+                .stroke();
+        };
+
+        let y = 30; // Bắt đầu cao hơn một chút
+
+        // --- HEADER ---
+        doc.font('Roboto-Bold')
+            .fontSize(10)
+            .fillColor(COLORS.SECONDARY)
+            .text('HỒ SƠ Y TẾ ĐIỆN TỬ', 40, y);
+        y += 15;
+        doc.font('Roboto-Bold')
+            .fontSize(22)
+            .fillColor(COLORS.PRIMARY)
+            .text(`PHIẾU KHÁM #${record.id}`, 40, y);
+        doc.fontSize(9)
+            .font('Roboto-Regular')
+            .text(
+                `Ngày tạo: ${new Date().toLocaleString('vi-VN')}`,
+                40,
+                y + 28
+            );
+
+        y += 45;
+        drawLine(y);
+        y += 15;
+
+        // --- PHẦN 1: NGƯỜI ĐẶT LỊCH (Compact) ---
+        doc.font('Roboto-Bold')
+            .fontSize(10)
+            .fillColor(COLORS.ACCENT)
+            .text('NGƯỜI ĐẶT LỊCH', 40, y);
+        y += 15;
+
+        const bookerName = record.patient?.user?.name?.toUpperCase() || '---';
+        const bookerPhone = record.patient?.user?.phone || '---';
+        const bookerEmail = record.patient?.user?.email || '---';
+
+        // In hàng ngang để tiết kiệm diện tích
+        doc.font('Roboto-Bold')
+            .fontSize(9)
+            .fillColor(COLORS.SECONDARY)
+            .text('HỌ TÊN:', 40, y);
+        doc.font('Roboto-Regular')
+            .fillColor(COLORS.PRIMARY)
+            .text(bookerName, 90, y);
+
+        doc.font('Roboto-Bold')
+            .fillColor(COLORS.SECONDARY)
+            .text('SĐT:', 250, y);
+        doc.font('Roboto-Regular')
+            .fillColor(COLORS.PRIMARY)
+            .text(bookerPhone, 280, y);
+
+        doc.font('Roboto-Bold')
+            .fillColor(COLORS.SECONDARY)
+            .text('EMAIL:', 380, y);
+        doc.font('Roboto-Regular')
+            .fillColor(COLORS.PRIMARY)
+            .text(bookerEmail, 420, y);
+
+        y += 20;
+        drawLine(y);
+        y += 15;
+
+        // --- PHẦN 2: BỆNH NHÂN & BÁC SĨ ---
+        const col1X = 40;
+        const col2X = 300;
+
+        // Cột Trái: Bệnh nhân
+        doc.font('Roboto-Bold')
+            .fontSize(10)
+            .fillColor(COLORS.SECONDARY)
+            .text('BỆNH NHÂN', col1X, y);
+        y += 15;
+        doc.font('Roboto-Bold')
+            .fontSize(14)
+            .fillColor(COLORS.PRIMARY)
+            .text(
+                record.appointment?.patientName?.toUpperCase() || 'KHÔNG RÕ',
+                col1X,
+                y
+            );
+
+        let subY = y + 20;
+        // Gom nhóm thông tin bệnh nhân
+        doc.fontSize(9)
+            .font('Roboto-Bold')
+            .fillColor(COLORS.SECONDARY)
+            .text('MÃ BN:', col1X, subY);
+        doc.font('Roboto-Regular')
+            .fillColor(COLORS.PRIMARY)
+            .text(record.patientId, col1X + 40, subY);
+
+        const gender =
+            record.appointment?.patientGender === 'M' ||
+            record.appointment?.patientGender === '1'
+                ? 'Nam'
+                : 'Nữ';
+        doc.font('Roboto-Bold')
+            .fillColor(COLORS.SECONDARY)
+            .text('GT:', col1X + 100, subY);
+        doc.font('Roboto-Regular')
+            .fillColor(COLORS.PRIMARY)
+            .text(gender, col1X + 120, subY);
+
+        subY += 15;
+        doc.font('Roboto-Bold')
+            .fillColor(COLORS.SECONDARY)
+            .text('ĐỊA CHỈ:', col1X, subY);
+        doc.font('Roboto-Regular')
+            .fillColor(COLORS.PRIMARY)
+            .text(
+                record.appointment?.patientAddress || '--',
+                col1X + 45,
+                subY,
+                { width: 200 }
+            );
+
+        // Cột Phải: Bác sĩ
+        let rightY = y - 15; // Căn chỉnh lại với tiêu đề Bệnh nhân
+        doc.font('Roboto-Bold')
+            .fontSize(10)
+            .fillColor(COLORS.ACCENT)
+            .text('BÁC SĨ KHÁM', col2X, rightY);
+        rightY += 15;
+        doc.font('Roboto-Bold')
+            .fontSize(14)
+            .fillColor(COLORS.PRIMARY)
+            .text(
+                record.doctor?.user?.name?.toUpperCase() || '---',
+                col2X,
+                rightY
+            );
+
+        let rightSubY = rightY + 20;
+        doc.fontSize(9)
+            .font('Roboto-Bold')
+            .fillColor(COLORS.SECONDARY)
+            .text('KHOA:', col2X, rightSubY);
+        doc.font('Roboto-Regular')
+            .fillColor(COLORS.PRIMARY)
+            .text('Nội Tổng Quát', col2X + 40, rightSubY); // Hardcode hoặc lấy từ DB
+
+        rightSubY += 15;
+        doc.font('Roboto-Bold')
+            .fillColor(COLORS.SECONDARY)
+            .text('MÃ HẸN:', col2X, rightSubY);
+        doc.font('Roboto-Regular')
+            .fillColor(COLORS.PRIMARY)
+            .text(`APP-${record.appointmentId}`, col2X + 45, rightSubY);
+
+        // Chọn vị trí Y thấp nhất giữa 2 cột để tiếp tục
+        y = Math.max(subY + 20, rightSubY + 20);
+
+        // --- CÁC BOX (Đã giảm chiều cao) ---
+        // Hàm vẽ box tùy chỉnh height
+        const drawBox = (
+            posX,
+            posY,
+            title,
+            content,
+            type = 'default',
+            height = 75
+        ) => {
+            const boxWidth = 250;
+            let bgColor = COLORS.BG_LIGHT;
+            let titleColor = COLORS.SECONDARY;
+
+            if (type === 'red') {
+                bgColor = COLORS.BG_RED_LIGHT;
+                titleColor = COLORS.RED_TEXT;
+            } else if (type === 'blue') {
+                bgColor = COLORS.BG_BLUE_LIGHT;
+                titleColor = COLORS.BLUE_TEXT;
+            }
+
+            doc.rect(posX, posY, boxWidth, height).fillAndStroke(
+                bgColor,
+                COLORS.BG_LIGHT
+            );
+            doc.font('Roboto-Bold')
+                .fontSize(8)
+                .fillColor(titleColor)
+                .text(title.toUpperCase(), posX + 8, posY + 8);
+            doc.font('Roboto-Regular')
+                .fontSize(9)
+                .fillColor(COLORS.PRIMARY)
+                .text(content || 'Không ghi nhận', posX + 8, posY + 25, {
+                    width: boxWidth - 16,
+                    height: height - 30,
+                    ellipsis: true
+                });
+        };
+
+        const boxHeight = 75; // Giảm từ 100 xuống 75
+        const boxGap = 85; // Khoảng cách nhảy y
+
+        drawBox(
+            40,
+            y,
+            'I. TRIỆU CHỨNG (SUBJECTIVE)',
+            record.symptoms,
+            'default',
+            boxHeight
+        );
+        drawBox(
+            305,
+            y,
+            'II. KHÁM THỰC THỂ (OBJECTIVE)',
+            record.physicalExam,
+            'default',
+            boxHeight
+        );
+
+        y += boxGap; // Nhảy xuống
+
+        drawBox(40, y, 'III. CHẨN ĐOÁN', record.diagnosis, 'red', boxHeight);
+        drawBox(
+            305,
+            y,
+            'IV. HƯỚNG ĐIỀU TRỊ',
+            record.treatment,
+            'blue',
+            boxHeight
+        );
+
+        y += boxGap + 10; // Khoảng cách tới đơn thuốc
+
+        // --- ĐƠN THUỐC (Giảm chiều cao) ---
+        doc.font('Roboto-Bold')
+            .fontSize(12)
+            .fillColor(COLORS.PRIMARY)
+            .text('ĐƠN THUỐC', 40, y);
+        y += 15;
+
+        const presHeight = 120; // Giảm từ 150 xuống 120
+        doc.rect(40, y, 515, presHeight).fill(COLORS.DARK_BOX);
+
+        doc.fillColor(COLORS.TEXT_WHITE).fontSize(9).font('Roboto-Regular');
+        let textY = y + 15;
+        if (record.prescription) {
+            const lines = record.prescription.split('\n');
+            // Chỉ in tối đa 7 dòng để không tràn box
+            lines.slice(0, 7).forEach((line) => {
+                doc.text(line, 55, textY);
+                textY += 14;
+            });
+        } else {
+            doc.text('Không có đơn thuốc.', 55, textY);
+        }
+
+        y += presHeight + 15; // Nhảy xuống dưới box đơn thuốc
+
+        // --- HẸN TÁI KHÁM & CHỮ KÝ ---
+        // Kiểm tra nếu y quá thấp (gần hết trang) thì add trang mới (Safety check)
+        if (y > 750) {
+            doc.addPage();
+            y = 40;
+        }
+
+        // Box hẹn tái khám
+        doc.rect(40, y, 140, 45).stroke(COLORS.BORDER); // Giảm size box
+        doc.font('Roboto-Bold')
+            .fontSize(8)
+            .fillColor(COLORS.SECONDARY)
+            .text('HẸN TÁI KHÁM', 50, y + 8);
+        const reExamDate = record.reExamDate
+            ? new Date(record.reExamDate).toLocaleDateString('vi-VN')
+            : '---';
+        doc.font('Roboto-Bold')
+            .fontSize(12)
+            .fillColor(COLORS.PRIMARY)
+            .text(reExamDate, 50, y + 22);
+
+        // Chữ ký bác sĩ
+        doc.font('Roboto-Bold')
+            .fontSize(10)
+            .fillColor(COLORS.PRIMARY)
+            .text('BS. TRẦN THỊ BÌNH', 400, y + 30, {
+                align: 'center',
+                width: 150
+            });
+
+        // Con dấu
+        const stampPath = path.join(__dirname, '../assets/images/stamp.png');
+        if (fs.existsSync(stampPath)) {
+            doc.image(stampPath, 435, y - 25, { width: 80 });
+        } else {
+            const circleX = 475;
+            const circleY = y + 35;
+            doc.circle(circleX, circleY, 30)
+                .lineWidth(2)
+                .strokeColor(COLORS.RED_TEXT)
+                .stroke();
+            doc.font('Roboto-Bold')
+                .fontSize(7)
+                .fillColor(COLORS.RED_TEXT)
+                .text('ĐÃ KIỂM TRA\nXÁC THỰC', circleX - 25, circleY - 8, {
+                    width: 50,
+                    align: 'center'
+                });
+        }
+
+        // --- FOOTER (Cố định ở đáy) ---
+        doc.page.margins.bottom = 0;
+        doc.rect(0, 820, 595, 22).fill(COLORS.PRIMARY);
+        doc.fontSize(8)
+            .fillColor(COLORS.TEXT_WHITE)
+            .text('BẢO MẬT THÔNG TIN NGƯỜI BỆNH THEO TIÊU CHUẨN ISO', 40, 827);
+
+        return { errCode: 0, doc: doc };
+    } catch (e) {
+        console.error('Error generating PDF:', e);
+        throw e;
+    }
+};
+
 module.exports = {
     getDetailPatientService,
     createProfilePatientService,
@@ -1215,5 +1777,8 @@ module.exports = {
     getAppointmentsService,
     updateAppointmentService,
     deleteAppointmentService,
-    fakePaymentService
+    searchPublicService,
+    fakePaymentService,
+    getRecordService,
+    downloadRecordService
 };

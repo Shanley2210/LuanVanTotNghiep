@@ -72,9 +72,7 @@ export default function SerivceHompage() {
                         `}
                         onClick={() =>
                             navigate(
-                                `/doctors-by-service/${slugify(item.name)}/${
-                                    item.id
-                                }`
+                                `/dich-vu/${slugify(item.name)}/${item.id}`
                             )
                         }
                     >

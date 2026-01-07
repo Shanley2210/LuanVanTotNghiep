@@ -51,6 +51,22 @@ router.delete(
     patientController.deleteAppointmentController
 );
 
+router.get('/search-public', patientController.searchPublicController);
+
 router.post('/fake-payment/:id', patientController.fakePaymentController);
+
+router.get(
+    '/record/:id',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Patient'),
+    patientController.getRecordController
+);
+
+router.get(
+    '/record/:id/download',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Patient'),
+    patientController.downloadRecordController
+);
 
 module.exports = router;

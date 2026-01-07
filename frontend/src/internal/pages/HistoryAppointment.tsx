@@ -9,14 +9,15 @@ import { Select, Table, Tag } from 'antd';
 import dayjs from 'dayjs';
 import { useContext, useEffect, useState } from 'react';
 import Pagination from '../components/Pagination';
+import { useTranslation } from 'react-i18next';
 
 const GROUP_KEY = 'history_appointments';
 
 export default function HistoryAppointment() {
     const { isDark } = useContext(ThemeContext);
     const dispatch = useAppDispatch();
+    const { t } = useTranslation();
 
-    // Lấy data từ Redux store theo group key
     const { groups } = useAppSelector(selectAppointment);
     const currentGroupData = groups[GROUP_KEY] || {
         list: [],
@@ -41,13 +42,13 @@ export default function HistoryAppointment() {
 
     const columns = [
         {
-            title: 'ID',
+            title: t('repHistory.colId'),
             dataIndex: 'id',
             key: 'id',
             width: 60
         },
         {
-            title: 'Người đặt lịch',
+            title: t('repHistory.colBooker'),
             key: 'book',
             render: (_: any, record: IAppointment) => (
                 <div className='flex flex-col'>
@@ -64,7 +65,7 @@ export default function HistoryAppointment() {
             )
         },
         {
-            title: 'Thông tin bệnh nhân',
+            title: t('repHistory.colPatientInfo'),
             key: 'patient',
             render: (_: any, record: IAppointment) => (
                 <div className='flex flex-col'>
@@ -73,21 +74,23 @@ export default function HistoryAppointment() {
                         {record.patientPhone}
                     </span>
                     <span className='text-xs text-gray-400'>
-                        {record.patientGender === '1' ? 'Nam' : 'Nữ'} -{' '}
-                        {dayjs(record.patientDob).format('DD/MM/YYYY')}
+                        {record.patientGender === '1'
+                            ? t('repHistory.genderMale')
+                            : t('repHistory.genderFemale')}{' '}
+                        - {dayjs(record.patientDob).format('DD/MM/YYYY')}
                     </span>
                 </div>
             )
         },
         {
-            title: 'Loại lịch hẹn',
+            title: t('repHistory.colType'),
             key: 'info',
             render: (_: any, record: IAppointment) => {
                 if (record.type === 'doctor') {
                     return (
                         <div className='flex flex-col'>
                             <span className='text-blue-600 font-medium'>
-                                Khám bác sĩ
+                                {t('repHistory.typeDoctor')}
                             </span>
                             <span>{record.doctor?.user?.name}</span>
                             <span className='text-xs text-gray-500'>
@@ -99,7 +102,7 @@ export default function HistoryAppointment() {
                 return (
                     <div className='flex flex-col'>
                         <span className='text-green-600 font-medium'>
-                            Dịch vụ
+                            {t('repHistory.typeService')}
                         </span>
                         <span>{record.service?.name}</span>
                     </div>
@@ -107,7 +110,7 @@ export default function HistoryAppointment() {
             }
         },
         {
-            title: 'Thời gian khám',
+            title: t('repHistory.colTime'),
             key: 'time',
             align: 'center' as const,
             width: 180,
@@ -125,25 +128,24 @@ export default function HistoryAppointment() {
             }
         },
         {
-            title: 'Thanh toán',
+            title: t('repHistory.colPayment'),
             key: 'payment',
             align: 'center' as const,
             render: (_: any, record: IAppointment) => (
                 <div className='flex flex-col'>
                     <span>
-                        Tổng:{' '}
+                        {t('repHistory.paymentTotal')}:{' '}
                         {Number(record.finalPrice).toLocaleString('vi-VN')} đ
                     </span>
                     <span className='text-xs text-green-600'>
-                        Đã cọc:{' '}
+                        {t('repHistory.paymentDeposited')}:{' '}
                         {Number(record.deposited).toLocaleString('vi-VN')} đ
                     </span>
                 </div>
             )
         },
-
         {
-            title: 'Trạng thái',
+            title: t('repHistory.colStatus'),
             dataIndex: 'status',
             key: 'status',
             align: 'center' as const,
@@ -154,31 +156,31 @@ export default function HistoryAppointment() {
                 switch (status) {
                     case 'pending':
                         color = 'yellow';
-                        text = 'Chờ đặt cọc';
+                        text = t('repHistory.statusPending');
                         break;
                     case 'deposited':
                         color = 'processing';
-                        text = 'Đã đặt cọc';
+                        text = t('repHistory.statusDeposited');
                         break;
                     case 'confirmed':
                         color = 'blue';
-                        text = 'Đã xác nhận';
+                        text = t('repHistory.statusConfirmed');
                         break;
                     case 'checked_in':
                         color = 'warning';
-                        text = 'Chờ khám';
+                        text = t('repHistory.statusCheckedIn');
                         break;
                     case 'examining':
                         color = 'purple';
-                        text = 'Đang khám';
+                        text = t('repHistory.statusExamining');
                         break;
                     case 'completed':
                         color = 'success';
-                        text = 'Hoàn tất';
+                        text = t('repHistory.statusCompleted');
                         break;
                     case 'cancelled':
                         color = 'error';
-                        text = 'Đã hủy';
+                        text = t('repHistory.statusCancelled');
                         break;
                 }
                 return <Tag color={color}>{text}</Tag>;
@@ -191,8 +193,8 @@ export default function HistoryAppointment() {
             fetchReceptionistAppointments({
                 page: currentPage,
                 limit: pageSize,
-                status: undefined, // QUAN TRỌNG: undefined để lấy tất cả trạng thái
-                date: undefined, // QUAN TRỌNG: undefined để lấy tất cả ngày
+                status: undefined,
+                date: undefined,
                 groupKey: GROUP_KEY
             })
         );
@@ -205,7 +207,7 @@ export default function HistoryAppointment() {
                     isDark ? 'text-gray-100' : 'text-neutral-900'
                 }`}
             >
-                Lịch sử cuộc hẹn
+                {t('repHistory.title')}
             </div>
 
             <div className={`p-10 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
@@ -226,7 +228,7 @@ export default function HistoryAppointment() {
                             isDark ? 'text-gray-100' : 'text-neutral-900'
                         }`}
                     >
-                        Số mục mỗi trang
+                        {t('repHistory.itemsPerPage')}
                     </div>
                 </div>
 

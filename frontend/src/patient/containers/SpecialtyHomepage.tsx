@@ -8,6 +8,7 @@ import {
 import { useContext, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { IoIosArrowRoundForward } from 'react-icons/io';
+import { useNavigate } from 'react-router-dom';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
 
@@ -16,6 +17,7 @@ export default function SpecialtyHomepage() {
     const { t } = useTranslation();
     const dispatch = useAppDispatch();
     const { list: specialties } = useAppSelector(selectSpecialty);
+    const navigate = useNavigate();
 
     useEffect(() => {
         dispatch(fetchSpecialties({ page: 1, limit: 10 }));
@@ -44,6 +46,7 @@ export default function SpecialtyHomepage() {
                                     : 'border-white text-white hover:bg-white hover:text-blue-500'
                             }
                         `}
+                        onClick={() => navigate('/chuyen-khoa')}
                     >
                         {t('homePage.xt')}
                     </Button>

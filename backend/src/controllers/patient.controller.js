@@ -199,6 +199,40 @@ const deleteAppointmentController = async (req, res) => {
     }
 };
 
+const searchPublicController = async (req, res) => {
+    try {
+        const { q } = req.query;
+
+        let page = req.query.page ? parseInt(req.query.page) : 1;
+        let limit = req.query.limit ? parseInt(req.query.limit) : 10;
+
+        if (page < 1) page = 1;
+        if (limit < 1) limit = 10;
+
+        if (!q) {
+            return res.status(200).json({
+                errCode: 1,
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
+            });
+        }
+
+        const response = await patientService.searchPublicService(
+            q,
+            page,
+            limit
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in searchPublic:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
 const fakePaymentController = async (req, res) => {
     try {
         const appointmentId = req.params.id;
@@ -222,6 +256,72 @@ const fakePaymentController = async (req, res) => {
     }
 };
 
+const getRecordController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const recordId = req.params.id;
+
+        if (!recordId) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await patientService.getRecordService(
+            userId,
+            recordId
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in getRecord:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const downloadRecordController = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const recordId = req.params.id;
+
+        if (!recordId) {
+            return res.status(200).json({
+                errCode: 1,
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
+            });
+        }
+
+        const response = await patientService.downloadRecordService(
+            userId,
+            recordId
+        );
+
+        if (response.errCode !== 0) {
+            return res.status(200).json(response);
+        }
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename=record-${recordId}.pdf`
+        );
+
+        response.doc.pipe(res);
+        response.doc.end();
+    } catch (e) {
+        console.log('Error in downloadRecord:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
 module.exports = {
     getDetailPatientController,
     createProfilePatientController,
@@ -230,5 +330,8 @@ module.exports = {
     getAppointmentsController,
     updateAppointmentController,
     deleteAppointmentController,
-    fakePaymentController
+    searchPublicController,
+    fakePaymentController,
+    getRecordController,
+    downloadRecordController
 };

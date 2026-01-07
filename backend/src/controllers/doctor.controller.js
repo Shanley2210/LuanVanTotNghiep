@@ -94,16 +94,23 @@ const getSlotsController = async (req, res) => {
 const getDoctorBySpecialtyController = async (req, res) => {
     try {
         const specialtyId = req.params.id;
+        const page = req.query.page ? parseInt(req.query.page) : 1;
+        const limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        const status = req.query.status;
 
         if (!specialtyId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
             });
         }
 
         const response = await doctorService.getDoctorBySpecialtyService(
-            specialtyId
+            specialtyId,
+            page,
+            limit,
+            status
         );
 
         return res.status(200).json(response);

@@ -1,9 +1,10 @@
-const { Op } = require('sequelize');
+const { Op, fn, col } = require('sequelize');
 const db = require('../models');
 const bcrypt = require('bcryptjs');
 const path = require('path');
 const fs = require('fs');
 const { lock } = require('../routes/admin.route');
+const { group } = require('console');
 
 const getShiftTime = (shift) => {
     switch (shift) {
@@ -1607,6 +1608,379 @@ const getReceptionistsService = () => {
     });
 };
 
+const getDoctorServicesService = async (doctorId, page, limit) => {
+    try {
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await db.DoctorService.findAndCountAll({
+            where: { doctorId },
+            limit,
+            offset,
+            include: [
+                {
+                    model: db.Service,
+                    as: 'service',
+                    attributes: ['name']
+                }
+            ]
+        });
+
+        if (rows.length === 0) {
+            return {
+                errCode: 2,
+                message: 'Doctor services not found'
+            };
+        }
+
+        return {
+            errCode: 0,
+            message: 'Get doctor services successful',
+            data: rows,
+            pagination: {
+                page,
+                limit,
+                totalItems: count,
+                totalPages: Math.ceil(count / limit)
+            }
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
+const createDoctorServicesService = async (data) => {
+    try {
+        const existing = await db.DoctorService.findOne({
+            where: {
+                doctorId: data.doctorId,
+                serviceId: data.serviceId
+            }
+        });
+
+        if (existing) {
+            return {
+                errCode: 2,
+                errEnMessage: 'Doctor service already exists',
+                errViMessage: 'Dịch vụ của bác sĩ đã tồn tại'
+            };
+        }
+
+        await db.DoctorService.create({
+            doctorId: data.doctorId,
+            serviceId: data.serviceId,
+            price: data.price,
+            status: data.status
+        });
+
+        return {
+            errCode: 0,
+            enMessage: 'Create doctor service successful',
+            viMessage: 'Tạo dịch vụ của bác sĩ thành công'
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
+const updateDoctorServicesService = async (doctorId, serviceId, data) => {
+    try {
+        const doctorService = await db.DoctorService.findOne({
+            where: {
+                doctorId: doctorId,
+                serviceId: serviceId
+            }
+        });
+
+        if (!doctorService) {
+            return {
+                errCode: 2,
+                errEnMessage: 'Doctor service not found',
+                errViMessage: 'Dịch vụ của bác sĩ không tồn tại'
+            };
+        }
+
+        if (data.price !== undefined) {
+            doctorService.price = data.price;
+        }
+
+        if (data.status !== undefined) {
+            doctorService.status = data.status;
+        }
+
+        await doctorService.save();
+
+        return {
+            errCode: 0,
+            enMessage: 'Update doctor service successful',
+            viMessage: 'Cập nhật dịch vụ của bác sĩ thành công'
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
+const getAppointmentsService = async (page, limit) => {
+    try {
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await db.Appointment.findAndCountAll({
+            limit,
+            offset,
+            include: [
+                {
+                    model: db.Patient,
+                    as: 'patient',
+                    include: [
+                        {
+                            model: db.User,
+                            as: 'user',
+                            attributes: ['name', 'email', 'phone']
+                        }
+                    ]
+                },
+                {
+                    model: db.Doctor,
+                    as: 'doctor',
+                    include: [
+                        {
+                            model: db.User,
+                            as: 'user',
+                            attributes: ['name', 'email', 'phone']
+                        }
+                    ]
+                },
+                {
+                    model: db.Service,
+                    as: 'service',
+                    attributes: ['name']
+                },
+                {
+                    model: db.Slot,
+                    as: 'slot',
+                    attributes: ['startTime', 'endTime']
+                }
+            ],
+            order: [['createdAt', 'DESC']]
+        });
+
+        if (rows.length === 0) {
+            return {
+                errCode: 2,
+                message: 'Appointments not found'
+            };
+        }
+
+        return {
+            errCode: 0,
+            message: 'Get appointments successful',
+            data: rows,
+            pagination: {
+                page,
+                limit,
+                totalRows: count,
+                totalPages: Math.ceil(count / limit)
+            }
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
+const getDashboardStatsService = async ({ period, doctorId, serviceId }) => {
+    try {
+        const now = new Date();
+        let startDate;
+        let endDate = new Date();
+
+        if (period === 'day') {
+            startDate = new Date();
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 999);
+        } else if (period === 'week') {
+            startDate = new Date();
+            startDate.setDate(startDate.getDate() - startDate.getDay());
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setDate(startDate.getDate() + 6);
+            endDate.setHours(23, 59, 59, 999);
+        } else if (period === 'month') {
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(
+                now.getFullYear(),
+                now.getMonth() + 1,
+                0,
+                23,
+                59,
+                59,
+                999
+            );
+        } else {
+            return {
+                errCode: 2,
+                errEnMessage: 'Invalid period',
+                errViMessage: 'Thời gian không hợp lệ'
+            };
+        }
+
+        const where = {
+            createdAt: { [Op.between]: [startDate, endDate] }
+        };
+        if (doctorId) {
+            where.doctorId = doctorId;
+        }
+        if (serviceId) {
+            where.serviceId = serviceId;
+        }
+
+        const stats = await db.Appointment.findAll({
+            where,
+            attributes: [
+                'status',
+                [fn('COUNT', col('Appointment.id')), 'count'],
+                [fn('SUM', col('finalPrice')), 'revenue']
+            ],
+            group: ['status']
+        });
+
+        let totalAppointments = 0;
+        let totalRevenue = 0;
+        let cancelled = 0;
+        let noshow = 0;
+        const statusDistribution = {};
+
+        stats.forEach((stat) => {
+            const status = stat.getDataValue('status');
+            const count = parseInt(stat.getDataValue('count'), 10);
+            const revenue = parseFloat(stat.getDataValue('revenue')) || 0;
+            totalAppointments += count;
+            totalRevenue += revenue;
+            statusDistribution[status] = count;
+            if (status === 'cancelled') {
+                cancelled += count;
+            } else if (status === 'no_show') {
+                noshow += count;
+            }
+        });
+
+        const trend = await db.Appointment.findAll({
+            where,
+            attributes: [
+                [fn('DATE', col('createdAt')), 'date'],
+                [fn('COUNT', col('id')), 'appointments'],
+                [fn('SUM', col('finalPrice')), 'revenue']
+            ],
+            group: [fn('DATE', col('createdAt'))],
+            order: [[fn('DATE', col('createdAt')), 'ASC']]
+        });
+
+        return {
+            errCode: 0,
+            message: 'Get dashboard stats successful',
+            data: {
+                period,
+                totalAppointments,
+                totalRevenue,
+                cancelRate: totalAppointments
+                    ? ((cancelled / totalAppointments) * 100).toFixed(2)
+                    : '0.00',
+                noshowRate: totalAppointments
+                    ? ((noshow / totalAppointments) * 100).toFixed(2)
+                    : '0.00',
+                statusDistribution,
+                bookingTrend: trend
+            }
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
+const exportStatsService = async ({ period, doctorId, serviceId }) => {
+    try {
+        const whereClause = {};
+        if (period) {
+            const now = new Date();
+            let startDate;
+            let endDate = new Date();
+            if (period === 'day') {
+                startDate = new Date();
+                startDate.setHours(0, 0, 0, 0);
+                endDate.setHours(23, 59, 59, 999);
+            } else if (period === 'week') {
+                startDate = new Date();
+                startDate.setDate(startDate.getDate() - startDate.getDay());
+                startDate.setHours(0, 0, 0, 0);
+                endDate.setDate(startDate.getDate() + 6);
+                endDate.setHours(23, 59, 59, 999);
+            } else if (period === 'month') {
+                startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                endDate = new Date(
+                    now.getFullYear(),
+                    now.getMonth() + 1,
+                    0,
+                    23,
+                    59,
+                    59,
+                    999
+                );
+            } else {
+                return {
+                    errCode: 2,
+                    errEnMessage: 'Invalid period',
+                    errViMessage: 'Thời gian không hợp lệ'
+                };
+            }
+            whereClause.createdAt = { [Op.between]: [startDate, endDate] };
+        }
+
+        if (doctorId) {
+            whereClause.doctorId = doctorId;
+        }
+        if (serviceId) {
+            whereClause.serviceId = serviceId;
+        }
+        const appointments = await db.Appointment.findAll({
+            where: whereClause,
+            include: [
+                {
+                    model: db.Patient,
+                    as: 'patient',
+                    include: [
+                        {
+                            model: db.User,
+                            as: 'user',
+                            attributes: ['name', 'email', 'phone']
+                        }
+                    ]
+                },
+                {
+                    model: db.Doctor,
+                    as: 'doctor',
+                    include: [
+                        {
+                            model: db.User,
+                            as: 'user',
+                            attributes: ['name', 'email', 'phone']
+                        }
+                    ]
+                },
+                {
+                    model: db.Service,
+                    as: 'service',
+                    attributes: ['name']
+                }
+            ]
+        });
+
+        return {
+            errCode: 0,
+            message: 'Export stats successful',
+            data: appointments
+        };
+    } catch (e) {
+        throw e;
+    }
+};
+
 module.exports = {
     createHopistalAdminService,
     getRolesService,
@@ -1637,5 +2011,11 @@ module.exports = {
     setPriceDoctorService,
     setPriceServiceService,
     getPatientsService,
-    getReceptionistsService
+    getReceptionistsService,
+    getDoctorServicesService,
+    createDoctorServicesService,
+    updateDoctorServicesService,
+    getAppointmentsService,
+    getDashboardStatsService,
+    exportStatsService
 };

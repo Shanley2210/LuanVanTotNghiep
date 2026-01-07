@@ -295,6 +295,7 @@ export default function CreateEditProfile() {
                                     onChange={handleChange}
                                     className={`${inputClass} pr-10`}
                                     id='dobInput'
+                                    max={new Date().toISOString().split('T')[0]}
                                 />
                                 <button
                                     type='button'
@@ -386,6 +387,7 @@ export default function CreateEditProfile() {
                                     onChange={handleChange}
                                     className={inputClass}
                                     id='bhytInput'
+                                    min={new Date().toISOString().split('T')[0]}
                                 />
                                 <button
                                     type='button'

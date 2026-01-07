@@ -9,12 +9,16 @@ module.exports = {
                 primaryKey: true,
                 type: Sequelize.INTEGER
             },
+            appointmentId: {
+                type: Sequelize.INTEGER,
+                allowNull: true
+            },
             recordId: {
                 type: Sequelize.INTEGER,
                 allowNull: true
             },
-            appointmentId: {
-                type: Sequelize.INTEGER,
+            type: {
+                type: Sequelize.STRING,
                 allowNull: true
             },
             amount: {
@@ -22,10 +26,6 @@ module.exports = {
                 allowNull: true
             },
             method: {
-                type: Sequelize.STRING,
-                allowNull: true
-            },
-            type: {
                 type: Sequelize.STRING,
                 allowNull: true
             },
@@ -37,7 +37,7 @@ module.exports = {
                 type: Sequelize.STRING,
                 allowNull: true
             },
-            callback_data: {
+            returnData: {
                 type: Sequelize.JSON,
                 allowNull: true
             },

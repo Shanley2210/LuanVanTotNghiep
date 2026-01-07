@@ -824,8 +824,163 @@ const getReceptionistsController = async (req, res) => {
     }
 };
 
-const createDoctorServiceBulkController = async (req, res) => {
-    //Cần viết
+const getDoctorServicesController = async (req, res) => {
+    try {
+        const doctorId = req.params.doctorId;
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        if (!doctorId) {
+            return res.status(200).json({
+                errCode: 1,
+                errMessage: 'Missing required parameters'
+            });
+        }
+
+        const response = await adminService.getDoctorServicesService(
+            doctorId,
+            page,
+            limit
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in getDoctorServices:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const createDoctorServicesController = async (req, res) => {
+    try {
+        const data = req.body;
+
+        if (
+            !data ||
+            !data.doctorId ||
+            !data.serviceId ||
+            !data.price ||
+            !data.status
+        ) {
+            return res.status(200).json({
+                errCode: 1,
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
+            });
+        }
+
+        const response = await adminService.createDoctorServicesService(data);
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in createDoctorServices:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const updateDoctorServicesController = async (req, res) => {
+    try {
+        const serviceId = req.params.serviceId;
+        const doctorId = req.params.doctorId;
+
+        const data = req.body;
+
+        if (!serviceId || !doctorId || !data) {
+            return res.status(200).json({
+                errCode: 1,
+                errEnMessage: 'Missing required parameters',
+                errViMessage: 'Thiếu tham số bắt buộc'
+            });
+        }
+
+        const response = await adminService.updateDoctorServicesService(
+            doctorId,
+            serviceId,
+            data
+        );
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in updateDoctorServices:', e);
+    }
+};
+
+const getAppointmentsController = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const response = await adminService.getAppointmentsService(page, limit);
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in getAppointments:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const getDashboardStatsController = async (req, res) => {
+    try {
+        const { period, doctorId, serviceId } = req.query;
+
+        if (!['day', 'week', 'month'].includes(period)) {
+            return res.status(400).json({
+                errCode: 1,
+                errEnMessage: 'Invalid period',
+                errViMessage: 'Khoảng thời gian không hợp lệ'
+            });
+        }
+
+        const response = await adminService.getDashboardStatsService({
+            period,
+            doctorId: doctorId || null,
+            serviceId: serviceId || null
+        });
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in getDashboardStats:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
+};
+
+const exportStatsController = async (req, res) => {
+    try {
+        const { period, doctorId, serviceId } = req.query;
+
+        if (!['day', 'week', 'month'].includes(period)) {
+            return res.status(400).json({
+                errCode: 1,
+                errEnMessage: 'Invalid period',
+                errViMessage: 'Khoảng thời gian không hợp lệ'
+            });
+        }
+
+        const response = await adminService.exportStatsService({
+            period,
+            doctorId: doctorId || null,
+            serviceId: serviceId || null
+        });
+
+        return res.status(200).json(response);
+    } catch (e) {
+        console.log('Error in exportStats:', e);
+        return res.status(500).json({
+            errCode: -1,
+            errMessage: 'Error from server'
+        });
+    }
 };
 
 module.exports = {
@@ -859,5 +1014,10 @@ module.exports = {
     setPriceServiceController,
     getPatientsController,
     getReceptionistsController,
-    createDoctorServiceBulkController
+    getDoctorServicesController,
+    createDoctorServicesController,
+    updateDoctorServicesController,
+    getAppointmentsController,
+    getDashboardStatsController,
+    exportStatsController
 };

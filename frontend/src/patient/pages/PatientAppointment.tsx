@@ -7,7 +7,10 @@ import {
     DialogTitle,
     DialogFooter
 } from '@/components/ui/dialog';
-import { cancelAppointment, fakePayment } from '@/shared/apis/patientService';
+import {
+    cancelAppointment,
+    paymentWithVNPAY
+} from '@/shared/apis/patientService';
 import { ThemeContext } from '@/shared/contexts/ThemeContext';
 import {
     fetchAppointments,
@@ -23,7 +26,6 @@ import {
     MdOutlineCancel,
     MdOutlineDateRange,
     MdOutlineEdit,
-    MdOutlineEmail,
     MdOutlineLocalPhone,
     MdOutlineRemoveRedEye
 } from 'react-icons/md';
@@ -156,7 +158,6 @@ export default function PatientAppointment() {
         setItemToCancel(id);
         setIsCancelConfirmOpen(true);
     };
-
     const handleConfirmCancel = async () => {
         if (itemToCancel) {
             try {
@@ -189,16 +190,35 @@ export default function PatientAppointment() {
     };
     const handlePaymentDeposit = async (item: any) => {
         try {
-            const res = await fakePayment(Number(item.id));
+            const paymentData = {
+                appointmentId: item.id,
+                amount: item.deposit,
+                description:
+                    currentLang === 'vi'
+                        ? 'Thanh toán tiền cọc'
+                        : 'Deposit Payment',
+                locale: currentLang === 'vi' ? 'vi' : 'en'
+            };
+
+            const res = await paymentWithVNPAY(paymentData);
+
             if (res && res.data && res.data.errCode === 0) {
-                toast.success(t('patientAppointment.paymentSuccess'));
-                dispatch(fetchAppointments({ page: 1, limit: 10 }));
+                window.location.href = res.data.paymentUrl;
             } else {
-                toast.error(t('patientAppointment.paymentFailed'));
+                toast.error(
+                    currentLang === 'vi'
+                        ? res?.data?.errViMessage
+                        : res?.data?.errEnMessage
+                );
             }
         } catch (e: any) {
             console.log(e);
+        } finally {
+            setIsLoading(false);
         }
+    };
+    const handleViewMedicalRecord = (recordId: number) => {
+        navigate(`/medical-record/${recordId}`);
     };
 
     useEffect(() => {
@@ -279,7 +299,7 @@ export default function PatientAppointment() {
                                         key={item.id}
                                         className='grid grid-cols-1 lg:grid-cols-12 gap-4 w-full border border-blue-500 p-3 items-center'
                                     >
-                                        <div className='lg:col-span-4 flex gap-2'>
+                                        <div className='lg:col-span-3 flex gap-2'>
                                             <img
                                                 src={
                                                     item.doctor?.image
@@ -290,40 +310,22 @@ export default function PatientAppointment() {
                                                 alt='Doctor'
                                                 className='w-15 h-15 object-cover'
                                             />
-                                            <div className='flex items-center'>
-                                                <div className='flex flex-col'>
-                                                    <span className='font-medium line-clamp-1'>
-                                                        BS.{' '}
-                                                        {
-                                                            item.doctor?.user
-                                                                ?.name
-                                                        }
-                                                    </span>
-                                                    <span className='text-blue-500 text-xs line-clamp-1'>
-                                                        {
-                                                            item.doctor
-                                                                ?.specialty
-                                                                ?.name
-                                                        }
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className='lg:col-span-2 flex flex-col text-sm text-gray-600'>
-                                            <div className='flex items-center gap-2'>
-                                                <MdOutlineEmail />
-                                                <span className='truncate'>
-                                                    {item.patientEmail}
+                                            <div className='flex flex-col justify-center'>
+                                                <span className='font-medium line-clamp-1'>
+                                                    BS.{' '}
+                                                    {item.doctor?.user?.name}
+                                                </span>
+                                                <span className='text-blue-500 text-xs line-clamp-1'>
+                                                    {
+                                                        item.doctor?.specialty
+                                                            ?.name
+                                                    }
                                                 </span>
                                             </div>
-                                            <div className='flex items-center gap-2'>
-                                                <MdOutlineLocalPhone />
-                                                <span>{item.patientPhone}</span>
-                                            </div>
                                         </div>
 
-                                        <div className='lg:col-span-2 flex flex-col text-sm text-gray-600'>
+                                        {/* 2. Thời gian & Liên hệ (Cột 4-6) */}
+                                        <div className='lg:col-span-3 flex flex-col text-sm text-gray-600 gap-1'>
                                             <div className='flex items-center gap-2'>
                                                 <MdOutlineDateRange />
                                                 <span>
@@ -331,72 +333,87 @@ export default function PatientAppointment() {
                                                         item.slot?.startTime
                                                     )}
                                                 </span>
-                                            </div>
-                                            <div className='flex items-center gap-2'>
-                                                <FiClock />
+                                                <FiClock className='ml-1' />
                                                 <span>
                                                     {formatTime(
                                                         item.slot?.startTime
-                                                    )}{' '}
-                                                    -{' '}
-                                                    {formatTime(
-                                                        item.slot?.endTime
                                                     )}
                                                 </span>
                                             </div>
-                                        </div>
-
-                                        <div className='lg:col-span-1 flex gap-2 items-center justify-start lg:justify-center'>
-                                            <MdOutlineRemoveRedEye
-                                                className='size-6 cursor-pointer text-blue-500 hover:text-blue-700 transition-colors'
-                                                onClick={() =>
-                                                    handleViewDetail(item)
-                                                }
-                                            />
-                                            {(item.status === 'pending' ||
-                                                item.status ===
-                                                    'deposited') && (
-                                                <>
-                                                    <MdOutlineEdit
-                                                        className='text-xl cursor-pointer text-yellow-500 hover:text-yellow-700 transition-colors'
-                                                        onClick={() =>
-                                                            handleUpdateAppointment(
-                                                                item
-                                                            )
-                                                        }
-                                                    />
-                                                    <MdOutlineCancel
-                                                        className='text-xl cursor-pointer text-red-500 hover:text-red-700 transition-colors'
-                                                        onClick={() =>
-                                                            handleCancelAppointment(
-                                                                item.id
-                                                            )
-                                                        }
-                                                    />
-                                                </>
-                                            )}
-                                        </div>
-
-                                        <div className='lg:col-span-3 flex gap-3 items-center justify-between lg:justify-end'>
-                                            <div className='flex flex-col text-sm text-gray-600 items-start lg:items-end'>
-                                                <span
-                                                    className={`font-semibold ${getStatusColorClass(
-                                                        item.status
-                                                    )}`}
-                                                >
-                                                    {getStatusLabel(
-                                                        item.status
-                                                    )}
-                                                </span>
-                                                <span className='text-sm'>
-                                                    {formatCurrency(
-                                                        item.finalPrice
-                                                    )}
-                                                </span>
+                                            <div className='flex items-center gap-2'>
+                                                <MdOutlineLocalPhone />
+                                                <span>{item.patientPhone}</span>
                                             </div>
-                                            {item.status === 'pending' && (
+                                            <div className='flex items-center gap-2'>
+                                                <MdOutlineRemoveRedEye
+                                                    className='size-5 cursor-pointer text-blue-500 hover:text-blue-700'
+                                                    onClick={() =>
+                                                        handleViewDetail(item)
+                                                    }
+                                                />
+                                                {(item.status === 'pending' ||
+                                                    item.status ===
+                                                        'deposited') && (
+                                                    <>
+                                                        <MdOutlineEdit
+                                                            className='text-lg cursor-pointer text-yellow-500 hover:text-yellow-700'
+                                                            onClick={() =>
+                                                                handleUpdateAppointment(
+                                                                    item
+                                                                )
+                                                            }
+                                                        />
+                                                        <MdOutlineCancel
+                                                            className='text-lg cursor-pointer text-red-500 hover:text-red-700'
+                                                            onClick={() =>
+                                                                handleCancelAppointment(
+                                                                    item.id
+                                                                )
+                                                            }
+                                                        />
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* 3. Cột Tổng tiền (Cột 7-8) */}
+                                        <div className='lg:col-span-2 flex flex-col items-start lg:items-center'>
+                                            <span className='text-xs text-gray-400 uppercase'>
+                                                {t(
+                                                    'patientAppointment.labelTotal'
+                                                )}
+                                            </span>
+                                            <span className='font-bold text-red-600'>
+                                                {formatCurrency(
+                                                    item.finalPrice
+                                                )}
+                                            </span>
+                                        </div>
+
+                                        {/* 4. Cột Tiền cọc & Trạng thái (Cột 9-10) */}
+                                        <div className='lg:col-span-2 flex flex-col items-start lg:items-center'>
+                                            <span className='text-xs text-gray-400 uppercase'>
+                                                {t(
+                                                    'patientAppointment.labelDeposit'
+                                                )}
+                                            </span>
+                                            <span className='font-medium text-gray-700'>
+                                                {formatCurrency(item.deposit)}
+                                            </span>
+                                            <span
+                                                className={`text-xs font-semibold ${getStatusColorClass(
+                                                    item.status
+                                                )}`}
+                                            >
+                                                {getStatusLabel(item.status)}
+                                            </span>
+                                        </div>
+
+                                        {/* 5. Cột Thanh toán/Hành động (Cột 11-12) */}
+                                        <div className='lg:col-span-2 flex items-center justify-start lg:justify-end'>
+                                            {item.status === 'pending' ? (
                                                 <Button
-                                                    className='cursor-pointer border rounded-3xl border-blue-500 text-blue-500 hover:text-white hover:bg-blue-500 transition-colors bg-transparent h-8 text-sm px-3'
+                                                    className='w-full lg:w-auto cursor-pointer border rounded-3xl border-blue-500 text-blue-500 hover:text-white hover:bg-blue-500 transition-colors bg-transparent h-8 text-sm px-4'
                                                     onClick={() =>
                                                         handlePaymentDeposit(
                                                             item
@@ -407,6 +424,25 @@ export default function PatientAppointment() {
                                                         'patientAppointment.actionPayment'
                                                     )}
                                                 </Button>
+                                            ) : STATUS_GROUPS.COMPLETED.includes(
+                                                  item.status
+                                                      ?.toLowerCase()
+                                                      ?.trim()
+                                              ) ? (
+                                                <Button
+                                                    className='w-full lg:w-auto cursor-pointer border rounded-3xl border-green-500 text-green-500 hover:text-white hover:bg-green-500 transition-colors bg-transparent h-8 text-sm px-4'
+                                                    onClick={() =>
+                                                        handleViewMedicalRecord(
+                                                            item.record.id
+                                                        )
+                                                    }
+                                                >
+                                                    {currentLang === 'vi'
+                                                        ? 'Xem phiếu khám'
+                                                        : 'Medical Record'}
+                                                </Button>
+                                            ) : (
+                                                <div className='h-8 w-full'></div>
                                             )}
                                         </div>
                                     </div>

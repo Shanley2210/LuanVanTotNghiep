@@ -58,6 +58,7 @@ export default function DoctorHomapage() {
                                     : 'border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white'
                             }
                         `}
+                        onClick={() => navigate('/bac-si')}
                     >
                         {t('homePage.xt')}
                     </Button>

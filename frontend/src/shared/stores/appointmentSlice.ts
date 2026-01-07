@@ -152,6 +152,7 @@ export const fetchAppointments = createAsyncThunk<
         );
     }
 });
+
 export const fetchReceptionistAppointments = createAsyncThunk<
     IFetchAppointmentsResponse,
     {
@@ -196,6 +197,7 @@ export const fetchReceptionistAppointments = createAsyncThunk<
         );
     }
 });
+
 export const fetchDoctorAppointments = createAsyncThunk<
     IFetchAppointmentsResponse,
     {
@@ -246,6 +248,58 @@ export const fetchDoctorAppointments = createAsyncThunk<
     }
 );
 
+export const fetchAdminAppointments = createAsyncThunk<
+    IFetchAppointmentsResponse,
+    {
+        page: number;
+        limit: number;
+        groupKey: string;
+    },
+    { rejectValue: string }
+>(
+    'appointments/fetchAdminAppointments',
+    async (params, { rejectWithValue }) => {
+        try {
+            const { page, limit } = params;
+
+            const response = await api.get('/admin/appointments', {
+                params: {
+                    page,
+                    limit
+                }
+            });
+
+            const { errCode, message, data, pagination } = response.data;
+
+            if (errCode === 0 && Array.isArray(data)) {
+                const meta: IPaginationMeta = {
+                    page: pagination.page,
+                    limit: pagination.limit,
+                    totalRows: pagination.totalRows,
+                    totalPages: pagination.totalPages
+                };
+
+                return {
+                    list: data as IAppointment[],
+                    meta: meta
+                };
+            }
+
+            return rejectWithValue(
+                message || 'Failed to fetch admin appointments'
+            );
+        } catch (e: any) {
+            console.error('Redux Thunk Error:', e);
+            if (e.response && e.response.data && e.response.data.errMessage) {
+                return rejectWithValue(e.response.data.errMessage);
+            }
+            return rejectWithValue(
+                'Server error occurred (Check Network/Console)'
+            );
+        }
+    }
+);
+
 export const appointmentsSlice = createSlice({
     name: 'appointments',
     initialState,
@@ -256,6 +310,7 @@ export const appointmentsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            // --- Patient Appointments ---
             .addCase(fetchAppointments.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -274,6 +329,7 @@ export const appointmentsSlice = createSlice({
                 state.error = (action.payload as string) || 'Error';
             })
 
+            // --- Receptionist Appointments ---
             .addCase(fetchReceptionistAppointments.pending, (state, action) => {
                 const { groupKey } = action.meta.arg;
 
@@ -308,6 +364,7 @@ export const appointmentsSlice = createSlice({
                     }
                 }
             )
+            // --- Doctor Appointments ---
             .addCase(fetchDoctorAppointments.pending, (state, action) => {
                 const { groupKey } = action.meta.arg;
                 if (!state.groups[groupKey]) {
@@ -328,6 +385,34 @@ export const appointmentsSlice = createSlice({
                 };
             })
             .addCase(fetchDoctorAppointments.rejected, (state, action) => {
+                const { groupKey } = action.meta.arg;
+                if (state.groups[groupKey]) {
+                    state.groups[groupKey].loading = false;
+                    state.groups[groupKey].error =
+                        (action.payload as string) || 'Error';
+                }
+            })
+            // --- Admin Appointments ---
+            .addCase(fetchAdminAppointments.pending, (state, action) => {
+                const { groupKey } = action.meta.arg;
+                if (!state.groups[groupKey]) {
+                    state.groups[groupKey] = { ...initialGroupState };
+                }
+                state.groups[groupKey].loading = true;
+                state.groups[groupKey].error = null;
+            })
+            .addCase(fetchAdminAppointments.fulfilled, (state, action) => {
+                const { groupKey } = action.meta.arg;
+                const { list, meta } = action.payload;
+
+                state.groups[groupKey] = {
+                    list,
+                    meta,
+                    loading: false,
+                    error: null
+                };
+            })
+            .addCase(fetchAdminAppointments.rejected, (state, action) => {
                 const { groupKey } = action.meta.arg;
                 if (state.groups[groupKey]) {
                     state.groups[groupKey].loading = false;
