@@ -4,8 +4,8 @@ const router = express.Router();
 const paymentController = require('../controllers/payment.controller');
 
 router.post(
-    '/vnpay/create-payment',
-    paymentController.createVNPayPaymentController
+  '/vnpay/create-payment',
+  paymentController.createVNPayPaymentController,
 );
 
 router.get('/vnpay/return', paymentController.retrunVNPayController);
