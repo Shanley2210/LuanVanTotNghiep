@@ -1,7 +1,7 @@
 const cron = require('node-cron');
 const moment = require('moment');
 const { Op } = require('sequelize');
-const db = require('../models'); 
+const db = require('../models');
 
 const runReminderJob = () => {
     cron.schedule('*/10 * * * *', async () => {
@@ -9,14 +9,14 @@ const runReminderJob = () => {
             const now = moment();
             console.log(
                 `[CronJob] Bắt đầu quét nhắc hẹn lúc: ${now.format(
-                    'YYYY-MM-DD HH:mm:ss'
-                )}`
+                    'YYYY-MM-DD HH:mm:ss',
+                )}`,
             );
 
             const appointments = await db.Appointment.findAll({
                 where: {
                     status: 'confirmed',
-                    [Op.or]: [{ isRemind24h: false }, { isRemind2h: false }]
+                    [Op.or]: [{ isRemind24h: false }, { isRemind2h: false }],
                 },
                 include: [
                     {
@@ -25,9 +25,9 @@ const runReminderJob = () => {
                         required: true,
                         where: {
                             startTime: {
-                                [Op.gt]: now.toDate()
-                            }
-                        }
+                                [Op.gt]: now.toDate(),
+                            },
+                        },
                     },
                     {
                         model: db.Doctor,
@@ -37,11 +37,11 @@ const runReminderJob = () => {
                             {
                                 model: db.User,
                                 as: 'user',
-                                attributes: ['id', 'name', 'email', 'phone']
-                            }
-                        ]
-                    }
-                ]
+                                attributes: ['id', 'name', 'email', 'phone'],
+                            },
+                        ],
+                    },
+                ],
             });
 
             if (appointments.length === 0) {
@@ -79,14 +79,13 @@ const runReminderJob = () => {
                         appt.patientEmail,
                         subject,
                         'Bạn có lịch khám vào ngày mai',
-                        htmlContent
+                        htmlContent,
                     );
 
-                    // Cập nhật trạng thái
                     appt.isRemind24h = true;
                     await appt.save();
                     console.log(
-                        `-> Đã gửi reminder 24h cho Appointment ID: ${appt.id}`
+                        `-> Đã gửi reminder 24h cho Appointment ID: ${appt.id}`,
                     );
                 }
 
@@ -107,13 +106,13 @@ const runReminderJob = () => {
                         appt.patientEmail,
                         subject,
                         'Lịch khám của bạn sắp diễn ra',
-                        htmlContent
+                        htmlContent,
                     );
 
                     appt.isRemind2h = true;
                     await appt.save();
                     console.log(
-                        `-> Đã gửi reminder 2h cho Appointment ID: ${appt.id}`
+                        `-> Đã gửi reminder 2h cho Appointment ID: ${appt.id}`,
                     );
                 }
             }
@@ -123,4 +122,43 @@ const runReminderJob = () => {
     });
 };
 
-module.exports = runReminderJob;
+const runAutoCancelJob = () => {
+    cron.schedule('*/10 * * * *', async () => {
+        try {
+            const now = moment();
+            const twoHoursAgo = moment().subtract(2, 'hours').toDate();
+
+            console.log(
+                `[CronJob] Quét lịch Pending quá hạn (UpdatedAt <= ${moment(
+                    twoHoursAgo,
+                ).format('HH:mm:ss')})`,
+            );
+
+            const appointments = await db.Appointment.findAll({
+                where: {
+                    status: 'pending',
+                    updatedAt: {
+                        [Op.lte]: twoHoursAgo,
+                    },
+                },
+            });
+
+            if (appointments.length === 0) {
+                return;
+            }
+
+            for (const appt of appointments) {
+                appt.status = 'cancelled';
+                await appt.save();
+
+                console.log(
+                    `-> Đã tự động hủy Appointment ID: ${appt.id} (Pending quá 2h)`,
+                );
+            }
+        } catch (error) {
+            console.error('[CronJob Error] Lỗi khi hủy lịch pending:', error);
+        }
+    });
+};
+
+module.exports = { runReminderJob, runAutoCancelJob };

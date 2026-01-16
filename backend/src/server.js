@@ -4,6 +4,7 @@ const { connectDB } = require('./config/connectdb');
 const initWebRoutes = require('./routes/web');
 const path = require('path');
 const cors = require('cors');
+const { runAutoCancelJob, runReminderJob } = require('./jobs/reminderJob');
 
 dotenv.config();
 
@@ -16,6 +17,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(uploadsDir));
 
 initWebRoutes(app);
+runAutoCancelJob();
+runReminderJob();
 
 const startServer = async () => {
     try {

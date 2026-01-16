@@ -20,7 +20,7 @@ import {
 import { useAppDispatch, useAppSelector } from '@/shared/stores/hooks';
 import { useContext, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AiOutlineHome } from 'react-icons/ai';
+import { AiOutlineHome, AiOutlineInfoCircle } from 'react-icons/ai';
 import { FiClock } from 'react-icons/fi';
 import { IoIosArrowForward } from 'react-icons/io';
 import {
@@ -193,17 +193,12 @@ export default function PatientAppointment() {
         }
     };
 
-    // --- LOGIC THANH TOÁN MỚI ---
     const handlePaymentDeposit = async (item: any) => {
         try {
-            // 1. Lấy giá trị deposit (yêu cầu) và deposited (đã trả)
             const requiredDeposit = Number(item.deposit || 0);
             const paidDeposit = Number(item.deposited || 0);
-
-            // 2. Tính số tiền cần thanh toán thêm
             const amountToPay = requiredDeposit - paidDeposit;
 
-            // Kiểm tra an toàn
             if (amountToPay <= 0) {
                 toast.warning(
                     currentLang === 'vi'
@@ -215,7 +210,7 @@ export default function PatientAppointment() {
 
             const paymentData = {
                 appointmentId: item.id,
-                amount: amountToPay.toString(), // Chỉ gửi số tiền còn thiếu
+                amount: amountToPay.toString(),
                 description:
                     currentLang === 'vi'
                         ? 'Thanh toán tiền cọc'
@@ -317,9 +312,26 @@ export default function PatientAppointment() {
                             className='p-5 flex flex-col gap-4'
                             key={activeTab}
                         >
+                            {activeTab === 'upcoming' && (
+                                <div
+                                    className={`p-3 border-l-4 rounded-r-md flex items-center gap-3 text-sm
+                                    ${
+                                        isDark
+                                            ? 'bg-yellow-900/20 border-yellow-500 text-yellow-300'
+                                            : 'bg-yellow-50 border-yellow-500 text-yellow-800'
+                                    }`}
+                                >
+                                    <AiOutlineInfoCircle className='text-xl min-w-5' />
+                                    <span>
+                                        {currentLang === 'vi'
+                                            ? 'Lưu ý: Vui lòng thanh toán tiền cọc trong vòng 2 giờ kể từ khi đặt lịch. Nếu quá thời hạn, hệ thống sẽ tự động hủy lịch hẹn.'
+                                            : 'Note: Please pay the deposit within 2 hours of booking. If overdue, the system will automatically cancel the appointment.'}
+                                    </span>
+                                </div>
+                            )}
+
                             {filteredList.length > 0 ? (
                                 filteredList.map((item: any) => {
-                                    // TÍNH TOÁN LOGIC HIỂN THỊ
                                     const requiredDeposit = Number(
                                         item.deposit || 0
                                     );
@@ -437,15 +449,13 @@ export default function PatientAppointment() {
                                                 </span>
                                             </div>
 
-                                            {/* 4. Cột Tiền cọc & Trạng thái (ĐÃ SỬA) */}
+                                            {/* 4. Cột Tiền cọc */}
                                             <div className='lg:col-span-2 flex flex-col items-start lg:items-center'>
                                                 <span className='text-xs text-gray-400 uppercase'>
                                                     {t(
                                                         'patientAppointment.labelDeposit'
                                                     )}
                                                 </span>
-
-                                                {/* Hiển thị: Đã cọc / Yêu cầu */}
                                                 <div className='flex flex-col items-start lg:items-center'>
                                                     <span className='font-medium text-green-600 text-sm'>
                                                         {formatCurrency(
@@ -479,9 +489,8 @@ export default function PatientAppointment() {
                                                 </span>
                                             </div>
 
-                                            {/* 5. Cột Thanh toán/Hành động (ĐÃ SỬA) */}
+                                            {/* 5. Cột Thanh toán/Hành động */}
                                             <div className='lg:col-span-2 flex items-center justify-start lg:justify-end'>
-                                                {/* Logic hiển thị nút thanh toán: Status pending VÀ chưa cọc đủ */}
                                                 {item.status === 'pending' &&
                                                 !isDepositEnough ? (
                                                     <Button
@@ -492,7 +501,6 @@ export default function PatientAppointment() {
                                                             )
                                                         }
                                                     >
-                                                        {/* Hiển thị số tiền cần thanh toán trên nút */}
                                                         {currentLang === 'vi'
                                                             ? `Cọc ${formatCurrency(
                                                                   amountNeeded
@@ -520,7 +528,6 @@ export default function PatientAppointment() {
                                                     </Button>
                                                 ) : (
                                                     <div className='h-8 w-full flex items-center justify-end'>
-                                                        {/* Thông báo nếu đã đủ cọc ở trạng thái pending */}
                                                         {item.status ===
                                                             'pending' &&
                                                             isDepositEnough && (
@@ -547,7 +554,6 @@ export default function PatientAppointment() {
                 </div>
             </div>
 
-            {/* Dialog Chi Tiết */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent
                     className={`
@@ -766,14 +772,12 @@ export default function PatientAppointment() {
                                             )}
                                         </span>
                                     </p>
-
-                                    {/* Cập nhật hiển thị chi tiết phần tiền cọc trong modal */}
                                     <p>
                                         <span className='font-medium'>
                                             {t(
                                                 'patientAppointment.labelDeposit'
-                                            )}
-                                            {' (Yêu cầu)'}
+                                            )}{' '}
+                                            (Yêu cầu)
                                         </span>{' '}
                                         {formatCurrency(
                                             selectedAppointment.deposit
