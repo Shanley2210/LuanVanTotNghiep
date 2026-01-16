@@ -8,7 +8,7 @@ router.get(
     '/appointments',
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Receptionist'),
-    receptionistController.getNewAppointmentsController
+    receptionistController.getNewAppointmentsController,
 );
 
 router.put(
@@ -16,7 +16,7 @@ router.put(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Receptionist'),
     authMiddleware.verifyPermission('comfirm_appointment'),
-    receptionistController.confirmAppointmentController
+    receptionistController.confirmAppointmentController,
 );
 
 router.post(
@@ -24,7 +24,21 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Receptionist'),
     authMiddleware.verifyPermission('comfirm_appointment'),
-    receptionistController.checkInController
+    receptionistController.checkInController,
+);
+
+router.post(
+    '/appointments',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Receptionist'),
+    receptionistController.createAppointmentByReceptionistController,
+);
+
+router.put(
+    '/appointments/:id',
+    authMiddleware.verifyToken,
+    authMiddleware.verifyRole('Receptionist'),
+    receptionistController.updateAppointmentByReceptionistController,
 );
 
 module.exports = router;

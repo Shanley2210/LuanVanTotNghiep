@@ -208,7 +208,6 @@ export const doctorsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            // --- Fetch All Doctors ---
             .addCase(fetchDoctors.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -233,8 +232,6 @@ export const doctorsSlice = createSlice({
                 state.totalDoctors = 0;
                 state.error = action.payload || 'Server error occurred';
             })
-
-            // --- Fetch Doctors By Service ---
             .addCase(fetchDoctorsByService.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -262,8 +259,6 @@ export const doctorsSlice = createSlice({
                 state.totalDoctors = 0;
                 state.error = action.payload || 'Server error occurred';
             })
-
-            // --- Fetch Doctors By Specialty ---
             .addCase(fetchDoctorsBySpecialty.pending, (state) => {
                 state.loading = true;
                 state.error = null;

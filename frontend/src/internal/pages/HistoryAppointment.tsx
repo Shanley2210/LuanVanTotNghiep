@@ -10,6 +10,8 @@ import dayjs from 'dayjs';
 import { useContext, useEffect, useState } from 'react';
 import Pagination from '../components/Pagination';
 import { useTranslation } from 'react-i18next';
+import { CiEdit } from 'react-icons/ci';
+import EditAppointmentModal from '../components/EditAppointmentModal';
 
 const GROUP_KEY = 'history_appointments';
 
@@ -35,12 +37,30 @@ export default function HistoryAppointment() {
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
 
+    // 2. Thêm State quản lý Modal và Dữ liệu dòng đang chọn
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+
     const handlePageSizeChange = (value: string) => {
         setPageSize(Number(value));
         setCurrentPage(1);
     };
 
+    // Hàm reload lại dữ liệu (dùng cho prop onSuccess của Modal)
+    const handleRefreshData = () => {
+        dispatch(
+            fetchReceptionistAppointments({
+                page: currentPage,
+                limit: pageSize,
+                status: undefined,
+                date: undefined,
+                groupKey: GROUP_KEY
+            })
+        );
+    };
+
     const columns = [
+        // ... (Giữ nguyên các cột khác)
         {
             title: t('repHistory.colId'),
             dataIndex: 'id',
@@ -152,7 +172,6 @@ export default function HistoryAppointment() {
             render: (status: string) => {
                 let color = 'default';
                 let text = status;
-
                 switch (status) {
                     case 'pending':
                         color = 'yellow';
@@ -185,6 +204,32 @@ export default function HistoryAppointment() {
                 }
                 return <Tag color={color}>{text}</Tag>;
             }
+        },
+        {
+            title: t('repHistory.colAction'),
+            key: 'action',
+            align: 'center' as const,
+            render: (_: any, app: IAppointment) => {
+                const allowEdit = [
+                    'pending',
+                    'deposited',
+                    'confirmed'
+                ].includes(app.status);
+
+                if (allowEdit) {
+                    return (
+                        <CiEdit
+                            className='text-yellow-500 cursor-pointer text-2xl'
+                            // 3. Cập nhật sự kiện Click: Lưu record và mở modal
+                            onClick={() => {
+                                setSelectedAppointment(app);
+                                setIsEditModalOpen(true);
+                            }}
+                        />
+                    );
+                }
+                return null;
+            }
         }
     ];
 
@@ -211,6 +256,7 @@ export default function HistoryAppointment() {
             </div>
 
             <div className={`p-10 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
+                {/* ... (Phần Select Page Size giữ nguyên) ... */}
                 <div className='flex gap-5 mb-5'>
                     <Select
                         defaultValue={pageSize.toString()}
@@ -252,6 +298,20 @@ export default function HistoryAppointment() {
                     />
                 </div>
             </div>
+
+            {/* 4. Render Modal ở đây */}
+            {/* Kiểm tra selectedAppointment có dữ liệu thì mới render modal để đảm bảo useEffect trong modal chạy đúng */}
+            {selectedAppointment && (
+                <EditAppointmentModal
+                    open={isEditModalOpen}
+                    appointmentData={selectedAppointment}
+                    onCancel={() => {
+                        setIsEditModalOpen(false);
+                        setSelectedAppointment(null); // Reset dữ liệu khi đóng
+                    }}
+                    onSuccess={handleRefreshData}
+                />
+            )}
         </div>
     );
 }

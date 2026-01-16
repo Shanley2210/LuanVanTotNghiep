@@ -23,3 +23,16 @@ export const confirmAppointment = async (id: number) => {
 export const checkInAppointment = async (id: number) => {
     return await api.post(`/receptionist/appointments/checkin/${id}`);
 };
+
+export const createAppointmentByReceptionist = async (
+    data: Record<string, any>
+) => {
+    return await api.post(`/receptionist/appointments`, data);
+};
+
+export const updateAppointmentByReceptionist = async (
+    id: number,
+    data: Record<string, any>
+) => {
+    return await api.put(`/receptionist/appointments/${id}`, data);
+};

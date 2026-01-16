@@ -179,7 +179,6 @@ export default function DoctorExam() {
 
   return (
     <div className='m-5 h-screen flex flex-col gap-5'>
-      {/* Header */}
       <div className='flex justify-between items-end border-b border-gray-300 pb-4'>
         <div>
           <div
@@ -231,7 +230,6 @@ export default function DoctorExam() {
 
       <div className='flex-1 overflow-y-auto'>
         <div className='grid grid-cols-12 gap-6 pb-10'>
-          {/* Cột trái */}
           <div className='col-span-12 md:col-span-4 space-y-6'>
             <div
               className={`p-4 shadow-sm border ${
@@ -315,7 +313,6 @@ export default function DoctorExam() {
             </div>
           </div>
 
-          {/* Cột phải: Form SOAP & Đơn thuốc */}
           <div className='col-span-12 md:col-span-8 flex flex-col gap-4'>
             <div
               className={`shadow-sm border flex-1 flex flex-col overflow-hidden ${
@@ -332,7 +329,6 @@ export default function DoctorExam() {
               </div>
 
               <div className='p-6 grid grid-cols-2 gap-6 flex-1'>
-                {/* S - Subjective */}
                 <div className='col-span-2 md:col-span-1'>
                   <label className='block text-sm font-bold text-blue-700 mb-2'>
                     {t('doctorExam.labelS')}
@@ -346,7 +342,6 @@ export default function DoctorExam() {
                   />
                 </div>
 
-                {/* O - Objective */}
                 <div className='col-span-2 md:col-span-1'>
                   <label className='block text-sm font-bold text-blue-700 mb-2'>
                     {t('doctorExam.labelO')}
@@ -360,7 +355,6 @@ export default function DoctorExam() {
                   />
                 </div>
 
-                {/* A - Assessment */}
                 <div className='col-span-2'>
                   <label className='block text-sm font-bold text-blue-700 mb-2'>
                     {t('doctorExam.labelA')}
@@ -373,7 +367,6 @@ export default function DoctorExam() {
                   />
                 </div>
 
-                {/* P - Plan */}
                 <div className='col-span-2'>
                   <label className='block text-sm font-bold text-blue-700 mb-2'>
                     {t('doctorExam.labelP')}
@@ -387,10 +380,8 @@ export default function DoctorExam() {
                   />
                 </div>
 
-                {/* Kê đơn & Hẹn lịch */}
                 <div className='col-span-2 border-t border-gray-200 my-2'></div>
 
-                {/* Prescription */}
                 <div className='col-span-2 md:col-span-1'>
                   <label className='text-sm font-bold text-green-700 mb-2 flex items-center gap-2'>
                     <Pill size={16} /> {t('doctorExam.labelPrescription')}
@@ -404,7 +395,6 @@ export default function DoctorExam() {
                   />
                 </div>
 
-                {/* Re-exam Date */}
                 <div className='col-span-2 md:col-span-1'>
                   <label className='text-sm font-bold text-purple-700 mb-2 flex items-center gap-2'>
                     <CalendarClock size={16} /> {t('doctorExam.labelReExam')}
