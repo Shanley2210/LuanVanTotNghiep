@@ -17,9 +17,9 @@
     },
     "production": {
         "username": "root",
-        "password": "GKBOXzvkEzOPewvfJZdSuKhDuFjUBtWf",
+        "password": "GbUXGCUeJDOxIaRTztWPbCGRuRoEHQSQ",
         "database": "railway",
-        "host": "mysql-wwuc.railway.internal",
+        "host": "mysql.railway.internal",
         "dialect": "mysql"
     }
 }
