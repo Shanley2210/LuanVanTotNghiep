@@ -2,11 +2,14 @@ const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS
-    }
+        pass: process.env.MAIL_PASS,
+    },
+    connectionTimeout: 10000,
 });
 
 /**
@@ -24,18 +27,17 @@ const sendMail = async (to, subject, text, html) => {
             to: to,
             subject: subject,
             text: text,
-            html: html || text
+            html: html || text,
         };
 
         const info = await transporter.sendMail(mailOptions);
         console.log(
-            `Email đã gửi thành công đến: ${to}. Message ID: ${info.messageId}`
+            `Email đã gửi thành công đến: ${to}. Message ID: ${info.messageId}`,
         );
         return info;
     } catch (error) {
         console.error(`Lỗi khi gửi email đến ${to}:`, error);
-
-        throw new Error('Không thể gửi email. Vui lòng thử lại.');
+        throw error;
     }
 };
 
