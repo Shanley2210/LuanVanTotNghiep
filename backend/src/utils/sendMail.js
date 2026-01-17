@@ -1,47 +1,55 @@
-const nodemailer = require('nodemailer');
 require('dotenv').config();
 
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 2525, // ĐỔI TỪ 587 SANG 2525
-    secure: false, // Port 2525 vẫn dùng secure: false
-    auth: {
-        user: process.env.MAIL_USER,
-        pass: process.env.MAIL_PASS,
-    },
-    // Thêm log để soi lỗi nếu vẫn bị treo
-    logger: true,
-    debug: true,
-});
-
+// Hàm gửi mail dùng Brevo API (HTTP) thay vì SMTP
 const sendMail = async (to, subject, text, html) => {
     try {
-        const mailOptions = {
-            from: `"Hệ thống Đặt lịch" <${process.env.MAIL_USER}>`,
-            to: to,
-            subject: subject,
-            text: text,
-            html: html || text,
+        const url = 'https://api.brevo.com/v3/smtp/email';
+
+        const options = {
+            method: 'POST',
+            headers: {
+                accept: 'application/json',
+                'api-key': process.env.MAIL_PASS, // Dùng API Key (xkeysib-...)
+                'content-type': 'application/json',
+            },
+            body: JSON.stringify({
+                sender: {
+                    name: 'Hệ thống Đặt lịch',
+                    email: process.env.MAIL_USER, // Email đã verify trong Brevo
+                },
+                to: [
+                    {
+                        email: to,
+                    },
+                ],
+                subject: subject,
+                htmlContent: html || text,
+                textContent: text,
+            }),
         };
 
-        // Thêm timeout cứng ở mức code (10 giây) để không đợi mãi
-        const info = await new Promise((resolve, reject) => {
-            transporter.sendMail(mailOptions, (err, info) => {
-                if (err) reject(err);
-                else resolve(info);
-            });
-            // Hủy nếu quá 10s
-            setTimeout(
-                () => reject(new Error('Timeout: Email server không phản hồi')),
-                100000,
-            );
-        });
+        const response = await fetch(url, options);
 
-        console.log(`Email sent via Brevo: ${info.messageId}`);
-        return info;
+        // Kiểm tra nếu API trả về lỗi
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error(
+                'Brevo API Error Details:',
+                JSON.stringify(errorData),
+            );
+            throw new Error(
+                `Lỗi API Brevo: ${response.status} - ${errorData.message}`,
+            );
+        }
+
+        const data = await response.json();
+        console.log(
+            `Email đã gửi thành công qua API. MessageId: ${data.messageId}`,
+        );
+        return data;
     } catch (error) {
-        console.error(`Brevo Send Error:`, error);
-        throw error;
+        console.error('Lỗi gửi email:', error.message);
+        throw error; // Ném lỗi để controller xử lý tiếp
     }
 };
 
