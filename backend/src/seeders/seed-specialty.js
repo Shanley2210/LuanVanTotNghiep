@@ -32,23 +32,6 @@ module.exports = {
                 updatedAt: new Date()
             },
             {
-                name: 'Da liễu',
-                description:
-                    'Chẩn đoán và điều trị các bệnh lý về da, tóc và móng.',
-                image: '/uploads/specialties/derma.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Tai mũi họng',
-                description: 'TMH.',
-                image: '/uploads/specialties/ent.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
                 name: 'Mắt',
                 description:
                     'Chẩn đoán và điều trị các bệnh lý về mắt và thị lực.',
@@ -61,15 +44,6 @@ module.exports = {
                 name: 'Nha khoa',
                 description: 'Chăm sóc và điều trị các bệnh lý của răng',
                 image: '/uploads/specialties/dental.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Sản phụ khoa',
-                description:
-                    'Chăm sóc thai kỳ, sinh nở và các bệnh lý của hệ sinh sản nữ giới.',
-                image: '/uploads/specialties/gyne.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -88,14 +62,6 @@ module.exports = {
                 description:
                     'Chẩn đoán và điều trị các rối loạn nội tiết và chuyển hóa (như tiểu đường, tuyến giáp).',
                 image: '/uploads/specialties/endo.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Ung bướu',
-                description: 'Chẩn đoán và điều trị các loại ung thư.',
-                image: '/uploads/specialties/onco.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -128,42 +94,6 @@ module.exports = {
                 updatedAt: new Date()
             },
             {
-                name: 'Thận tiết niệu',
-                description:
-                    'Thận học chuyên về bệnh lý thận, Tiết niệu chuyên về hệ thống tiết niệu nam và nữ, và hệ sinh sản nam.',
-                image: '/uploads/specialties/nephro.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Huyết học',
-                description:
-                    'Chẩn đoán và điều trị các bệnh lý về máu và cơ quan tạo máu.',
-                image: '/uploads/specialties/hema.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Phục hồi',
-                description:
-                    'Giúp bệnh nhân phục hồi chức năng sau chấn thương hoặc bệnh lý.',
-                image: '/uploads/specialties/rehab.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Phẫu thuật tạo hình',
-                description:
-                    'Phẫu thuật tái tạo hoặc chỉnh sửa hình dạng cơ thể và chức năng.',
-                image: '/uploads/specialties/plastic.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
                 name: 'Thần kinh',
                 description:
                     'Chẩn đoán và điều trị các bệnh lý của hệ thần kinh (não, tủy sống, dây thần kinh).',
@@ -177,14 +107,6 @@ module.exports = {
                 description:
                     'Chẩn đoán và điều trị các bệnh lý của hệ tiêu hóa (thực quản, dạ dày, ruột, gan, tụy).',
                 image: '/uploads/specialties/gastro.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Ngoại khoa',
-                description: 'Điều trị bệnh lý bằng phương pháp phẫu thuật.',
-                image: '/uploads/specialties/surg.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -212,15 +134,6 @@ module.exports = {
                 description:
                     'Chẩn đoán và điều trị các rối loạn sức khỏe tâm thần.',
                 image: '/uploads/specialties/mental.webp',
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            },
-            {
-                name: 'Gây mê hồi sức',
-                description:
-                    'Quản lý đau, gây mê/tỉnh trong phẫu thuật và chăm sóc bệnh nhân trong tình trạng nguy kịch (Hồi sức tích cực)..',
-                image: '/uploads/specialties/anes.webp',
                 status: 'active',
                 createdAt: new Date(),
                 updatedAt: new Date()
