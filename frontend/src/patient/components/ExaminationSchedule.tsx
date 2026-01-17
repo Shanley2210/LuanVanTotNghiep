@@ -54,6 +54,7 @@ export default function ExaminationSchedule({
 }: ExaminationScheduleProps) {
     const { isDark } = useContext(ThemeContext);
 
+    // Helper function: Format date to YYYY-MM-DD using Local Time (Not UTC)
     const formatDateToLocal = (date: Date) => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -99,14 +100,14 @@ export default function ExaminationSchedule({
         }
     };
 
+    // --- SỬA ĐỔI QUAN TRỌNG 1: Hàm hiển thị giờ ---
+    // Dùng getUTCHours để lấy chính xác số 08 từ "08:00Z" thay vì bị cộng thành 15:00
     const formatTime = (isoString: string) => {
         if (!isoString) return '';
         const date = new Date(isoString);
-        return new Intl.DateTimeFormat('vi-VN', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        }).format(date);
+        const hours = date.getUTCHours().toString().padStart(2, '0');
+        const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+        return `${hours}:${minutes}`;
     };
 
     const handleBooking = (slot: ScheduleSlot) => {
@@ -150,7 +151,6 @@ export default function ExaminationSchedule({
         for (let i = 1; i <= 7; i++) {
             const d = new Date(today);
             d.setDate(today.getDate() + i);
-            // FIX: Use local formatter instead of toISOString
             arr.push(formatDateToLocal(d));
         }
 
@@ -168,6 +168,7 @@ export default function ExaminationSchedule({
             });
     }, [selectedDate, doctorId]);
 
+    // --- SỬA ĐỔI QUAN TRỌNG 2: Logic phân chia Buổi (Sáng/Chiều/Tối) ---
     const groupedSlots = useMemo(() => {
         const groups = {
             morning: [] as ScheduleSlot[],
@@ -177,9 +178,11 @@ export default function ExaminationSchedule({
 
         slotData.forEach((slot) => {
             const date = new Date(slot.startTime);
-            const hour = date.getHours();
+            // Dùng getUTCHours() để lấy số 8 (sáng) thay vì getHours() ra 15 (chiều)
+            const hour = date.getUTCHours();
 
-            if (hour >= 8 && hour <= 12) {
+            if (hour >= 0 && hour <= 12) {
+                // Mở rộng range sáng một chút nếu cần
                 groups.morning.push(slot);
             } else if (hour >= 13 && hour <= 17) {
                 groups.afternoon.push(slot);
@@ -211,13 +214,13 @@ export default function ExaminationSchedule({
                                     if (isAvailable) handleBooking(slot);
                                 }}
                                 className={`
-                                                    px-4 py-2 text-sm text-center transition-all duration-200 font-medium
-                                                    ${
-                                                        isAvailable
-                                                            ? 'cursor-pointer border border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white shadow-sm'
-                                                            : 'cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400'
-                                                    }
-                                                `}
+                            px-4 py-2 text-sm text-center transition-all duration-200 font-medium
+                            ${
+                                isAvailable
+                                    ? 'cursor-pointer border border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white shadow-sm'
+                                    : 'cursor-not-allowed border border-gray-200 bg-gray-100 text-gray-400'
+                            }
+                        `}
                             >
                                 {formatTime(slot.startTime)} -{' '}
                                 {formatTime(slot.endTime)}
@@ -232,9 +235,9 @@ export default function ExaminationSchedule({
     return (
         <div
             className={`
-                flex flex-col px-4 w-full py-5 my-5 border border-gray-200 shadow-sm
-                ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'}
-            `}
+            flex flex-col px-4 w-full py-5 my-5 border border-gray-200 shadow-sm
+            ${isDark ? 'bg-gray-900 text-white' : 'bg-white text-black'}
+        `}
         >
             <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6'>
                 <Select
