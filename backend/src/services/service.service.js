@@ -1,17 +1,30 @@
+const { Op } = require('sequelize');
 const db = require('../models');
 
-const getServiceService = (page, limit) => {
+const getServiceService = (page, limit, q) => {
     return new Promise(async (resolve, reject) => {
         try {
             const offset = (page - 1) * limit;
 
-            const { count, rows } = await db.Service.findAndCountAll({
+            // Cấu hình query mặc định
+            let options = {
                 offset: offset,
                 limit: limit,
-                order: [['createdAt', 'DESC']]
-            });
+                order: [['createdAt', 'DESC']],
+                where: {} // Điều kiện lọc
+            };
 
-            if (!rows || rows.length === 0) {
+            // Nếu có từ khóa tìm kiếm -> Thêm điều kiện LIKE theo tên dịch vụ
+            if (q) {
+                options.where.name = {
+                    [Op.like]: `%${q.trim()}%`
+                };
+            }
+
+            const { count, rows } = await db.Service.findAndCountAll(options);
+
+            // Xử lý khi không có dữ liệu (trả về mảng rỗng chuẩn format)
+            if (!rows) {
                 return resolve({
                     errCode: 0,
                     message: 'No services found',

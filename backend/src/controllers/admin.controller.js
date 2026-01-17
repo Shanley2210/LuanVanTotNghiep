@@ -9,7 +9,7 @@ const createHopistalAdminController = async (req, res) => {
         if (!name || !email || !phone || !password || !confirmPassword) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
@@ -18,7 +18,7 @@ const createHopistalAdminController = async (req, res) => {
             email,
             phone,
             password,
-            confirmPassword
+            confirmPassword,
         );
 
         return res.status(200).json(response);
@@ -26,7 +26,7 @@ const createHopistalAdminController = async (req, res) => {
         console.log('Error in createHopistalAdmin:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -40,7 +40,7 @@ const getRolesController = async (req, res) => {
         console.log('Error in getRoles:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -52,13 +52,13 @@ const createRoleController = async (req, res) => {
         if (!name || !description) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const response = await adminService.createRoleService(
             name,
-            description
+            description,
         );
 
         return res.status(200).json(response);
@@ -66,7 +66,7 @@ const createRoleController = async (req, res) => {
         console.log('Error in createRole:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -78,7 +78,7 @@ const deleteRoleController = async (req, res) => {
         if (!roleId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
@@ -90,7 +90,7 @@ const deleteRoleController = async (req, res) => {
         console.log('Error in deleteRole:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -104,7 +104,7 @@ const getPermissionsController = async (req, res) => {
         console.log('Error in getPermissions:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -116,13 +116,13 @@ const createPermissionController = async (req, res) => {
         if (!name || !description) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const response = await adminService.createPermissionService(
             name,
-            description
+            description,
         );
 
         return res.status(200).json(response);
@@ -130,7 +130,7 @@ const createPermissionController = async (req, res) => {
         console.log('Error in createPermission:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -142,20 +142,19 @@ const deletePermissionController = async (req, res) => {
         if (!permissionId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
-        const response = await adminService.deletePermissionService(
-            permissionId
-        );
+        const response =
+            await adminService.deletePermissionService(permissionId);
 
         return res.status(200).json(response);
     } catch (e) {
         console.log('Error in deletePermission:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -169,7 +168,7 @@ const getUserPermissionController = async (req, res) => {
         console.log('Error in getUserPermission:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -181,13 +180,13 @@ const createUserPermissionController = async (req, res) => {
         if (!userId || !permissionId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const respone = await adminService.createUserPermissionService(
             userId,
-            permissionId
+            permissionId,
         );
 
         return res.status(200).json(respone);
@@ -195,7 +194,7 @@ const createUserPermissionController = async (req, res) => {
         console.log('Error in createUserPermission:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -208,20 +207,20 @@ const deleteUserPermissionController = async (req, res) => {
         if (!userId || !permissionId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const respone = await adminService.deleteUserPermissionService(
             userId,
-            permissionId
+            permissionId,
         );
 
         return res.status(200).json(respone);
     } catch (e) {
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -246,7 +245,7 @@ const getUserByIdController = async (req, res) => {
         if (!userId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
@@ -257,7 +256,7 @@ const getUserByIdController = async (req, res) => {
         console.log('Error in getUserById:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -269,7 +268,7 @@ const deleteUserController = async (req, res) => {
         if (!delId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
@@ -280,7 +279,7 @@ const deleteUserController = async (req, res) => {
         console.log('Error in deleteUser:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -295,21 +294,21 @@ const createDoctorController = async (req, res) => {
                     if (err)
                         console.error(
                             'Failed to cleanup uploaded file on error:',
-                            err
+                            err,
                         );
                 });
             }
 
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         if (!req.file) {
             return res.status(200).json({
                 errCode: 2,
-                errMessage: 'Missing required image'
+                errMessage: 'Missing required image',
             });
         }
 
@@ -317,12 +316,12 @@ const createDoctorController = async (req, res) => {
 
         const response = await adminService.createDoctorService(
             req.body,
-            imageFilename
+            imageFilename,
         );
 
         if (response.errCode !== 0) {
             fs.unlinkSync(
-                path.join(__dirname, '../uploads/doctors', imageFilename)
+                path.join(__dirname, '../uploads/doctors', imageFilename),
             );
         }
 
@@ -332,13 +331,13 @@ const createDoctorController = async (req, res) => {
         if (e.code === 'LIMIT_FILE_SIZE') {
             return res.status(200).json({
                 errCode: -2,
-                errMessage: 'File size exceeds the limit'
+                errMessage: 'File size exceeds the limit',
             });
         }
 
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -352,14 +351,14 @@ const updateDoctorController = async (req, res) => {
         if (!userId || !data) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const response = await adminService.updateDoctorService(
             userId,
             data,
-            imageFile
+            imageFile,
         );
 
         if (imageFile && response.errCode !== 0) {
@@ -371,7 +370,7 @@ const updateDoctorController = async (req, res) => {
         console.log('Error in updateDoctor:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -386,7 +385,7 @@ const createReceptionistController = async (req, res) => {
                     if (err)
                         console.error(
                             'Failed to cleanup uploaded file on error:',
-                            err
+                            err,
                         );
                 });
             }
@@ -394,7 +393,7 @@ const createReceptionistController = async (req, res) => {
             return res.status(200).json({
                 errCode: 1,
                 errEnMessage: 'Missing required parameters',
-                errViMessage: 'Thiếu tham số bắt buộc'
+                errViMessage: 'Thiếu tham số bắt buộc',
             });
         }
 
@@ -402,7 +401,7 @@ const createReceptionistController = async (req, res) => {
             return res.status(200).json({
                 errCode: 2,
                 errEnMessage: 'Missing required image',
-                errViMessage: 'Thiếu hình ảnh bắt buộc'
+                errViMessage: 'Thiếu hình ảnh bắt buộc',
             });
         }
 
@@ -410,12 +409,12 @@ const createReceptionistController = async (req, res) => {
 
         const response = await adminService.createReceptionistService(
             req.body,
-            imageFilename
+            imageFilename,
         );
 
         if (response.errCode !== 0) {
             fs.unlinkSync(
-                path.join(__dirname, '../uploads/receptionists', imageFilename)
+                path.join(__dirname, '../uploads/receptionists', imageFilename),
             );
         }
 
@@ -425,13 +424,13 @@ const createReceptionistController = async (req, res) => {
         if (e.code === 'LIMIT_FILE_SIZE') {
             return res.status(200).json({
                 errCode: -2,
-                errMessage: 'File size exceeds the limit'
+                errMessage: 'File size exceeds the limit',
             });
         }
 
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -446,14 +445,14 @@ const updatereceptionistController = async (req, res) => {
             return res.status(200).json({
                 errCode: 1,
                 errEnMessage: 'Missing required parameters',
-                errViMessage: 'Thiếu tham số bắt buộc'
+                errViMessage: 'Thiếu tham số bắt buộc',
             });
         }
 
         const response = await adminService.updatereceptionistService(
             userId,
             data,
-            imageFile
+            imageFile,
         );
 
         if (imageFile && response.errCode !== 0) {
@@ -464,7 +463,7 @@ const updatereceptionistController = async (req, res) => {
         console.log('Error in updateReceptionist:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -479,14 +478,14 @@ const createSpecialtyController = async (req, res) => {
                     if (err)
                         console.error(
                             'Failed to cleanup uploaded file on error:',
-                            err
+                            err,
                         );
                 });
             }
             return res.status(200).json({
                 errCode: 1,
                 errEnMessage: 'Missing required parameters',
-                errViMessage: 'Thiếu tham số bắt buộc'
+                errViMessage: 'Thiếu tham số bắt buộc',
             });
         }
 
@@ -494,7 +493,7 @@ const createSpecialtyController = async (req, res) => {
             return res.status(200).json({
                 errCode: 2,
                 errEnMessage: 'Missing required image',
-                errViMessage: 'Thiếu hình ảnh bắt buộc'
+                errViMessage: 'Thiếu hình ảnh bắt buộc',
             });
         }
 
@@ -504,12 +503,12 @@ const createSpecialtyController = async (req, res) => {
             name,
             description,
             imageFilename,
-            status
+            status,
         );
 
         if (response.errCode !== 0) {
             fs.unlinkSync(
-                path.join(__dirname, '../uploads/specialties', imageFilename)
+                path.join(__dirname, '../uploads/specialties', imageFilename),
             );
         }
 
@@ -519,12 +518,12 @@ const createSpecialtyController = async (req, res) => {
         if (e.code === 'LIMIT_FILE_SIZE') {
             return res.status(200).json({
                 errCode: -2,
-                errMessage: 'File size exceeds the limit'
+                errMessage: 'File size exceeds the limit',
             });
         }
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -538,14 +537,14 @@ const updateSpecialtyController = async (req, res) => {
         if (!specialtyId || !data) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const response = await adminService.updateSpecialtyService(
             specialtyId,
             data,
-            imageFile
+            imageFile,
         );
 
         return res.status(200).json(response);
@@ -553,7 +552,7 @@ const updateSpecialtyController = async (req, res) => {
         console.log('Error in updateSpecialty:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -566,7 +565,7 @@ const deleteSpecialtyController = async (req, res) => {
             return res.status(200).json({
                 errCode: 1,
                 errEnMessage: 'Missing required parameters',
-                errViMessage: 'Thiếu tham số bắt buộc'
+                errViMessage: 'Thiếu tham số bắt buộc',
             });
         }
 
@@ -577,7 +576,7 @@ const deleteSpecialtyController = async (req, res) => {
         console.log('Error in deleteSpecialty:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -590,7 +589,7 @@ const createServiceController = async (req, res) => {
             return res.status(200).json({
                 errCode: 1,
                 errEnMessage: 'Missing required parameters',
-                errViMessage: 'Thiếu tham số bắt buộc'
+                errViMessage: 'Thiếu tham số bắt buộc',
             });
         }
 
@@ -599,7 +598,7 @@ const createServiceController = async (req, res) => {
             description,
             durationMinutes,
             price,
-            status
+            status,
         );
 
         return res.status(200).json(response);
@@ -607,7 +606,7 @@ const createServiceController = async (req, res) => {
         console.log('Error in createService:', e);
         return res.status(200).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -620,13 +619,13 @@ const updateServiceController = async (req, res) => {
         if (!serviceId || !data) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const response = await adminService.updateServiceService(
             serviceId,
-            data
+            data,
         );
 
         return res.status(200).json(response);
@@ -634,7 +633,7 @@ const updateServiceController = async (req, res) => {
         console.log('Error in updateService:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -646,7 +645,7 @@ const deleteServiceController = async (req, res) => {
         if (!serviceId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
@@ -657,7 +656,7 @@ const deleteServiceController = async (req, res) => {
         console.log('Error in deleteService:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -669,7 +668,7 @@ const getSchedulesController = async (req, res) => {
         if (!doctorId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
@@ -689,20 +688,20 @@ const createScheduleController = async (req, res) => {
         if (!doctorId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         if (!Array.isArray(data) || data.length === 0) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing or invalid schedule array in body'
+                errMessage: 'Missing or invalid schedule array in body',
             });
         }
 
         const response = await adminService.createScheduleAndSlotService(
             doctorId,
-            data
+            data,
         );
 
         return res.status(200).json(response);
@@ -710,7 +709,7 @@ const createScheduleController = async (req, res) => {
         console.log('Error in createSchedule:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -725,7 +724,7 @@ const deleteScheduleController = async (req, res) => {
                 errEnMessage:
                     'Missing or invalid required parameter: scheduleIds (must be an array of IDs)',
                 errViMessage:
-                    'Thiếu tham số bắt buộc: scheduleIds (phải là mảng các ID)'
+                    'Thiếu tham số bắt buộc: scheduleIds (phải là mảng các ID)',
             });
         }
 
@@ -736,7 +735,7 @@ const deleteScheduleController = async (req, res) => {
         console.log('Error in deleteSchedule:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -749,13 +748,13 @@ const setPriceDoctorController = async (req, res) => {
         if (!doctorId || !price) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const response = await adminService.setPriceDoctorService(
             doctorId,
-            price
+            price,
         );
 
         return res.status(200).json(response);
@@ -763,7 +762,7 @@ const setPriceDoctorController = async (req, res) => {
         console.log('Error in setPrice:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -777,13 +776,13 @@ const setPriceServiceController = async (req, res) => {
             return res.status(200).json({
                 errCode: 1,
                 errEnMessage: 'Missing required parameters',
-                errViMessage: 'Thiếu tham số bắt buộc'
+                errViMessage: 'Thiếu tham số bắt buộc',
             });
         }
 
         const response = await adminService.setPriceServiceService(
             serviceId,
-            price
+            price,
         );
 
         return res.status(200).json(response);
@@ -791,7 +790,7 @@ const setPriceServiceController = async (req, res) => {
         console.log('Error in setPrice:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -805,21 +804,34 @@ const getPatientsController = async (req, res) => {
         console.log('Error in getPatients:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
 
 const getReceptionistsController = async (req, res) => {
     try {
-        const response = await adminService.getReceptionistsService();
+        let page = req.query.page ? parseInt(req.query.page) : 1;
+        let limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        let status = req.query.status;
+        let q = req.query.q || ''; // Lấy từ khóa tìm kiếm
+
+        if (page < 1) page = 1;
+        if (limit < 1) limit = 10;
+
+        const response = await adminService.getReceptionistsService(
+            page,
+            limit,
+            status,
+            q,
+        );
 
         return res.status(200).json(response);
     } catch (e) {
         console.log('Error in getReceptionists:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -833,14 +845,14 @@ const getDoctorServicesController = async (req, res) => {
         if (!doctorId) {
             return res.status(200).json({
                 errCode: 1,
-                errMessage: 'Missing required parameters'
+                errMessage: 'Missing required parameters',
             });
         }
 
         const response = await adminService.getDoctorServicesService(
             doctorId,
             page,
-            limit
+            limit,
         );
 
         return res.status(200).json(response);
@@ -848,7 +860,7 @@ const getDoctorServicesController = async (req, res) => {
         console.log('Error in getDoctorServices:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -867,7 +879,7 @@ const createDoctorServicesController = async (req, res) => {
             return res.status(200).json({
                 errCode: 1,
                 errEnMessage: 'Missing required parameters',
-                errViMessage: 'Thiếu tham số bắt buộc'
+                errViMessage: 'Thiếu tham số bắt buộc',
             });
         }
 
@@ -878,7 +890,7 @@ const createDoctorServicesController = async (req, res) => {
         console.log('Error in createDoctorServices:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -894,14 +906,14 @@ const updateDoctorServicesController = async (req, res) => {
             return res.status(200).json({
                 errCode: 1,
                 errEnMessage: 'Missing required parameters',
-                errViMessage: 'Thiếu tham số bắt buộc'
+                errViMessage: 'Thiếu tham số bắt buộc',
             });
         }
 
         const response = await adminService.updateDoctorServicesService(
             doctorId,
             serviceId,
-            data
+            data,
         );
 
         return res.status(200).json(response);
@@ -922,7 +934,7 @@ const getAppointmentsController = async (req, res) => {
         console.log('Error in getAppointments:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -935,14 +947,14 @@ const getDashboardStatsController = async (req, res) => {
             return res.status(400).json({
                 errCode: 1,
                 errEnMessage: 'Invalid period',
-                errViMessage: 'Khoảng thời gian không hợp lệ'
+                errViMessage: 'Khoảng thời gian không hợp lệ',
             });
         }
 
         const response = await adminService.getDashboardStatsService({
             period,
             doctorId: doctorId || null,
-            serviceId: serviceId || null
+            serviceId: serviceId || null,
         });
 
         return res.status(200).json(response);
@@ -950,7 +962,7 @@ const getDashboardStatsController = async (req, res) => {
         console.log('Error in getDashboardStats:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -963,14 +975,14 @@ const exportStatsController = async (req, res) => {
             return res.status(400).json({
                 errCode: 1,
                 errEnMessage: 'Invalid period',
-                errViMessage: 'Khoảng thời gian không hợp lệ'
+                errViMessage: 'Khoảng thời gian không hợp lệ',
             });
         }
 
         const response = await adminService.exportStatsService({
             period,
             doctorId: doctorId || null,
-            serviceId: serviceId || null
+            serviceId: serviceId || null,
         });
 
         return res.status(200).json(response);
@@ -978,7 +990,7 @@ const exportStatsController = async (req, res) => {
         console.log('Error in exportStats:', e);
         return res.status(500).json({
             errCode: -1,
-            errMessage: 'Error from server'
+            errMessage: 'Error from server',
         });
     }
 };
@@ -1019,5 +1031,5 @@ module.exports = {
     updateDoctorServicesController,
     getAppointmentsController,
     getDashboardStatsController,
-    exportStatsController
+    exportStatsController,
 };

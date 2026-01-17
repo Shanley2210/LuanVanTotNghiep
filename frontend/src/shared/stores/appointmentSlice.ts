@@ -160,19 +160,21 @@ export const fetchReceptionistAppointments = createAsyncThunk<
         limit: number;
         status?: string;
         date?: string;
+        q?: string; // Thêm tham số q (optional)
         groupKey: string;
     },
     { rejectValue: string }
 >('appointments/fetchNewAppointments', async (params, { rejectWithValue }) => {
     try {
-        const { page, limit, status, date } = params;
+        const { page, limit, status, date, q } = params;
 
         const response = await api.get('/receptionist/appointments', {
             params: {
                 page,
                 limit,
                 status,
-                date
+                date,
+                q // Truyền q lên server
             }
         });
 

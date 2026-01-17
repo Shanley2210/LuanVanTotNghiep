@@ -5,21 +5,22 @@ import {
     type IAppointment
 } from '@/shared/stores/appointmentSlice';
 import { useAppDispatch, useAppSelector } from '@/shared/stores/hooks';
-import { Select, Table, Tag } from 'antd';
+import { Select, Table, Tag, Input } from 'antd';
 import dayjs from 'dayjs';
 import { useContext, useEffect, useState } from 'react';
 import Pagination from '../components/Pagination';
 import { useTranslation } from 'react-i18next';
 import { CiEdit } from 'react-icons/ci';
 import EditAppointmentModal from '../components/EditAppointmentModal';
+import { SearchOutlined } from '@ant-design/icons';
 
 const GROUP_KEY = 'history_appointments';
 
 export default function HistoryAppointment() {
     const { isDark } = useContext(ThemeContext);
     const dispatch = useAppDispatch();
-    const { t } = useTranslation();
-
+    const { t, i18n } = useTranslation();
+    const language = i18n.language;
     const { groups } = useAppSelector(selectAppointment);
     const currentGroupData = groups[GROUP_KEY] || {
         list: [],
@@ -36,17 +37,40 @@ export default function HistoryAppointment() {
     const totalAppointments = meta.totalRows;
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-
-    // 2. Thêm State quản lý Modal và Dữ liệu dòng đang chọn
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+    const [searchText, setSearchText] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchText);
+            if (searchText !== debouncedSearchTerm) {
+                setCurrentPage(1);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchText]);
+
+    useEffect(() => {
+        dispatch(
+            fetchReceptionistAppointments({
+                page: currentPage,
+                limit: pageSize,
+                status: undefined,
+                date: undefined,
+                q: debouncedSearchTerm,
+                groupKey: GROUP_KEY
+            })
+        );
+    }, [dispatch, currentPage, pageSize, debouncedSearchTerm]);
 
     const handlePageSizeChange = (value: string) => {
         setPageSize(Number(value));
         setCurrentPage(1);
     };
 
-    // Hàm reload lại dữ liệu (dùng cho prop onSuccess của Modal)
     const handleRefreshData = () => {
         dispatch(
             fetchReceptionistAppointments({
@@ -54,13 +78,13 @@ export default function HistoryAppointment() {
                 limit: pageSize,
                 status: undefined,
                 date: undefined,
+                q: debouncedSearchTerm,
                 groupKey: GROUP_KEY
             })
         );
     };
 
     const columns = [
-        // ... (Giữ nguyên các cột khác)
         {
             title: t('repHistory.colId'),
             dataIndex: 'id',
@@ -220,7 +244,6 @@ export default function HistoryAppointment() {
                     return (
                         <CiEdit
                             className='text-yellow-500 cursor-pointer text-2xl'
-                            // 3. Cập nhật sự kiện Click: Lưu record và mở modal
                             onClick={() => {
                                 setSelectedAppointment(app);
                                 setIsEditModalOpen(true);
@@ -233,18 +256,6 @@ export default function HistoryAppointment() {
         }
     ];
 
-    useEffect(() => {
-        dispatch(
-            fetchReceptionistAppointments({
-                page: currentPage,
-                limit: pageSize,
-                status: undefined,
-                date: undefined,
-                groupKey: GROUP_KEY
-            })
-        );
-    }, [dispatch, currentPage, pageSize]);
-
     return (
         <div className='m-5 h-screen'>
             <div
@@ -256,25 +267,41 @@ export default function HistoryAppointment() {
             </div>
 
             <div className={`p-10 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                {/* ... (Phần Select Page Size giữ nguyên) ... */}
-                <div className='flex gap-5 mb-5'>
-                    <Select
-                        defaultValue={pageSize.toString()}
-                        style={{ width: 70 }}
-                        options={[
-                            { value: '10', label: '10' },
-                            { value: '25', label: '25' },
-                            { value: '50', label: '50' },
-                            { value: '100', label: '100' }
-                        ]}
-                        onChange={handlePageSizeChange}
-                    />
-                    <div
-                        className={`flex items-center text-base text-center ${
-                            isDark ? 'text-gray-100' : 'text-neutral-900'
-                        }`}
-                    >
-                        {t('repHistory.itemsPerPage')}
+                <div className='flex justify-between items-center mb-5'>
+                    <div className='flex gap-5 items-center'>
+                        <Select
+                            defaultValue={pageSize.toString()}
+                            style={{ width: 70 }}
+                            options={[
+                                { value: '10', label: '10' },
+                                { value: '25', label: '25' },
+                                { value: '50', label: '50' },
+                                { value: '100', label: '100' }
+                            ]}
+                            onChange={handlePageSizeChange}
+                        />
+                        <div
+                            className={`flex items-center text-base text-center ${
+                                isDark ? 'text-gray-100' : 'text-neutral-900'
+                            }`}
+                        >
+                            {t('repHistory.itemsPerPage')}
+                        </div>
+                    </div>
+
+                    <div className='w-1/3'>
+                        <Input
+                            placeholder={
+                                language === 'vi' || language === 'vn'
+                                    ? 'Tìm kiếm bệnh nhân...'
+                                    : 'Search patient...'
+                            }
+                            allowClear
+                            onChange={(e) => setSearchText(e.target.value)}
+                            prefix={
+                                <SearchOutlined className='text-gray-400' />
+                            }
+                        />
                     </div>
                 </div>
 
@@ -299,15 +326,13 @@ export default function HistoryAppointment() {
                 </div>
             </div>
 
-            {/* 4. Render Modal ở đây */}
-            {/* Kiểm tra selectedAppointment có dữ liệu thì mới render modal để đảm bảo useEffect trong modal chạy đúng */}
             {selectedAppointment && (
                 <EditAppointmentModal
                     open={isEditModalOpen}
                     appointmentData={selectedAppointment}
                     onCancel={() => {
                         setIsEditModalOpen(false);
-                        setSelectedAppointment(null); // Reset dữ liệu khi đóng
+                        setSelectedAppointment(null);
                     }}
                     onSuccess={handleRefreshData}
                 />

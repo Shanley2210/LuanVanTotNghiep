@@ -99,25 +99,31 @@ const initialState: IDoctorState = {
 };
 
 export const fetchDoctors = createAsyncThunk<
-    IFetchDoctorsResponse,
-    { page: number; limit: number; status?: string },
+    any, // Replace any bằng IFetchDoctorsResponse nếu import đủ
+    { page: number; limit: number; status?: string; q?: string }, // Thêm q?: string
     { rejectValue: string }
 >('doctor/fetchDoctor', async (params, { rejectWithValue }) => {
     try {
-        const { page, limit, status } = params;
+        const { page, limit, status, q } = params;
 
         let url = `/doctor/all?page=${page}&limit=${limit}`;
+
         if (status) {
             url += `&status=${status}`;
         }
+
+        if (q) {
+            url += `&q=${encodeURIComponent(q)}`;
+        }
+
         const response = await api.get(url);
 
         const { errCode, message, data, meta } = response.data;
 
         if (errCode === 0 && Array.isArray(data)) {
             return {
-                list: data as IDoctor[],
-                meta: meta as IPaginationMeta
+                list: data,
+                meta: meta
             };
         }
 

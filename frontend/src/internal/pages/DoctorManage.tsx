@@ -32,7 +32,11 @@ import {
 } from '@/shared/apis/doctorService';
 import dayjs, { Dayjs } from 'dayjs';
 import LoadingCommon from '@/shared/components/LoadingCommon';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
+import {
+    LoadingOutlined,
+    PlusOutlined,
+    SearchOutlined
+} from '@ant-design/icons';
 import {
     fetchSchedulesForAdmin,
     selectSchedules
@@ -83,6 +87,10 @@ export default function DoctorManage() {
     const [priceItem, setPriceItem] = useState<IDoctor | null>(null);
     const [selectedDoctor, setSelectedDoctor] = useState<IDoctor | null>(null);
 
+    // Search State
+    const [searchText, setSearchText] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
     // Schedule State
     const [isOpenSchedule, setIsOpenSchedule] = useState(false);
     const [scheduleFormData, setScheduleFormData] = useState<
@@ -113,10 +121,29 @@ export default function DoctorManage() {
     const [servicePage, setServicePage] = useState(1);
     const servicePageSize = 5;
 
+    // --- Search Debounce Effect ---
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchText);
+            if (searchText !== debouncedSearchTerm) {
+                setCurrentPage(1); // Reset to page 1 on search change
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchText]);
+
     // --- Effects ---
     useEffect(() => {
-        dispatch(fetchDoctors({ page: currentPage, limit: pageSize }));
-    }, [dispatch, currentPage, pageSize]);
+        dispatch(
+            fetchDoctors({
+                page: currentPage,
+                limit: pageSize,
+                q: debouncedSearchTerm // Pass search term to API
+            })
+        );
+    }, [dispatch, currentPage, pageSize, debouncedSearchTerm]);
 
     useEffect(() => {
         dispatch(fetchSpecialties({ page: 1, limit: 100 }));
@@ -128,7 +155,13 @@ export default function DoctorManage() {
 
     // --- Helper Functions ---
     const refreshData = () => {
-        dispatch(fetchDoctors({ page: currentPage, limit: pageSize }));
+        dispatch(
+            fetchDoctors({
+                page: currentPage,
+                limit: pageSize,
+                q: debouncedSearchTerm
+            })
+        );
     };
 
     const handlePageSizeChange = (value: string) => {
@@ -1074,24 +1107,43 @@ export default function DoctorManage() {
 
             {/* Main Table */}
             <div className={`p-10 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                <div className='flex gap-5 mb-5'>
-                    <Select
-                        defaultValue={pageSize.toString()}
-                        style={{ width: 70 }}
-                        options={[
-                            { value: '10', label: '10' },
-                            { value: '25', label: '25' },
-                            { value: '50', label: '50' },
-                            { value: '100', label: '100' }
-                        ]}
-                        onChange={handlePageSizeChange}
-                    />
-                    <div
-                        className={`flex items-center text-base text-center ${
-                            isDark ? 'text-gray-100' : 'text-neutral-900'
-                        }`}
-                    >
-                        {t('doctor.epg')}
+                {/* Search and Pagination Controls */}
+                <div className='flex justify-between items-center mb-5'>
+                    <div className='flex gap-5 items-center'>
+                        <Select
+                            defaultValue={pageSize.toString()}
+                            style={{ width: 70 }}
+                            options={[
+                                { value: '10', label: '10' },
+                                { value: '25', label: '25' },
+                                { value: '50', label: '50' },
+                                { value: '100', label: '100' }
+                            ]}
+                            onChange={handlePageSizeChange}
+                        />
+                        <div
+                            className={`flex items-center text-base text-center ${
+                                isDark ? 'text-gray-100' : 'text-neutral-900'
+                            }`}
+                        >
+                            {t('doctor.epg')}
+                        </div>
+                    </div>
+
+                    {/* Search Input */}
+                    <div className='w-1/3'>
+                        <Input
+                            placeholder={
+                                language === 'vi'
+                                    ? 'Tìm kiếm bác sĩ...'
+                                    : 'Search doctor...'
+                            }
+                            allowClear
+                            onChange={(e) => setSearchText(e.target.value)}
+                            prefix={
+                                <SearchOutlined className='text-gray-400' />
+                            }
+                        />
                     </div>
                 </div>
 
@@ -1122,8 +1174,8 @@ export default function DoctorManage() {
                     priceItem
                         ? t('doctor.ur')
                         : editItem
-                        ? t('doctor.ed')
-                        : t('doctor.an')
+                          ? t('doctor.ed')
+                          : t('doctor.an')
                 }
                 open={isOpen}
                 onCancel={() => {
@@ -1313,7 +1365,7 @@ export default function DoctorManage() {
                     loading={isServiceLoading}
                     dataSource={currentServices}
                     columns={serviceColumns}
-                    rowKey='serviceId' // --- FIX: Dùng serviceId thay vì id ---
+                    rowKey='serviceId'
                     pagination={false}
                     footer={() =>
                         serviceList.length > 0 && (

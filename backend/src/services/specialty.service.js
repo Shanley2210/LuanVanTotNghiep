@@ -1,11 +1,13 @@
+const { Op } = require('sequelize');
 const db = require('../models');
 
-const getSpecialtyService = (page, limit) => {
+const getSpecialtyService = (page, limit, q) => {
     return new Promise(async (resolve, reject) => {
         try {
             const offset = (page - 1) * limit;
 
-            const { count, rows } = await db.Specialty.findAndCountAll({
+            // Xây dựng điều kiện tìm kiếm
+            let options = {
                 offset: offset,
                 limit: limit,
                 distinct: true,
@@ -13,28 +15,26 @@ const getSpecialtyService = (page, limit) => {
                     {
                         model: db.Doctor,
                         as: 'doctors',
-                        attributes: ['id']
-                    }
+                        attributes: ['id'],
+                    },
                 ],
-                order: [['updatedAt', 'DESC']]
-            });
+                order: [['updatedAt', 'DESC']],
+                where: {}, // Mặc định là object rỗng
+            };
 
-            if (!rows || rows.length === 0) {
-                return resolve({
-                    errCode: 0,
-                    message: 'No specialties found',
-                    data: [],
-                    meta: {
-                        page: page,
-                        limit: limit,
-                        totalRows: 0,
-                        totalPages: 0
-                    }
-                });
+            // Nếu có từ khóa tìm kiếm, thêm điều kiện WHERE LIKE name
+            if (q) {
+                options.where.name = {
+                    [Op.like]: `%${q.trim()}%`,
+                };
             }
 
+            const { count, rows } = await db.Specialty.findAndCountAll(options);
+
+            // Xử lý kết quả trả về (giống logic cũ)
             const totalPages = Math.ceil(count / limit);
 
+            // Nếu không có dữ liệu nhưng vẫn trả về cấu trúc chuẩn để FE không bị lỗi
             const data = rows.map((item) => {
                 const json = item.toJSON();
                 json.doctorCount = json.doctors ? json.doctors.length : 0;
@@ -50,8 +50,8 @@ const getSpecialtyService = (page, limit) => {
                     page: page,
                     limit: limit,
                     totalRows: count,
-                    totalPages: totalPages
-                }
+                    totalPages: totalPages,
+                },
             });
         } catch (e) {
             return reject(e);

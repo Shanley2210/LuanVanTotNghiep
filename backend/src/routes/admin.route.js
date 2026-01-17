@@ -10,7 +10,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.createHopistalAdminController
+    adminController.createHopistalAdminController,
 );
 
 router.get(
@@ -18,7 +18,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.getRolesController
+    adminController.getRolesController,
 );
 
 router.post(
@@ -26,7 +26,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.createRoleController
+    adminController.createRoleController,
 );
 
 router.delete(
@@ -34,7 +34,7 @@ router.delete(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.deleteRoleController
+    adminController.deleteRoleController,
 );
 
 router.get(
@@ -42,7 +42,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.getPermissionsController
+    adminController.getPermissionsController,
 );
 
 router.post(
@@ -50,7 +50,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.createPermissionController
+    adminController.createPermissionController,
 );
 
 router.delete(
@@ -58,7 +58,7 @@ router.delete(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.deletePermissionController
+    adminController.deletePermissionController,
 );
 
 router.get(
@@ -66,7 +66,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.getUserPermissionController
+    adminController.getUserPermissionController,
 );
 
 router.post(
@@ -74,7 +74,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.createUserPermissionController
+    adminController.createUserPermissionController,
 );
 
 router.delete(
@@ -82,7 +82,7 @@ router.delete(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('System_Admin'),
     authMiddleware.verifyPermission('system_management'),
-    adminController.deleteUserPermissionController
+    adminController.deleteUserPermissionController,
 );
 
 router.get(
@@ -90,7 +90,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
     authMiddleware.verifyPermission('user_view_all'),
-    adminController.getUsersController
+    adminController.getUsersController,
 );
 
 router.get(
@@ -98,7 +98,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
     authMiddleware.verifyPermission('view_user_detail'),
-    adminController.getUserByIdController
+    adminController.getUserByIdController,
 );
 
 router.delete(
@@ -106,7 +106,7 @@ router.delete(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
     authMiddleware.verifyPermission('user_manage_all'),
-    adminController.deleteUserController
+    adminController.deleteUserController,
 );
 
 router.post(
@@ -115,7 +115,7 @@ router.post(
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_manage'),
     uploadMiddleware.createUploadImgaeDir('doctors').single('image'),
-    adminController.createDoctorController
+    adminController.createDoctorController,
 );
 
 router.put(
@@ -124,7 +124,7 @@ router.put(
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_manage'),
     uploadMiddleware.createUploadImgaeDir('doctors').single('image'),
-    adminController.updateDoctorController
+    adminController.updateDoctorController,
 );
 
 router.post(
@@ -133,7 +133,7 @@ router.post(
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('user_manage_all'),
     uploadMiddleware.createUploadImgaeDir('receptionists').single('image'),
-    adminController.createReceptionistController
+    adminController.createReceptionistController,
 );
 
 router.put(
@@ -142,7 +142,7 @@ router.put(
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('user_manage_all'),
     uploadMiddleware.createUploadImgaeDir('receptionists').single('image'),
-    adminController.updatereceptionistController
+    adminController.updatereceptionistController,
 );
 
 router.post(
@@ -151,7 +151,7 @@ router.post(
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('service_manage'),
     uploadMiddleware.createUploadImgaeDir('specialties').single('image'),
-    adminController.createSpecialtyController
+    adminController.createSpecialtyController,
 );
 
 router.put(
@@ -160,7 +160,7 @@ router.put(
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('service_manage'),
     uploadMiddleware.createUploadImgaeDir('specialties').single('image'),
-    adminController.updateSpecialtyController
+    adminController.updateSpecialtyController,
 );
 
 router.delete(
@@ -168,7 +168,7 @@ router.delete(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('service_manage'),
-    adminController.deleteSpecialtyController
+    adminController.deleteSpecialtyController,
 );
 
 router.post(
@@ -176,7 +176,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('service_manage'),
-    adminController.createServiceController
+    adminController.createServiceController,
 );
 
 router.put(
@@ -184,7 +184,7 @@ router.put(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('service_manage'),
-    adminController.updateServiceController
+    adminController.updateServiceController,
 );
 
 router.delete(
@@ -192,7 +192,7 @@ router.delete(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('service_manage'),
-    adminController.deleteServiceController
+    adminController.deleteServiceController,
 );
 
 router.get(
@@ -200,7 +200,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_schedule_manage'),
-    adminController.getSchedulesController
+    adminController.getSchedulesController,
 );
 
 router.post(
@@ -208,7 +208,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_schedule_manage'),
-    adminController.createScheduleController
+    adminController.createScheduleController,
 );
 
 router.delete(
@@ -216,7 +216,7 @@ router.delete(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_schedule_manage'),
-    adminController.deleteScheduleController
+    adminController.deleteScheduleController,
 );
 
 router.post(
@@ -224,7 +224,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_manage'),
-    adminController.setPriceDoctorController
+    adminController.setPriceDoctorController,
 );
 
 router.post(
@@ -232,7 +232,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRole('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_manage'),
-    adminController.setPriceServiceController
+    adminController.setPriceServiceController,
 );
 
 router.get(
@@ -240,7 +240,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
     authMiddleware.verifyPermission('user_view_all'),
-    adminController.getPatientsController
+    adminController.getPatientsController,
 );
 
 router.get(
@@ -248,7 +248,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
     authMiddleware.verifyPermission('user_view_all'),
-    adminController.getReceptionistsController
+    adminController.getReceptionistsController,
 );
 
 router.get(
@@ -256,7 +256,7 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_manage'),
-    adminController.getDoctorServicesController
+    adminController.getDoctorServicesController,
 );
 
 router.post(
@@ -264,7 +264,7 @@ router.post(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_manage'),
-    adminController.createDoctorServicesController
+    adminController.createDoctorServicesController,
 );
 
 router.put(
@@ -272,14 +272,14 @@ router.put(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('Hospital_Admin'),
     authMiddleware.verifyPermission('doctor_manage'),
-    adminController.updateDoctorServicesController
+    adminController.updateDoctorServicesController,
 );
 
 router.get(
     '/appointments',
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('Hospital_Admin'),
-    adminController.getAppointmentsController
+    adminController.getAppointmentsController,
 );
 
 router.get(
@@ -287,15 +287,16 @@ router.get(
     authMiddleware.verifyToken,
     authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
     authMiddleware.verifyPermission('report_manage'),
-    adminController.getDashboardStatsController
+    adminController.getDashboardStatsController,
 );
 
 router.get(
     '/stats/export',
-    // authMiddleware.verifyToken,
+    authMiddleware.verifyToken,
     // authMiddleware.verifyRoles('System_Admin', 'Hospital_Admin'),
     // authMiddleware.verifyPermission('report_manage'),
-    adminController.exportStatsController
+    adminController.exportStatsController,
 );
+
 
 module.exports = router;

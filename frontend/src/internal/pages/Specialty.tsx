@@ -1,5 +1,5 @@
 import { ThemeContext } from '@/shared/contexts/ThemeContext';
-import { Button, Select, Spin, Table } from 'antd';
+import { Button, Select, Spin, Table, Input } from 'antd';
 import { useContext, useEffect, useState } from 'react';
 import { GoPencil } from 'react-icons/go';
 import { AiOutlineDelete } from 'react-icons/ai';
@@ -20,7 +20,7 @@ import {
     postSpecialty,
     updateSpecialty
 } from '@/shared/apis/specialtyService';
-import { LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined, SearchOutlined } from '@ant-design/icons';
 import LoadingCommon from '@/shared/components/LoadingCommon';
 
 interface ISpecialtyApi {
@@ -64,13 +64,36 @@ export default function Specialty() {
     const [loadingDeleteId, setLoadingDeleteId] = useState<string | null>(null);
     const [loadingStatusId, setLoadingStatusId] = useState<string | null>(null);
 
+    // State cho tìm kiếm
+    const [searchText, setSearchText] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
     const pageSize = entriesPerPage;
 
+    // Xử lý Debounce cho tìm kiếm (delay 500ms)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchText);
+            // Nếu từ khóa thay đổi, reset về trang 1
+            if (searchText !== debouncedSearchTerm) {
+                setCurrentPage(1);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchText]);
+
+    // Gọi API khi page, limit hoặc từ khóa tìm kiếm thay đổi
     useEffect(() => {
         dispatch(
-            fetchSpecialties({ page: currentPage, limit: entriesPerPage })
+            fetchSpecialties({
+                page: currentPage,
+                limit: entriesPerPage,
+                q: debouncedSearchTerm // Truyền tham số search
+            })
         );
-    }, [dispatch, currentPage, entriesPerPage]);
+    }, [dispatch, currentPage, entriesPerPage, debouncedSearchTerm]);
 
     const currentData: ISpecialty[] = (specialties as ISpecialtyApi[]).map(
         (item: ISpecialtyApi) => ({
@@ -89,7 +112,11 @@ export default function Specialty() {
 
     const refreshData = () => {
         dispatch(
-            fetchSpecialties({ page: currentPage, limit: entriesPerPage })
+            fetchSpecialties({
+                page: currentPage,
+                limit: entriesPerPage,
+                q: debouncedSearchTerm
+            })
         );
     };
 
@@ -412,24 +439,43 @@ export default function Specialty() {
             </div>
 
             <div className={`p-10 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                <div className='flex gap-5 mb-5'>
-                    <Select
-                        defaultValue={entriesPerPage}
-                        style={{ width: 70 }}
-                        options={[
-                            { value: '10', label: '10' },
-                            { value: '25', label: '25' },
-                            { value: '50', label: '50' },
-                            { value: '100', label: '100' }
-                        ]}
-                        onChange={handlePageSizeChange}
-                    />
-                    <div
-                        className={`flex items-center text-base text-center ${
-                            isDark ? 'text-gray-100' : 'text-neutral-900'
-                        }`}
-                    >
-                        {t('specialty.epg')}
+                {/* Khu vực Toolbar: Select và Search */}
+                <div className='flex justify-between items-center mb-5'>
+                    <div className='flex gap-5 items-center'>
+                        <Select
+                            defaultValue={entriesPerPage}
+                            style={{ width: 70 }}
+                            options={[
+                                { value: '10', label: '10' },
+                                { value: '25', label: '25' },
+                                { value: '50', label: '50' },
+                                { value: '100', label: '100' }
+                            ]}
+                            onChange={handlePageSizeChange}
+                        />
+                        <div
+                            className={`flex items-center text-base text-center ${
+                                isDark ? 'text-gray-100' : 'text-neutral-900'
+                            }`}
+                        >
+                            {t('specialty.epg')}
+                        </div>
+                    </div>
+
+                    {/* Ô tìm kiếm */}
+                    <div className='w-1/3'>
+                        <Input
+                            placeholder={
+                                language === 'en'
+                                    ? 'Search specialty...'
+                                    : 'Tìm kiếm chuyên khoa...'
+                            }
+                            allowClear
+                            onChange={(e) => setSearchText(e.target.value)}
+                            prefix={
+                                <SearchOutlined className='text-gray-400' />
+                            }
+                        />
                     </div>
                 </div>
 

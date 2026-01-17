@@ -148,11 +148,12 @@ const sendUpdateAppointment = async (
 
 const salt = bcrypt.genSaltSync(10);
 
-const getNewAppointmentsService = (page, limit, status, date) => {
+const getNewAppointmentsService = (page, limit, status, date, q = '') => {
     return new Promise(async (resolve, reject) => {
         try {
             const offset = (page - 1) * limit;
 
+            // 1. Điều kiện lọc theo Status & Date (giữ nguyên)
             let appointmentCondition = {};
             if (status) {
                 appointmentCondition.status = status;
@@ -161,12 +162,25 @@ const getNewAppointmentsService = (page, limit, status, date) => {
             let slotCondition = {};
             if (date) {
                 const inputDate = new Date(isNaN(date) ? date : parseInt(date));
-
                 const startOfDay = new Date(inputDate.setHours(0, 0, 0, 0));
                 const endOfDay = new Date(inputDate.setHours(23, 59, 59, 999));
 
                 slotCondition.startTime = {
                     [Op.between]: [startOfDay, endOfDay],
+                };
+            }
+
+            // 2. Điều kiện tìm kiếm (MỚI)
+            // Tìm kiếm trong bảng User của Patient (Tên, Email, SĐT)
+            let patientUserCondition = {};
+            if (q) {
+                const keyword = `%${q.trim()}%`;
+                patientUserCondition = {
+                    [Op.or]: [
+                        { name: { [Op.like]: keyword } },
+                        { email: { [Op.like]: keyword } },
+                        { phone: { [Op.like]: keyword } },
+                    ],
                 };
             }
 
@@ -198,11 +212,13 @@ const getNewAppointmentsService = (page, limit, status, date) => {
                         model: db.Patient,
                         as: 'patient',
                         attributes: ['id', 'gender', 'dob', 'address'],
+                        required: !!q, // Nếu có tìm kiếm thì bắt buộc phải có Patient khớp
                         include: [
                             {
                                 model: db.User,
                                 as: 'user',
                                 attributes: ['name', 'email', 'phone'],
+                                where: patientUserCondition, // Áp dụng tìm kiếm tại đây
                             },
                         ],
                     },
@@ -802,7 +818,13 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                     {
                         model: db.Doctor,
                         as: 'doctor',
-                        include: [{ model: db.User, as: 'user', attributes: ['name'] }],
+                        include: [
+                            {
+                                model: db.User,
+                                as: 'user',
+                                attributes: ['name'],
+                            },
+                        ],
                     },
                 ],
                 transaction: trans,
@@ -824,8 +846,11 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
             const start = moment(currentSlot.startTime);
             const end = moment(currentSlot.endTime);
             const slotDurationMinutes = end.diff(start) / 60000;
-            const serviceDurationMinutes = Number(serviceInfo.durationMinutes) || 30;
-            const neededSlotCount = Math.ceil(serviceDurationMinutes / slotDurationMinutes);
+            const serviceDurationMinutes =
+                Number(serviceInfo.durationMinutes) || 30;
+            const neededSlotCount = Math.ceil(
+                serviceDurationMinutes / slotDurationMinutes,
+            );
 
             if (neededSlotCount > 1) {
                 const allSlotsOfDay = await db.Slot.findAll({
@@ -837,10 +862,16 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                     transaction: trans,
                 });
 
-                const startIndex = allSlotsOfDay.findIndex((s) => s.id === currentSlot.id);
+                const startIndex = allSlotsOfDay.findIndex(
+                    (s) => s.id === currentSlot.id,
+                );
 
                 if (startIndex === -1) {
-                    throw { code: 99, en: 'Slot sync error', vi: 'Lỗi đồng bộ dữ liệu slot' };
+                    throw {
+                        code: 99,
+                        en: 'Slot sync error',
+                        vi: 'Lỗi đồng bộ dữ liệu slot',
+                    };
                 }
 
                 if (startIndex + neededSlotCount > allSlotsOfDay.length) {
@@ -854,7 +885,10 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                 for (let i = 0; i < neededSlotCount; i++) {
                     const nextSlot = allSlotsOfDay[startIndex + i];
 
-                    if (nextSlot.status !== 'available' && nextSlot.capacity < 1) {
+                    if (
+                        nextSlot.status !== 'available' &&
+                        nextSlot.capacity < 1
+                    ) {
                         if (nextSlot.id !== currentSlot.id) {
                             throw {
                                 code: 9,
@@ -862,13 +896,20 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
                                 vi: 'Khoảng thời gian liên tiếp đã bị đặt trước',
                             };
                         } else {
-                            throw { code: 4, en: 'Start slot full', vi: 'Khung giờ bắt đầu đã đầy' };
+                            throw {
+                                code: 4,
+                                en: 'Start slot full',
+                                vi: 'Khung giờ bắt đầu đã đầy',
+                            };
                         }
                     }
                     slotsToBook.push(nextSlot);
                 }
             } else {
-                if (currentSlot.status !== 'available' && currentSlot.capacity < 1) {
+                if (
+                    currentSlot.status !== 'available' &&
+                    currentSlot.capacity < 1
+                ) {
                     throw { code: 4, en: 'Slot full', vi: 'Khung giờ đã đầy' };
                 }
                 slotsToBook.push(currentSlot);
@@ -892,11 +933,18 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
         });
 
         if (!doctorInfo) {
-            throw { code: 3, en: 'Doctor not found', vi: 'Bác sĩ không tồn tại' };
+            throw {
+                code: 3,
+                en: 'Doctor not found',
+                vi: 'Bác sĩ không tồn tại',
+            };
         }
 
         if (currentSlot) {
-            if (currentSlot.status !== 'available' && currentSlot.capacity < 1) {
+            if (
+                currentSlot.status !== 'available' &&
+                currentSlot.capacity < 1
+            ) {
                 throw { code: 4, en: 'Slot full', vi: 'Khung giờ đã đầy' };
             }
             slotsToBook.push(currentSlot);
@@ -911,7 +959,11 @@ const calculateBookingDetails = async (doctorId, serviceId, slotId, trans) => {
         };
     }
 
-    throw { code: 2, en: 'Invalid info', vi: 'Thông tin đặt lịch không hợp lệ' };
+    throw {
+        code: 2,
+        en: 'Invalid info',
+        vi: 'Thông tin đặt lịch không hợp lệ',
+    };
 };
 const updateAppointmentByReceptionistService = async (appointmentId, data) => {
     const trans = await db.sequelize.transaction();
@@ -944,11 +996,14 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
             };
         }
 
-        if (!['pending', 'deposited', 'confirmed'].includes(appointment.status)) {
+        if (
+            !['pending', 'deposited', 'confirmed'].includes(appointment.status)
+        ) {
             await trans.rollback();
             return {
                 errCode: 2,
-                errViMessage: 'Không thể cập nhật lịch hẹn ở trạng thái hiện tại (Đã hoàn thành hoặc hủy)',
+                errViMessage:
+                    'Không thể cập nhật lịch hẹn ở trạng thái hiện tại (Đã hoàn thành hoặc hủy)',
                 errEnMessage: 'Cannot update appointment in current status',
             };
         }
@@ -983,8 +1038,11 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
                         const start = moment(oldStartSlot.startTime);
                         const end = moment(oldStartSlot.endTime);
                         const slotDurationMinutes = end.diff(start) / 60000;
-                        const serviceDurationMinutes = Number(oldService.durationMinutes) || 30;
-                        const neededSlotCount = Math.ceil(serviceDurationMinutes / slotDurationMinutes);
+                        const serviceDurationMinutes =
+                            Number(oldService.durationMinutes) || 30;
+                        const neededSlotCount = Math.ceil(
+                            serviceDurationMinutes / slotDurationMinutes,
+                        );
 
                         if (neededSlotCount > 1) {
                             const allSlotsOfDay = await db.Slot.findAll({
@@ -996,11 +1054,15 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
                                 transaction: trans,
                             });
 
-                            const startIndex = allSlotsOfDay.findIndex((s) => s.id === oldStartSlot.id);
+                            const startIndex = allSlotsOfDay.findIndex(
+                                (s) => s.id === oldStartSlot.id,
+                            );
                             if (startIndex !== -1) {
                                 for (let i = 1; i < neededSlotCount; i++) {
                                     if (allSlotsOfDay[startIndex + i]) {
-                                        slotsToRelease.push(allSlotsOfDay[startIndex + i]);
+                                        slotsToRelease.push(
+                                            allSlotsOfDay[startIndex + i],
+                                        );
                                     }
                                 }
                             }
@@ -1021,10 +1083,10 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
                     data.doctorId || appointment.doctorId,
                     data.serviceId || appointment.serviceId,
                     data.slotId || appointment.slotId,
-                    trans
+                    trans,
                 );
             } catch (error) {
-                console.error("Calculate Error:", error);
+                console.error('Calculate Error:', error);
                 await trans.rollback();
                 return {
                     errCode: error.code || -1,
@@ -1032,7 +1094,8 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
                 };
             }
 
-            const { slotsToBook, finalPrice, type, target, finalDoctorId } = newBookingDetails;
+            const { slotsToBook, finalPrice, type, target, finalDoctorId } =
+                newBookingDetails;
 
             // 3. Check trùng lịch
             if (slotsToBook && slotsToBook.length > 0) {
@@ -1051,8 +1114,10 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
                     await trans.rollback();
                     return {
                         errCode: 7,
-                        errViMessage: 'Bệnh nhân đã có lịch hẹn trùng vào khoảng thời gian mới!',
-                        errEnMessage: 'Patient already has an appointment at this time',
+                        errViMessage:
+                            'Bệnh nhân đã có lịch hẹn trùng vào khoảng thời gian mới!',
+                        errEnMessage:
+                            'Patient already has an appointment at this time',
                     };
                 }
 
@@ -1067,7 +1132,7 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
             appointment.doctorId = finalDoctorId;
             appointment.slotId = slotsToBook[0].id;
             appointment.serviceId = data.serviceId || appointment.serviceId;
-            
+
             // Cập nhật giá và tiền cọc yêu cầu
             appointment.finalPrice = finalPrice;
             const newRequiredDeposit = finalPrice * 0.2;
@@ -1089,31 +1154,41 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
         const bookingInfo = data.bookingInfo;
         if (bookingInfo) {
             if (bookingInfo.reason) appointment.reason = bookingInfo.reason;
-            if (bookingInfo.patientName) appointment.patientName = bookingInfo.patientName;
-            if (bookingInfo.patientPhone) appointment.patientPhone = bookingInfo.patientPhone;
-            if (bookingInfo.patientGender) appointment.patientGender = bookingInfo.patientGender;
-            if (bookingInfo.patientAddress) appointment.patientAddress = bookingInfo.patientAddress;
-            if (bookingInfo.patientDob) appointment.patientDob = bookingInfo.patientDob;
+            if (bookingInfo.patientName)
+                appointment.patientName = bookingInfo.patientName;
+            if (bookingInfo.patientPhone)
+                appointment.patientPhone = bookingInfo.patientPhone;
+            if (bookingInfo.patientGender)
+                appointment.patientGender = bookingInfo.patientGender;
+            if (bookingInfo.patientAddress)
+                appointment.patientAddress = bookingInfo.patientAddress;
+            if (bookingInfo.patientDob)
+                appointment.patientDob = bookingInfo.patientDob;
         }
 
         await appointment.save({ transaction: trans });
         await trans.commit();
 
         // Gửi email
-        const recipientEmail = appointment.bookingFor === 'relative'
-            ? appointment.patientEmail || appointment.patient.user.email
-            : appointment.patient.user.email;
+        const recipientEmail =
+            appointment.bookingFor === 'relative'
+                ? appointment.patientEmail || appointment.patient.user.email
+                : appointment.patient.user.email;
 
         let timeString = '';
         if (isReschedule && newBookingDetails) {
             const { slotsToBook } = newBookingDetails;
             const start = moment(slotsToBook[0].startTime).format('HH:mm');
-            const end = moment(slotsToBook[slotsToBook.length - 1].endTime).format('HH:mm DD/MM/YYYY');
+            const end = moment(
+                slotsToBook[slotsToBook.length - 1].endTime,
+            ).format('HH:mm DD/MM/YYYY');
             timeString = `${start} - ${end}`;
         } else {
             const currentSlot = await db.Slot.findByPk(appointment.slotId);
             if (currentSlot) {
-                timeString = moment(currentSlot.startTime).format('HH:mm DD/MM/YYYY');
+                timeString = moment(currentSlot.startTime).format(
+                    'HH:mm DD/MM/YYYY',
+                );
             }
         }
 
@@ -1130,7 +1205,7 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
             moment(appointment.updatedAt).format('llll'),
             appointment.finalPrice,
             appointment.deposit,
-            appointment.status // Gửi đúng status vừa cập nhật (deposited hoặc pending)
+            appointment.status, // Gửi đúng status vừa cập nhật (deposited hoặc pending)
         ).catch(console.error);
 
         return {
@@ -1140,7 +1215,7 @@ const updateAppointmentByReceptionistService = async (appointmentId, data) => {
         };
     } catch (e) {
         if (!trans.finished) await trans.rollback();
-        console.error("System Error in Receptionist Update:", e);
+        console.error('System Error in Receptionist Update:', e);
         return {
             errCode: -1,
             errMessage: 'Lỗi hệ thống',

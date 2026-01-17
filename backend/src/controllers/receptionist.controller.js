@@ -6,6 +6,7 @@ const getNewAppointmentsController = async (req, res) => {
         let limit = req.query.limit ? parseInt(req.query.limit) : 10;
         let status = req.query.status;
         let date = req.query.date;
+        let q = req.query.q || ''; // Lấy từ khóa tìm kiếm
 
         if (page < 1) page = 1;
         if (limit < 1) limit = 10;
@@ -15,6 +16,7 @@ const getNewAppointmentsController = async (req, res) => {
             limit,
             status,
             date,
+            q // Truyền q vào service
         );
 
         return res.status(200).json(response);

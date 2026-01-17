@@ -5,7 +5,7 @@ import {
     selectServices,
     type IService
 } from '@/shared/stores/serviceSlice';
-import { Button, Select, Table } from 'antd';
+import { Button, Select, Table, Input } from 'antd'; // Thêm Input
 import { useContext, useEffect, useState } from 'react';
 import Pagination from '../components/Pagination';
 import ToggleSwitch from '../components/ToggleSwitch';
@@ -23,7 +23,7 @@ import {
     updateService
 } from '@/shared/apis/serviceService';
 import LoadingCommon from '@/shared/components/LoadingCommon';
-import { LoadingOutlined } from '@ant-design/icons';
+import { LoadingOutlined, SearchOutlined } from '@ant-design/icons'; // Thêm SearchOutlined
 import { IoPricetagsOutline } from 'react-icons/io5';
 
 export default function Service() {
@@ -53,14 +53,44 @@ export default function Service() {
     const [loadingDeleteId, setLoadingDeleteId] = useState<number | null>(null);
     const [loadingStatusId, setLoadingStatusId] = useState<number | null>(null);
 
-    // 2. useEffect gọi API với tham số phân trang
+    // State cho tìm kiếm
+    const [searchText, setSearchText] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+
+    // Xử lý Debounce cho tìm kiếm (delay 500ms)
     useEffect(() => {
-        dispatch(fetchServices({ page: currentPage, limit: pageSize }));
-    }, [dispatch, currentPage, pageSize]);
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchText);
+            // Nếu từ khóa thay đổi, reset về trang 1
+            if (searchText !== debouncedSearchTerm) {
+                setCurrentPage(1);
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchText]);
+
+    // 2. useEffect gọi API với tham số phân trang và tìm kiếm
+    useEffect(() => {
+        dispatch(
+            fetchServices({
+                page: currentPage,
+                limit: pageSize,
+                q: debouncedSearchTerm // Truyền tham số search
+            })
+        );
+    }, [dispatch, currentPage, pageSize, debouncedSearchTerm]);
 
     // Hàm refresh dữ liệu tại trang hiện tại (dùng sau khi CRUD)
     const refreshData = () => {
-        dispatch(fetchServices({ page: currentPage, limit: pageSize }));
+        dispatch(
+            fetchServices({
+                page: currentPage,
+                limit: pageSize,
+                q: debouncedSearchTerm
+            })
+        );
     };
 
     const handlePageSizeChange = (value: string) => {
@@ -530,45 +560,67 @@ export default function Service() {
                         filters={priceModalConfigs}
                         initialValues={formData}
                         onChange={(values) =>
-                            setFormData((prev: any) => ({ ...prev, ...values }))
+                            setFormData((prev: any) => ({
+                                ...prev,
+                                ...values
+                            }))
                         }
                     />
                 </AdminModal>
             </div>
 
             <div className={`p-10 ${isDark ? 'bg-gray-900' : 'bg-white'}`}>
-                <div className='flex gap-5 mb-5'>
-                    <Select
-                        defaultValue={pageSize.toString()}
-                        style={{ width: 70 }}
-                        options={[
-                            { value: '10', label: '10' },
-                            { value: '25', label: '25' },
-                            { value: '50', label: '50' },
-                            { value: '100', label: '100' }
-                        ]}
-                        onChange={handlePageSizeChange}
-                    />
-                    <div
-                        className={`flex items-center text-base text-center ${
-                            isDark ? 'text-gray-100' : 'text-neutral-900'
-                        }`}
-                    >
-                        {t('service.epg')}
+                {/* Khu vực Toolbar: Select và Search */}
+                <div className='flex justify-between items-center mb-5'>
+                    <div className='flex gap-5 items-center'>
+                        <Select
+                            defaultValue={pageSize.toString()}
+                            style={{ width: 70 }}
+                            options={[
+                                { value: '10', label: '10' },
+                                { value: '25', label: '25' },
+                                { value: '50', label: '50' },
+                                { value: '100', label: '100' }
+                            ]}
+                            onChange={handlePageSizeChange}
+                        />
+                        <div
+                            className={`flex items-center text-base text-center ${
+                                isDark ? 'text-gray-100' : 'text-neutral-900'
+                            }`}
+                        >
+                            {t('service.epg')}
+                        </div>
+                    </div>
+
+                    {/* Ô tìm kiếm */}
+                    <div className='w-1/3'>
+                        <Input
+                            placeholder={
+                                language === 'en'
+                                    ? 'Search service...'
+                                    : 'Tìm kiếm dịch vụ...'
+                            }
+                            allowClear
+                            onChange={(e) => setSearchText(e.target.value)}
+                            prefix={
+                                <SearchOutlined className='text-gray-400' />
+                            }
+                        />
                     </div>
                 </div>
 
                 <div className={isDark ? 'text-black' : 'text-blue-500'}>
                     <Table
-                        loading={tableLoading} // Binding trạng thái loading vào bảng
-                        dataSource={services} // Dùng trực tiếp list services từ Redux
+                        loading={tableLoading} 
+                        dataSource={services} 
                         columns={columns}
                         rowKey='id'
                         showSorterTooltip={false}
                         pagination={false}
                         footer={() => (
                             <Pagination
-                                total={totalServices} // Binding tổng số bản ghi từ Server
+                                total={totalServices} 
                                 pageSize={pageSize}
                                 current={currentPage}
                                 onChange={(page) => setCurrentPage(page)}

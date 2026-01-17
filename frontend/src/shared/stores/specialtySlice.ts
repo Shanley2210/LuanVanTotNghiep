@@ -3,8 +3,8 @@ import {
     createSlice,
     type PayloadAction
 } from '@reduxjs/toolkit';
-import api from '../apis/api';
-import type { RootState } from './store';
+import api from '../apis/api'; // Đường dẫn api của bạn
+import type { RootState } from './store'; // Đường dẫn store của bạn
 
 export interface ISpecialty {
     id: number;
@@ -49,16 +49,22 @@ const initialState: ISpecialtyState = {
     error: null
 };
 
+// CẬP NHẬT: Thêm q?: string vào params đầu vào
 export const fetchSpecialties = createAsyncThunk<
     IFetchSpecialtiesResponse,
-    { page: number; limit: number },
+    { page: number; limit: number; q?: string },
     { rejectValue: string }
 >('specialties/fetchSpecialties', async (params, { rejectWithValue }) => {
     try {
-        const { page, limit } = params;
-        const response = await api.get(
-            `/specialty?page=${page}&limit=${limit}`
-        );
+        const { page, limit, q } = params;
+
+        // Xây dựng URL động
+        let url = `/specialty?page=${page}&limit=${limit}`;
+        if (q) {
+            url += `&q=${encodeURIComponent(q)}`;
+        }
+
+        const response = await api.get(url);
 
         const { errCode, message, data, meta } = response.data;
 
@@ -110,7 +116,7 @@ export const specialtiesSlice = createSlice({
             )
             .addCase(fetchSpecialties.rejected, (state, action) => {
                 state.loading = false;
-                state.list = [];
+                state.list = []; // Hoặc giữ lại list cũ tùy trải nghiệm UX
                 state.totalSpecialties = 0;
                 state.error =
                     (action.payload as string) || 'Failed to fetch specialties';

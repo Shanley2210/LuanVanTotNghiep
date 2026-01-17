@@ -48,15 +48,22 @@ const initialState: IServiceState = {
     error: null
 };
 
+// CẬP NHẬT: Thêm q?: string vào params
 export const fetchServices = createAsyncThunk<
     IFetchServicesResponse,
-    { page: number; limit: number },
+    { page: number; limit: number; q?: string },
     { rejectValue: string }
 >('services/fetchServices', async (params, { rejectWithValue }) => {
     try {
-        const { page, limit } = params;
+        const { page, limit, q } = params;
 
-        const response = await api.get(`/service?page=${page}&limit=${limit}`);
+        // Xây dựng URL động có chứa query param q
+        let url = `/service?page=${page}&limit=${limit}`;
+        if (q) {
+            url += `&q=${encodeURIComponent(q)}`;
+        }
+
+        const response = await api.get(url);
 
         const { errCode, message, data, meta } = response.data;
 

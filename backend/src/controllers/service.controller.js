@@ -4,11 +4,13 @@ const getServiceController = async (req, res) => {
     try {
         let page = req.query.page ? parseInt(req.query.page) : 1;
         let limit = req.query.limit ? parseInt(req.query.limit) : 10;
+        let q = req.query.q || ''; // Lấy tham số tìm kiếm
 
         if (page < 1) page = 1;
         if (limit < 1) limit = 10;
 
-        const response = await serviceService.getServiceService(page, limit);
+        // Truyền q vào service
+        const response = await serviceService.getServiceService(page, limit, q);
 
         return res.status(200).json(response);
     } catch (e) {
