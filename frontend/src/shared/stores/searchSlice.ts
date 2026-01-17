@@ -55,12 +55,12 @@ export interface IDoctor {
 
 // --- Interfaces cho Response & State ---
 
-interface IPaginationMeta {
-    page: number;
-    limit: number;
-    totalRows: number;
-    totalPages: number;
-}
+// interface IPaginationMeta {
+//     page: number;
+//     limit: number;
+//     totalRows: number;
+//     totalPages: number;
+// }
 
 // Cấu trúc response cho Public Search
 interface IPublicSearchResponseData {
@@ -263,8 +263,7 @@ export const searchSlice = createSlice({
 export const { resetSearchState, clearAppointmentResults } =
     searchSlice.actions;
 
-export const selectSearch = (state: { search: ISearchState }) =>
-    state.search;
+export const selectSearch = (state: { search: ISearchState }) => state.search;
 export const selectPublicResults = (state: { search: ISearchState }) =>
     state.search.publicResults;
 // export const selectAppointmentResults = (state: { search: ISearchState }) =>
