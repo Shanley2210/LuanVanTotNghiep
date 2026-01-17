@@ -9,7 +9,13 @@ const transporter = nodemailer.createTransport({
         user: process.env.MAIL_USER,
         pass: process.env.MAIL_PASS,
     },
+    // --- THÊM PHẦN NÀY ---
+    family: 4, // Ép buộc dùng IPv4
+    logger: true, // Bật log để xem chi tiết lỗi trên Railway logs
+    debug: true, // Bật chế độ debug
     connectionTimeout: 10000,
+    greetingTimeout: 5000,
+    socketTimeout: 10000,
 });
 
 /**
