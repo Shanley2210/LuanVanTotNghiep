@@ -100,8 +100,6 @@ export default function ExaminationSchedule({
         }
     };
 
-    // --- SỬA ĐỔI QUAN TRỌNG 1: Hàm hiển thị giờ ---
-    // Dùng getUTCHours để lấy chính xác số 08 từ "08:00Z" thay vì bị cộng thành 15:00
     const formatTime = (isoString: string) => {
         if (!isoString) return '';
         const date = new Date(isoString);
