@@ -17,36 +17,28 @@ const createVNPayPaymentService = ({
     locale,
 }) => {
     try {
-        if (
-            !process.env.VNP_TMNCODE ||
-            !process.env.VNP_HASHSECRET ||
-            !process.env.VNP_RETURNURL
-        ) {
-            return {
-                errCode: 3,
-                errEnMessage: 'VNPay configuration invalid',
-                errViMessage: 'Cấu hình VNPay không hợp lệ',
-            };
-        }
-
         const timestamp = moment().format('YYMMDDHHmmss');
         const txnRef = appointmentId
             ? `APPT_${appointmentId}_${timestamp}`
             : `RECORD_${recordId}_${timestamp}`;
         const paymentType = appointmentId ? 'deposit' : 'final';
+
         const secureIp = ipAddr && ipAddr !== '::1' ? ipAddr : '127.0.0.1';
+
+        const secureInfo = removeVietnameseTones(
+            description || 'Thanh toan don hang',
+        );
 
         const paymentUrl = vnpay.buildPaymentUrl({
             vnp_TxnRef: txnRef,
             vnp_Amount: Math.floor(amount),
-            vnp_OrderInfo: description,
+            vnp_OrderInfo: secureInfo,
             vnp_OrderType: ProductCode.Other,
             vnp_ReturnUrl: process.env.VNP_RETURNURL,
             vnp_IpAddr: secureIp,
             vnp_Locale: locale || 'vn',
             vnp_BankCode: 'NCB',
             vnp_CreateDate: moment().format('YYYYMMDDHHmmss'),
-            vnp_ExpireDate: moment().add(1, 'hour').format('YYYYMMDDHHmmss'),
         });
 
         return {
