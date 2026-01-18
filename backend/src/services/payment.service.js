@@ -37,16 +37,20 @@ const createVNPayPaymentService = ({
 
         const paymentType = appointmentId ? 'deposit' : 'final';
 
+        // SỬA ĐỔI: Xử lý IP address để tránh lỗi ::1
+        const secureIp = ipAddr && ipAddr !== '::1' ? ipAddr : '127.0.0.1';
+
         const paymentUrl = vnpay.buildPaymentUrl({
             vnp_TxnRef: txnRef,
-            vnp_Amount: amount,
+            vnp_Amount: amount, // Lưu ý: Đảm bảo amount đầu vào là VND * 100 (Ví dụ: 10000 VND -> 1000000)
             vnp_OrderInfo: description,
             vnp_OrderType: ProductCode.Other,
             vnp_ReturnUrl: process.env.VNP_RETURNURL,
-            vnp_IpAddr: ipAddr,
+            vnp_IpAddr: secureIp,
             vnp_Locale: locale,
+            vnp_BankCode: 'NCB', // <--- QUAN TRỌNG: Thêm dòng này để fix lỗi code=15 Sandbox
             vnp_CreateDate: moment().format('YYYYMMDDHHmmss'),
-            vnp_ExpireDate: moment().add(1, 'hour').format('YYYYMMDDHHmmss'),
+            vnp_ExpireDate: moment().add(15, 'minute').format('YYYYMMDDHHmmss'), // Sandbox nên để ngắn (15p)
         });
 
         return {
@@ -65,6 +69,7 @@ const returnVNPayService = async (query) => {
     const trans = await db.sequelize.transaction();
 
     try {
+        // Kiểm tra checksum
         const isValid = vnpay.verifyReturnUrl(query);
 
         if (!isValid) {
@@ -76,6 +81,7 @@ const returnVNPayService = async (query) => {
             };
         }
 
+        // Kiểm tra mã lỗi từ VNPay
         if (query.vnp_ResponseCode !== '00') {
             await trans.rollback();
             return {
@@ -86,6 +92,7 @@ const returnVNPayService = async (query) => {
         }
 
         const txnRef = query.vnp_TxnRef;
+        // Vì lúc gửi đi amount có thể đã nhân 100, lúc nhận về chia 100 để lưu DB
         const amount = Number(query.vnp_Amount) / 100;
 
         if (txnRef.startsWith('APPT_')) {
