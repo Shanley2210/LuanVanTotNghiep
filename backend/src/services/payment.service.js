@@ -25,14 +25,10 @@ const createVNPayPaymentService = ({
 
         const secureIp = ipAddr && ipAddr !== '::1' ? ipAddr : '127.0.0.1';
 
-        const secureInfo = removeVietnameseTones(
-            description || 'Thanh toan don hang',
-        );
-
         const paymentUrl = vnpay.buildPaymentUrl({
             vnp_TxnRef: txnRef,
             vnp_Amount: Math.floor(amount),
-            vnp_OrderInfo: secureInfo,
+            vnp_OrderInfo: description,
             vnp_OrderType: ProductCode.Other,
             vnp_ReturnUrl: process.env.VNP_RETURNURL,
             vnp_IpAddr: secureIp,
