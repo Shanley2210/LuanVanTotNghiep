@@ -8,24 +8,6 @@ const vnpay = new VNPay({
     vnpayHost: 'https://sandbox.vnpayment.vn',
 });
 
-function removeVietnameseTones(str) {
-    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
-    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
-    str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
-    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
-    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
-    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
-    str = str.replace(/đ/g, 'd');
-    str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, 'A');
-    str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, 'E');
-    str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, 'I');
-    str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, 'O');
-    str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, 'U');
-    str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, 'Y');
-    str = str.replace(/Đ/g, 'D');
-    return str;
-}
-
 const createVNPayPaymentService = ({
     appointmentId,
     recordId,
@@ -35,51 +17,37 @@ const createVNPayPaymentService = ({
     locale,
 }) => {
     try {
+        if (
+            !process.env.VNP_TMNCODE ||
+            !process.env.VNP_HASHSECRET ||
+            !process.env.VNP_RETURNURL
+        ) {
+            return {
+                errCode: 3,
+                errEnMessage: 'VNPay configuration invalid',
+                errViMessage: 'Cấu hình VNPay không hợp lệ',
+            };
+        }
+
         const timestamp = moment().format('YYMMDDHHmmss');
         const txnRef = appointmentId
             ? `APPT_${appointmentId}_${timestamp}`
             : `RECORD_${recordId}_${timestamp}`;
         const paymentType = appointmentId ? 'deposit' : 'final';
-
-        // 1. Xử lý IP: Fallback về 127.0.0.1 nếu không lấy được
         const secureIp = ipAddr && ipAddr !== '::1' ? ipAddr : '127.0.0.1';
-
-        // 2. Xử lý Description: Bỏ dấu tiếng Việt để tránh lỗi checksum
-        const secureInfo = removeVietnameseTones(
-            description || 'Thanh toan don hang',
-        );
-
-        // 3. Xử lý Amount:
-        // - VNPay yêu cầu đơn vị là VNĐ * 100.
-        // - Ví dụ: 10.000 VNĐ -> gửi 1000000
-        // - Đảm bảo là số nguyên (Math.floor)
-        let vnpAmount = amount;
-        // Nếu client gửi lên < 100 triệu, giả định client gửi VNĐ thường -> nhân 100
-        // Nếu client đã nhân 100 rồi thì giữ nguyên. (Đây là logic an toàn)
-        // LƯU Ý: VNPay Sandbox tối thiểu khoảng 5000-10000 VND.
-        if (vnpAmount < 10000000) {
-            vnpAmount = vnpAmount * 100;
-        }
 
         const paymentUrl = vnpay.buildPaymentUrl({
             vnp_TxnRef: txnRef,
-            vnp_Amount: Math.floor(vnpAmount), // Bắt buộc là số nguyên
-            vnp_OrderInfo: secureInfo,
+            vnp_Amount: Math.floor(amount),
+            vnp_OrderInfo: description,
             vnp_OrderType: ProductCode.Other,
             vnp_ReturnUrl: process.env.VNP_RETURNURL,
             vnp_IpAddr: secureIp,
             vnp_Locale: locale || 'vn',
-            vnp_BankCode: 'NCB', // Cứng mã Bank test
+            vnp_BankCode: 'NCB',
             vnp_CreateDate: moment().format('YYYYMMDDHHmmss'),
+            vnp_ExpireDate: moment().add(1, 'hour').format('YYYYMMDDHHmmss'),
         });
-
-        console.log('--- VNPAY DEBUG ---');
-        console.log('TmnCode:', process.env.VNP_TMNCODE);
-        console.log('TxnRef:', txnRef);
-        console.log('Amount Raw:', amount, '-> Sent:', Math.floor(vnpAmount));
-        console.log('IpAddr:', secureIp);
-        console.log('Generated URL:', paymentUrl);
-        console.log('-------------------');
 
         return {
             errCode: 0,
@@ -97,7 +65,6 @@ const returnVNPayService = async (query) => {
     const trans = await db.sequelize.transaction();
 
     try {
-        // Kiểm tra checksum
         const isValid = vnpay.verifyReturnUrl(query);
 
         if (!isValid) {
@@ -109,7 +76,6 @@ const returnVNPayService = async (query) => {
             };
         }
 
-        // Kiểm tra mã lỗi từ VNPay
         if (query.vnp_ResponseCode !== '00') {
             await trans.rollback();
             return {
@@ -120,7 +86,6 @@ const returnVNPayService = async (query) => {
         }
 
         const txnRef = query.vnp_TxnRef;
-        // Vì lúc gửi đi amount có thể đã nhân 100, lúc nhận về chia 100 để lưu DB
         const amount = Number(query.vnp_Amount) / 100;
 
         if (txnRef.startsWith('APPT_')) {
