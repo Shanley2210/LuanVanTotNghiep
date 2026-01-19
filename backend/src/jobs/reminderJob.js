@@ -39,9 +39,15 @@ const runReminderJob = () => {
                         ],
                     },
                     {
-                        model: db.User,
+                        model: db.Patient,
                         as: 'patient',
-                        attributes: ['name', 'email'],
+                        include: [
+                            {
+                                model: db.User,
+                                as: 'user',
+                                attributes: ['name', 'email'],
+                            },
+                        ],
                     },
                 ],
             });
@@ -49,8 +55,10 @@ const runReminderJob = () => {
             if (appointments.length === 0) return;
 
             for (const appt of appointments) {
-                const patientEmail = appt.patient?.email;
-                const patientName = appt.patientName;
+                const patientEmail =
+                    appt.patient?.user?.email || appt.patientEmail;
+                const patientName =
+                    appt.patient?.user?.name || appt.patientName;
 
                 if (!patientEmail) {
                     console.log(
@@ -81,11 +89,9 @@ const runReminderJob = () => {
                             <h3 style="color:#0078d7;margin-bottom:15px;">
                                 Kính gửi ${patientName},
                             </h3>
-
                             <p style="margin-bottom:10px;">
                                 Hệ thống xin nhắc bạn có lịch khám sắp tới với các thông tin sau:
                             </p>
-
                             <ul style="background:#f5f5f5;padding:15px 20px;list-style-type:none;border:1px solid #ccc;margin:15px 0;">
                                 <li style="margin-bottom:8px;">
                                     <strong>Thời gian:</strong>
@@ -97,11 +103,9 @@ const runReminderJob = () => {
                                     <strong>Bác sĩ:</strong> ${doctorName}
                                 </li>
                             </ul>
-
                             <p style="margin-bottom:10px;">
                                 Vui lòng đến đúng giờ để đảm bảo quá trình khám diễn ra thuận lợi.
                             </p>
-
                             <p style="margin-bottom:5px;">Trân trọng,</p>
                             <p style="font-style:italic;margin:0;">Hệ thống Đặt lịch</p>
                         </div>`,
@@ -120,11 +124,9 @@ const runReminderJob = () => {
                             <h3 style="color:#0078d7;margin-bottom:15px;">
                                 Kính gửi ${patientName},
                             </h3>
-
                             <p style="margin-bottom:10px;">
                                 Chỉ còn khoảng <strong>2 giờ</strong> nữa là đến lịch khám của bạn với thông tin sau:
                             </p>
-
                             <ul style="background:#f5f5f5;padding:15px 20px;list-style-type:none;border:1px solid #ccc;margin:15px 0;">
                                 <li style="margin-bottom:8px;">
                                     <strong>Thời gian:</strong>
@@ -136,11 +138,9 @@ const runReminderJob = () => {
                                     <strong>Bác sĩ:</strong> ${doctorName}
                                 </li>
                             </ul>
-
                             <p style="margin-bottom:10px;">
                                 Vui lòng chuẩn bị di chuyển để đến đúng giờ.
                             </p>
-
                             <p style="margin-bottom:5px;">Trân trọng,</p>
                             <p style="font-style:italic;margin:0;">Hệ thống Đặt lịch</p>
                         </div>`,
@@ -160,7 +160,6 @@ const runAutoCancelJob = () => {
     cron.schedule('*/10 * * * *', async () => {
         try {
             const now = moment().tz('Asia/Ho_Chi_Minh');
-
             const twoHoursAgo = now.clone().subtract(2, 'hours').toDate();
 
             console.log(
@@ -174,9 +173,15 @@ const runAutoCancelJob = () => {
                 },
                 include: [
                     {
-                        model: db.User,
+                        model: db.Patient,
                         as: 'patient',
-                        attributes: ['name', 'email'],
+                        include: [
+                            {
+                                model: db.User,
+                                as: 'user',
+                                attributes: ['name', 'email'],
+                            },
+                        ],
                     },
                     {
                         model: db.Slot,
@@ -191,8 +196,12 @@ const runAutoCancelJob = () => {
                 appt.status = 'cancelled';
                 await appt.save();
 
-                const patientEmail = appt.patient?.email;
-                const patientName = appt.patient?.name || 'Khách hàng';
+                const patientEmail =
+                    appt.patient?.user?.email || appt.patientEmail;
+                const patientName =
+                    appt.patient?.user?.name ||
+                    appt.patientName ||
+                    'Khách hàng';
 
                 const dateBooked = appt.slot?.startTime
                     ? moment(appt.slot.startTime)
@@ -209,11 +218,9 @@ const runAutoCancelJob = () => {
                             <h3 style="color:#0078d7;margin-bottom:15px;">
                                 Kính gửi ${patientName},
                             </h3>
-
                             <p style="margin-bottom:10px;">
                                 Hệ thống đã <strong>tự động hủy lịch khám</strong> của bạn do quá thời gian chờ cho phép (2 tiếng).
                             </p>
-
                             <ul style="background:#f5f5f5;padding:15px 20px;list-style-type:none;border:1px solid #ccc;margin:15px 0;">
                                 <li style="margin-bottom:8px;">
                                     <strong>Mã lịch hẹn:</strong>
@@ -223,11 +230,9 @@ const runAutoCancelJob = () => {
                                     <strong>Thời gian dự kiến:</strong> ${dateBooked}
                                 </li>
                             </ul>
-
                             <p style="margin-bottom:10px;">
                                 Vui lòng thực hiện đặt lịch lại nếu vẫn có nhu cầu khám.
                             </p>
-
                             <p style="margin-bottom:5px;">Trân trọng,</p>
                             <p style="font-style:italic;margin:0;">Hệ thống Đặt lịch</p>
                         </div>
